@@ -32,19 +32,25 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .tab-btn.active { border-bottom: 2px solid #2fcbd1; color: #09292a; font-weight: bold; }
-        ::-webkit-scrollbar { width: 8px; }
+        
+        /* Custom scrollbar for general page */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #99eaf0; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #2fcbd1; }
         
+        /* Hide scrollbar for specific horizontal containers */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
         .accordion-content { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; overflow: hidden; }
         .accordion-content.hidden-section { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border-top-width: 0;}
-        .accordion-content.open-section { max-height: 800px; opacity: 1; }
+        .accordion-content.open-section { max-height: 1200px; opacity: 1; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
 
-    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 -translate-y-20 opacity-0 transition-all duration-500 bg-brand-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center z-50 pointer-events-none border-b-4 border-brand-500">
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 -translate-y-20 opacity-0 transition-all duration-500 bg-brand-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center z-50 pointer-events-none border-b-4 border-brand-500 w-11/12 max-w-md sm:w-auto">
         <i class="fa-solid fa-cloud-arrow-up text-3xl text-brand-400 mr-4"></i>
         <div>
             <h4 class="font-bold text-lg leading-tight">Guardado Automático</h4>
@@ -65,7 +71,7 @@
 
     <div class="bg-white shadow relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex space-x-8" id="tabs">
+            <div class="flex space-x-6 sm:space-x-8 overflow-x-auto whitespace-nowrap scrollbar-hide" id="tabs">
                 <button onclick="switchTab('asesor')" class="tab-btn active py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
                     <i class="fa-solid fa-user-check mr-2"></i>Asesor
                 </button>
@@ -76,11 +82,11 @@
         </div>
     </div>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
         
         <div id="asesor" class="tab-content active">
             
-            <div class="bg-white rounded-xl shadow-md p-6 mb-6 border-t-4 border-brand-500 sticky top-0 z-20">
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-500 sticky top-0 z-20">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-bold text-gray-800 mb-2">1. Identifícate para ver tu ruta:</label>
@@ -107,11 +113,11 @@
 
             <div id="trackerWorkspace" class="transition-opacity duration-500 opacity-0 pointer-events-none">
                 
-                <div class="bg-white rounded-xl shadow-md p-6 mb-6 border border-gray-100">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Progreso de <span id="displayName" class="text-brand-600"></span></h2>
+                <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border border-gray-100">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Progreso de <span id="displayName" class="text-brand-600 break-words"></span></h2>
                     
                     <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div class="flex justify-between items-end mb-2">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-2 space-y-2 sm:space-y-0">
                             <div>
                                 <span class="block text-sm font-semibold text-brand-900">Avance del día: <span id="progressText" class="font-bold text-brand-600">0/14 Pasos (0%)</span></span>
                                 <span class="block text-xs text-brand-700 mt-1">Fase actual: <span id="currentPhaseText" class="font-bold bg-brand-100 px-2 py-1 rounded">1. Marcación</span></span>
@@ -124,9 +130,9 @@
                     </div>
 
                     <div class="text-sm text-gray-500 mb-4 bg-yellow-50 p-3 rounded border border-yellow-200 flex items-start">
-                        <i class="fa-solid fa-circle-info text-yellow-500 mr-2 mt-0.5"></i>
+                        <i class="fa-solid fa-circle-info text-yellow-500 mr-2 mt-0.5 shrink-0"></i>
                         <div>
-                            <strong>Nota:</strong> Debes completar todas las micrometas de una sección para desbloquear la siguiente. 
+                            <strong>Nota:</strong> Debes completar todas las micrometas de una sección para continuar con las siguientes.
                         </div>
                     </div>
 
@@ -135,20 +141,20 @@
                         <!-- Meta 1 -->
                         <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                             <button type="button" onclick="toggleSection('sec1')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
-                                <h3 class="text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-regular fa-clock mr-2 text-brand-500"></i>1. Marcación</h3>
-                                <i class="fa-solid fa-chevron-up transform transition-transform duration-300 text-gray-400" id="icon-sec1"></i>
+                                <h3 class="text-base sm:text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-regular fa-clock mr-2 text-brand-500"></i>1. Marcación</h3>
+                                <i class="fa-solid fa-chevron-up transform transition-transform duration-300 text-gray-400 shrink-0 ml-2" id="icon-sec1"></i>
                             </button>
-                            <div id="sec1" class="accordion-content open-section bg-white px-2 pb-2 border-t border-gray-200 mt-2">
+                            <div id="sec1" class="accordion-content open-section bg-white px-2 sm:px-4 pb-4 border-t border-gray-200 mt-2">
                                 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step1_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">1.1 Marcación Intranet</span>
-                                            <span class="block text-sm text-gray-500">L-V: 8:00am y 6:00pm | Sáb: 9:00am y 12:00pm</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step1_1" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">1.1 Marcación Intranet</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">L-V: 8:00am y 6:00pm | Sáb: 9:00am y 12:00pm</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-2 ml-1 shrink-0">
                                         <a href="https://intranet.uwiener.edu.pe/sso.asp" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-brand-50 hover:border-brand-300 transition-colors text-brand-600" title="Intranet Wiener">
                                             <i class="fa-solid fa-desktop"></i>
                                         </a>
@@ -156,14 +162,14 @@
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step1_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">1.2 Ubicación en Grupo WhatsApp</span>
-                                            <span class="block text-sm text-gray-500">Enviar al grupo "RUTAS Y UBICACIONES"</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step1_2" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">1.2 Ubicación en Grupo WhatsApp</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Enviar al grupo "RUTAS Y UBICACIONES"</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-2 ml-1 shrink-0">
                                         <a href="https://chat.whatsapp.com/lup4kmBMb0yFlyjFhxD2yR?s=cl&p=a&ilr=1" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Rutas y Ubicaciones">
                                             <i class="fa-brands fa-whatsapp text-lg"></i>
                                         </a>
@@ -171,14 +177,14 @@
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step1_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">1.3 Foto de Informe de Salida</span>
-                                            <span class="block text-sm text-gray-500">En taxi/van de 7:50 am a 8:00 am máximo</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step1_3" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">1.3 Foto de Informe de Salida</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">En taxi/van de 7:50 am a 8:00 am máximo</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-2 ml-1 shrink-0">
                                         <a href="https://chat.whatsapp.com/GFuEXtnI0OKEQWEqfLLy45" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Informe de Salida">
                                             <i class="fa-brands fa-whatsapp text-lg"></i>
                                         </a>
@@ -186,14 +192,14 @@
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step1_4" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">1.4 Foto del Cuaderno de Asistencia</span>
-                                            <span class="block text-sm text-gray-500">Evidenciar puntualidad a las 8:00 am</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step1_4" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">1.4 Foto del Cuaderno de Asistencia</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Evidenciar puntualidad a las 8:00 am</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-2 ml-1 shrink-0">
                                         <a href="https://chat.whatsapp.com/GFuEXtnI0OKEQWEqfLLy45" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Cuaderno de Asistencia">
                                             <i class="fa-brands fa-whatsapp text-lg"></i>
                                         </a>
@@ -206,20 +212,20 @@
                         <!-- Meta 2 -->
                         <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                             <button type="button" onclick="toggleSection('sec2')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
-                                <h3 class="text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-map-location-dot mr-2 text-brand-500"></i>2. Prospección en Campo</h3>
-                                <i class="fa-solid fa-chevron-down transform transition-transform duration-300 text-gray-400 rotate-180" id="icon-sec2"></i>
+                                <h3 class="text-base sm:text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-map-location-dot mr-2 text-brand-500"></i>2. Prospección en Campo</h3>
+                                <i class="fa-solid fa-chevron-down transform transition-transform duration-300 text-gray-400 shrink-0 ml-2 rotate-180" id="icon-sec2"></i>
                             </button>
-                            <div id="sec2" class="accordion-content hidden-section bg-white px-2 pb-2 border-t border-gray-200 mt-2">
+                            <div id="sec2" class="accordion-content hidden-section bg-white px-2 sm:px-4 pb-4 border-t border-gray-200 mt-2">
                                 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step2_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">2.1 Foto de Actividades en Campo</span>
-                                            <span class="block text-sm text-gray-500">Enviar foto de la actividad o estatus del colegio al grupo</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step2_1" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">2.1 Foto de Actividades en Campo</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Enviar foto de la actividad o estatus del colegio al grupo</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-2 ml-1 shrink-0">
                                         <a href="https://chat.whatsapp.com/GFuEXtnI0OKEQWEqfLLy45" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Actividades">
                                             <i class="fa-brands fa-whatsapp text-lg"></i>
                                         </a>
@@ -227,21 +233,21 @@
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step2_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">2.2 Ficha de Actualización</span>
-                                            <span class="block text-sm text-gray-500">Llevar el día de visita y de la actividad para actualizar población</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step2_2" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0">
+                                            <span class="block font-medium text-gray-800 break-words">2.2 Ficha de Actualización</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Llevar el día de visita y de la actividad</span>
                                         </div>
                                     </label>
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step2_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">2.3 Llevar Materiales de Actividades</span>
-                                            <span class="block text-sm text-gray-500">Charla: Lapiceros, fichas. Feria: Mantel, banners, etc.</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step2_3" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0">
+                                            <span class="block font-medium text-gray-800 break-words">2.3 Llevar Materiales de Actividades</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Charla: Lapiceros, fichas. Feria: Mantel, banners, etc.</span>
                                         </div>
                                     </label>
                                 </div>
@@ -252,20 +258,20 @@
                         <!-- Meta 3 -->
                         <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                             <button type="button" onclick="toggleSection('sec3')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
-                                <h3 class="text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-folder-open mr-2 text-brand-500"></i>3. Gestión Administrativa</h3>
-                                <i class="fa-solid fa-chevron-down transform transition-transform duration-300 text-gray-400 rotate-180" id="icon-sec3"></i>
+                                <h3 class="text-base sm:text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-folder-open mr-2 text-brand-500"></i>3. Gestión Administrativa</h3>
+                                <i class="fa-solid fa-chevron-down transform transition-transform duration-300 text-gray-400 shrink-0 ml-2 rotate-180" id="icon-sec3"></i>
                             </button>
-                            <div id="sec3" class="accordion-content hidden-section bg-white px-2 pb-2 border-t border-gray-200 mt-2">
+                            <div id="sec3" class="accordion-content hidden-section bg-white px-2 sm:px-4 pb-4 border-t border-gray-200 mt-2">
                                 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step3_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">3.1 Registro de Actividades en CRM</span>
-                                            <span class="block text-sm text-gray-500">Registrar 1 día antes en Zoho (hora, tipo de actividad)</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_1" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.1 Registro de Actividades en CRM</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Registrar 1 día antes en Zoho</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-2 ml-1 shrink-0">
                                         <a href="https://crm.zoho.com/crm/unorbertwiener/tab/Dashboards/5985073000906900079" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors text-blue-500" title="CRM Zoho">
                                             <i class="fa-solid fa-chart-pie"></i>
                                         </a>
@@ -273,24 +279,24 @@
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step3_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">3.1.1 Completar Actividad en CRM</span>
-                                            <span class="block text-sm text-gray-500">Al culminar: marcar como "Completada" o "Cancelada"</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_2" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0">
+                                            <span class="block font-medium text-gray-800 break-words">3.1.1 Completar Actividad en CRM</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Marcar como "Completada" o "Cancelada"</span>
                                         </div>
                                     </label>
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step3_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">3.2 Programación de Taxi y Van</span>
-                                            <span class="block text-sm text-gray-500">Enviar 1 día antes. Taxi por tiempo.</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_3" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.2 Programación de Taxi y Van</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Enviar 1 día antes. Taxi por tiempo.</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-1 sm:space-x-2 ml-1 shrink-0">
                                         <a href="https://portal.directoapp.pe/intranet/" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-yellow-50 hover:border-yellow-300 transition-colors text-yellow-500" title="Taxi Directo">
                                             <i class="fa-solid fa-taxi"></i>
                                         </a>
@@ -301,14 +307,14 @@
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step3_4" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">3.3 Solicitud de Material</span>
-                                            <span class="block text-sm text-gray-500">Solicitar 1 día antes vía formulario</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_4" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.3 Solicitud de Material</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Solicitar 1 día antes vía formulario</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-2 ml-1 shrink-0">
                                         <a href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=E7z54CaJykKz0FKgpp0gL073JBC3PiVMo2kl-EIRITPUQ1g3UERLQ1NBSODOSUJNWkg4RFg1UkIQOS4u" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-orange-50 hover:border-orange-300 transition-colors text-orange-500" title="Formulario Material">
                                             <i class="fa-brands fa-microsoft"></i>
                                         </a>
@@ -316,14 +322,14 @@
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step3_5" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">3.4 Solicitud para Charlas/Test OV</span>
-                                            <span class="block text-sm text-gray-500">Anticipación: Charlas 24h/15d, Talleres 15d.</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_5" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.4 Solicitud para Charlas/Test OV</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Anticipación: Charlas 24h/15d, Talleres 15d.</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-2 ml-1 shrink-0">
                                         <a href="https://docs.google.com/spreadsheets/d/1pa0c8Wrm3fJwy8nKQZ6e_AeTg90Aw98U" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-600" title="Matriz de Solicitudes">
                                             <i class="fa-solid fa-table-list"></i>
                                         </a>
@@ -331,14 +337,14 @@
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step3_6" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">3.5 / 3.7 Digitalización y Registro Fichas</span>
-                                            <span class="block text-sm text-gray-500">EasyPanel y Drive</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_6" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.5 / 3.7 Digitalización y Registro Fichas</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">EasyPanel y Drive</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-1 sm:space-x-2 ml-1 shrink-0">
                                         <a href="https://wiener-prospeccion.swnb5v.easypanel.host/login" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-brand-50 hover:border-brand-300 transition-colors text-brand-500" title="EasyPanel">
                                             <i class="fa-solid fa-file-arrow-up"></i>
                                         </a>
@@ -349,14 +355,14 @@
                                 </div>
 
                                 <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
-                                        <input type="checkbox" id="step3_7" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div>
-                                            <span class="block font-medium text-gray-800">3.6 Status de Cartera</span>
-                                            <span class="block text-sm text-gray-500">Mantener cartera actualizada en Sharepoint</span>
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_7" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.6 Status de Cartera</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Mantener cartera en Sharepoint</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-2 ml-2">
+                                    <div class="flex space-x-2 ml-1 shrink-0">
                                         <a href="https://wienercarrion-my.sharepoint.com/:x:/r/personal/claudia_quevedo_uwiener_edu_pe/_layouts/15/Doc.aspx?sourcedoc=%7Bc89fc1ca-4dbb-44ab-86d1-eb1c3e3e350c%7D" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors text-blue-600" title="Status Cartera">
                                             <i class="fa-solid fa-folder-tree"></i>
                                         </a>
@@ -366,9 +372,9 @@
                             </div>
                         </div>
 
-                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded mt-6 shadow-sm">
+                        <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded mt-6 shadow-sm">
                             <h4 class="font-bold text-red-700 mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i> No Negociables</h4>
-                            <ul class="text-sm text-red-800 list-disc list-inside space-y-1">
+                            <ul class="text-xs sm:text-sm text-red-800 list-disc list-inside space-y-1">
                                 <li>El taxi para psicólogos desde domicilio es SOLO cuando salen a las 6:30 am, de lo contrario salen de Sede.</li>
                                 <li>Salida de casa de promotores máximo 6:30 am si la actividad empieza a las 7:30 am.</li>
                             </ul>
@@ -379,24 +385,24 @@
         </div>
 
         <div id="jefatura" class="tab-content">
-            <div class="bg-white rounded-xl shadow-md p-6 mb-6 border-t-4 border-brand-600">
-                <div class="flex justify-between items-center mb-6">
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-2 sm:space-y-0">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Dashboard de Seguimiento</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Dashboard de Seguimiento</h2>
                         <p class="text-sm text-gray-500 mt-1">Supervisora: <span class="font-semibold text-brand-900">Camila Ortiz</span></p>
                     </div>
                 </div>
                 
-                <p class="text-gray-500 mb-6">Monitoreo del progreso diario en tiempo real. Visualiza en qué parte de la ruta de prospección se encuentra cada asesor.</p>
+                <p class="text-sm sm:text-base text-gray-500 mb-6">Monitoreo del progreso diario en tiempo real. Visualiza en qué parte de la ruta de prospección se encuentra cada asesor.</p>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asesor</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Progreso General</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fase Actual</th>
+                                <th class="px-4 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-4 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asesor</th>
+                                <th class="px-4 py-3 sm:px-6 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Progreso</th>
+                                <th class="px-4 py-3 sm:px-6 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fase Actual</th>
                             </tr>
                         </thead>
                         <tbody id="dashboardTableBody" class="bg-white divide-y divide-gray-200">
@@ -406,7 +412,7 @@
                 
                 <div id="emptyDashboardState" class="text-center py-10 text-gray-400 hidden">
                     <i class="fa-solid fa-inbox text-4xl mb-3 text-brand-200"></i>
-                    <p>No hay registros en el día de hoy aún.</p>
+                    <p class="text-sm sm:text-base">No hay registros en el día de hoy aún.</p>
                 </div>
             </div>
         </div>
@@ -721,16 +727,16 @@
                 const phaseColor = getPhaseColorClass(record.phase);
                 const subphaseColorText = getSubphaseColorClass(record.phase);
                 
-                let phaseHtml = `<span class="px-4 py-2 inline-flex text-sm font-bold rounded-full shadow-sm border ${phaseColor}">${record.phase}</span>`;
+                let phaseHtml = `<span class="px-3 sm:px-4 py-1 sm:py-2 inline-flex text-xs sm:text-sm font-bold rounded-full shadow-sm border ${phaseColor} whitespace-nowrap">${record.phase}</span>`;
                 
                 if(record.subphase && record.phase !== "Ruta Completada") {
-                    phaseHtml += `<div class="mt-2 text-xs font-semibold ${subphaseColorText} tracking-wide"><i class="fa-solid fa-chevron-right text-[10px] mr-1 opacity-70"></i>${record.subphase}</div>`;
+                    phaseHtml += `<div class="mt-2 text-[10px] sm:text-xs font-semibold ${subphaseColorText} tracking-wide text-center"><i class="fa-solid fa-chevron-right text-[8px] sm:text-[10px] mr-1 opacity-70"></i>${record.subphase}</div>`;
                 }
 
                 const progressHtml = `
                     <div class="flex items-center justify-center">
-                        <span class="mr-2 text-sm text-gray-700 font-semibold w-12 text-right">${record.percentage}%</span>
-                        <div class="w-24 bg-gray-200 rounded-full h-2">
+                        <span class="mr-2 text-xs sm:text-sm text-gray-700 font-semibold w-8 sm:w-12 text-right">${record.percentage}%</span>
+                        <div class="w-16 sm:w-24 bg-gray-200 rounded-full h-2">
                             <div class="bg-brand-500 h-2 rounded-full shadow-inner" style="width: ${record.percentage}%"></div>
                         </div>
                     </div>
@@ -739,10 +745,10 @@
                 const formattedDate = formatDateToDMY(record.date);
 
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formattedDate}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${record.asesor}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center">${progressHtml}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center flex flex-col items-center justify-center">${phaseHtml}</td>
+                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">${formattedDate}</td>
+                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-gray-900">${record.asesor}</td>
+                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-center">${progressHtml}</td>
+                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-center flex flex-col items-center justify-center min-h-[4rem]">${phaseHtml}</td>
                 `;
                 tbody.appendChild(tr);
             });

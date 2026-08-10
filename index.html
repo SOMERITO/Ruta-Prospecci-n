@@ -3,7 +3,7 @@ html_content = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ruta 360 PRO | Portal de Asesores</title>
+    <title>Ruta Prospección</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script>
@@ -57,7 +57,7 @@ html_content = """<!DOCTYPE html>
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-route text-2xl text-brand-500"></i>
-                    <span class="font-bold text-xl tracking-wide">Ruta 360 PRO</span>
+                    <span class="font-bold text-xl tracking-wide">Ruta Prospección</span>
                 </div>
             </div>
         </div>
@@ -67,7 +67,7 @@ html_content = """<!DOCTYPE html>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex space-x-8" id="tabs">
                 <button onclick="switchTab('asesor')" class="tab-btn active py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
-                    <i class="fa-solid fa-user-check mr-2"></i>Tracker Asesor
+                    <i class="fa-solid fa-user-check mr-2"></i>Asesor
                 </button>
                 <button onclick="switchTab('enlaces')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
                     <i class="fa-solid fa-link mr-2"></i>Enlaces
@@ -408,6 +408,13 @@ html_content = """<!DOCTYPE html>
             return `${year}-${month}-${day}`;
         }
         
+        function formatDateToDMY(dateString) {
+            if(!dateString) return "";
+            const parts = dateString.split('-');
+            if(parts.length !== 3) return dateString;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        
         dateInput.value = getLocalDateString();
         
         window.addEventListener('focus', () => { 
@@ -492,6 +499,28 @@ html_content = """<!DOCTYPE html>
             }); 
         });
 
+        function getActiveSubphaseLabel() {
+            const cbs = Array.from(document.querySelectorAll('.step-checkbox'));
+            
+            let lastCheckedLabel = "";
+            let nextUncheckedLabel = "";
+            
+            for(let i=0; i<cbs.length; i++) {
+                if(cbs[i].checked) {
+                    lastCheckedLabel = cbs[i].nextElementSibling.querySelector('span').innerText;
+                } else {
+                    nextUncheckedLabel = cbs[i].nextElementSibling.querySelector('span').innerText;
+                    break;
+                }
+            }
+            
+            if(!nextUncheckedLabel && lastCheckedLabel) {
+                return "Todas completadas";
+            }
+            
+            return nextUncheckedLabel || "Esperando inicio";
+        }
+
         function updateProgress(triggerAutoSave = false) {
             const sec1Cbs = Array.from(document.querySelectorAll('#sec1 .step-checkbox'));
             const sec2Cbs = Array.from(document.querySelectorAll('#sec2 .step-checkbox'));
@@ -553,14 +582,16 @@ html_content = """<!DOCTYPE html>
             
             document.getElementById('currentPhaseText').innerText = phaseName;
             
+            const subphaseName = getActiveSubphaseLabel();
+            
             if(triggerAutoSave) {
-                autoSaveRecord(checkedSteps, percentage, phaseName);
+                autoSaveRecord(checkedSteps, percentage, phaseName, subphaseName);
             }
 
-            return phaseName;
+            return {phase: phaseName, subphase: subphaseName};
         }
 
-        function autoSaveRecord(completedCount, percentage, phaseName) {
+        function autoSaveRecord(completedCount, percentage, phaseName, subphaseName) {
             const asesor = asesorSelect.value;
             const date = dateInput.value;
             if (!asesor) return;
@@ -578,6 +609,7 @@ html_content = """<!DOCTYPE html>
                 total: totalSteps,
                 percentage: percentage,
                 phase: phaseName,
+                subphase: subphaseName,
                 checkboxStates: checkboxStates
             };
 
@@ -655,13 +687,29 @@ html_content = """<!DOCTYPE html>
                     default: return "bg-gray-100 text-gray-800 border-gray-200";
                 }
             };
+            
+            const getSubphaseColorClass = (phaseName) => {
+                switch(phaseName) {
+                    case "1. Marcación": return "text-blue-600";
+                    case "2. Prospección en Campo": return "text-purple-600";
+                    case "3. Gestión Administrativa": return "text-orange-600";
+                    case "Ruta Completada": return "text-green-600";
+                    default: return "text-gray-600";
+                }
+            };
 
             todayData.forEach(record => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50 transition-colors";
                 
                 const phaseColor = getPhaseColorClass(record.phase);
-                const statusHtml = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full shadow-sm border ${phaseColor}">${record.phase}</span>`;
+                const subphaseColorText = getSubphaseColorClass(record.phase);
+                
+                let phaseHtml = `<span class="px-4 py-2 inline-flex text-sm font-bold rounded-full shadow-sm border ${phaseColor}">${record.phase}</span>`;
+                
+                if(record.subphase && record.phase !== "Ruta Completada") {
+                    phaseHtml += `<div class="mt-2 text-xs font-semibold ${subphaseColorText} tracking-wide"><i class="fa-solid fa-chevron-right text-[10px] mr-1 opacity-70"></i>${record.subphase}</div>`;
+                }
 
                 const progressHtml = `
                     <div class="flex items-center justify-center">
@@ -672,11 +720,13 @@ html_content = """<!DOCTYPE html>
                     </div>
                 `;
 
+                const formattedDate = formatDateToDMY(record.date);
+
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formattedDate}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${record.asesor}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-center">${progressHtml}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-center">${statusHtml}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center flex flex-col items-center justify-center">${phaseHtml}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -690,4 +740,4 @@ html_content = """<!DOCTYPE html>
 with open("Tracker_Ruta_Prospeccion.html", "w", encoding="utf-8") as file:
     file.write(html_content)
 
-print("HTML file updated to revert color settings, remove specific text, and update title.")
+print("HTML file successfully completely updated.")

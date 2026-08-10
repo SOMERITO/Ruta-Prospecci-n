@@ -1,4 +1,4 @@
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -69,9 +69,6 @@ html_content = """<!DOCTYPE html>
                 <button onclick="switchTab('asesor')" class="tab-btn active py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
                     <i class="fa-solid fa-user-check mr-2"></i>Asesor
                 </button>
-                <button onclick="switchTab('enlaces')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
-                    <i class="fa-solid fa-link mr-2"></i>Enlaces
-                </button>
                 <button onclick="switchTab('jefatura')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
                     <i class="fa-solid fa-chart-line mr-2"></i>Dashboard Jefatura
                 </button>
@@ -135,128 +132,237 @@ html_content = """<!DOCTYPE html>
 
                     <form id="trackerForm" class="space-y-4">
                         
+                        <!-- Meta 1 -->
                         <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                             <button type="button" onclick="toggleSection('sec1')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
                                 <h3 class="text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-regular fa-clock mr-2 text-brand-500"></i>1. Marcación</h3>
                                 <i class="fa-solid fa-chevron-up transform transition-transform duration-300 text-gray-400" id="icon-sec1"></i>
                             </button>
-                            <div id="sec1" class="accordion-content open-section bg-white px-4 pb-4 border-t border-gray-200 space-y-2 mt-2">
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step1_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">1.1 Marcación Intranet</span>
-                                        <span class="block text-sm text-gray-500">L-V: 8:00am y 6:00pm | Sáb: 9:00am y 12:00pm</span>
+                            <div id="sec1" class="accordion-content open-section bg-white px-2 pb-2 border-t border-gray-200 mt-2">
+                                
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step1_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">1.1 Marcación Intranet</span>
+                                            <span class="block text-sm text-gray-500">L-V: 8:00am y 6:00pm | Sáb: 9:00am y 12:00pm</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://intranet.uwiener.edu.pe/sso.asp" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-brand-50 hover:border-brand-300 transition-colors text-brand-600" title="Intranet Wiener">
+                                            <i class="fa-solid fa-desktop"></i>
+                                        </a>
                                     </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step1_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">1.2 Ubicación en Grupo WhatsApp</span>
-                                        <span class="block text-sm text-gray-500">Enviar al grupo "RUTAS Y UBICACIONES"</span>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step1_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">1.2 Ubicación en Grupo WhatsApp</span>
+                                            <span class="block text-sm text-gray-500">Enviar al grupo "RUTAS Y UBICACIONES"</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://chat.whatsapp.com/lup4kmBMb0yFlyjFhxD2yR?s=cl&p=a&ilr=1" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Rutas y Ubicaciones">
+                                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                                        </a>
                                     </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step1_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">1.3 Foto de Informe de Salida</span>
-                                        <span class="block text-sm text-gray-500">En taxi/van de 7:50 am a 8:00 am máximo</span>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step1_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">1.3 Foto de Informe de Salida</span>
+                                            <span class="block text-sm text-gray-500">En taxi/van de 7:50 am a 8:00 am máximo</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://chat.whatsapp.com/GFuEXtnI0OKEQWEqfLLy45" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Informe de Salida">
+                                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                                        </a>
                                     </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step1_4" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">1.4 Foto del Cuaderno de Asistencia (8:00am)</span>
-                                        <span class="block text-sm text-gray-500">Evidenciar puntualidad (Sede Centro / Sede Norte)</span>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step1_4" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">1.4 Foto del Cuaderno de Asistencia</span>
+                                            <span class="block text-sm text-gray-500">Evidenciar puntualidad a las 8:00 am</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://chat.whatsapp.com/GFuEXtnI0OKEQWEqfLLy45" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Cuaderno de Asistencia">
+                                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                                        </a>
                                     </div>
-                                </label>
+                                </div>
+
                             </div>
                         </div>
 
+                        <!-- Meta 2 -->
                         <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                             <button type="button" onclick="toggleSection('sec2')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
                                 <h3 class="text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-map-location-dot mr-2 text-brand-500"></i>2. Prospección en Campo</h3>
                                 <i class="fa-solid fa-chevron-down transform transition-transform duration-300 text-gray-400 rotate-180" id="icon-sec2"></i>
                             </button>
-                            <div id="sec2" class="accordion-content hidden-section bg-white px-4 pb-4 border-t border-gray-200 space-y-2 mt-2">
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step2_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">2.1 Foto de Actividades en Campo</span>
-                                        <span class="block text-sm text-gray-500">Enviar foto (charla, cita, test) o foto del colegio + status al grupo</span>
+                            <div id="sec2" class="accordion-content hidden-section bg-white px-2 pb-2 border-t border-gray-200 mt-2">
+                                
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step2_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">2.1 Foto de Actividades en Campo</span>
+                                            <span class="block text-sm text-gray-500">Enviar foto de la actividad o estatus del colegio al grupo</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://chat.whatsapp.com/GFuEXtnI0OKEQWEqfLLy45" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Actividades">
+                                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                                        </a>
                                     </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step2_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">2.2 Ficha de Actualización</span>
-                                        <span class="block text-sm text-gray-500">Llevar el día de visita y de la actividad para actualizar población</span>
-                                    </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step2_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">2.3 Llevar Materiales de Actividades</span>
-                                        <span class="block text-sm text-gray-500">Charla: Lapiceros, fichas, blocks. Feria: Mantel, banners, brochures, etc.</span>
-                                    </div>
-                                </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step2_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">2.2 Ficha de Actualización</span>
+                                            <span class="block text-sm text-gray-500">Llevar el día de visita y de la actividad para actualizar población</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step2_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">2.3 Llevar Materiales de Actividades</span>
+                                            <span class="block text-sm text-gray-500">Charla: Lapiceros, fichas. Feria: Mantel, banners, etc.</span>
+                                        </div>
+                                    </label>
+                                </div>
+
                             </div>
                         </div>
 
+                        <!-- Meta 3 -->
                         <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                             <button type="button" onclick="toggleSection('sec3')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
                                 <h3 class="text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-folder-open mr-2 text-brand-500"></i>3. Gestión Administrativa</h3>
                                 <i class="fa-solid fa-chevron-down transform transition-transform duration-300 text-gray-400 rotate-180" id="icon-sec3"></i>
                             </button>
-                            <div id="sec3" class="accordion-content hidden-section bg-white px-4 pb-4 border-t border-gray-200 space-y-2 mt-2">
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step3_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">3.1 Registro de Actividades en CRM</span>
-                                        <span class="block text-sm text-gray-500">Registrar 1 día antes en Zoho (hora, tipo de actividad)</span>
+                            <div id="sec3" class="accordion-content hidden-section bg-white px-2 pb-2 border-t border-gray-200 mt-2">
+                                
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step3_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">3.1 Registro de Actividades en CRM</span>
+                                            <span class="block text-sm text-gray-500">Registrar 1 día antes en Zoho (hora, tipo de actividad)</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://crm.zoho.com/crm/unorbertwiener/tab/Dashboards/5985073000906900079" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors text-blue-500" title="CRM Zoho">
+                                            <i class="fa-solid fa-chart-pie"></i>
+                                        </a>
                                     </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step3_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">3.1.1 Completar Actividad en CRM</span>
-                                        <span class="block text-sm text-gray-500">Al culminar: marcar como "Completada" o "Cancelada"</span>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step3_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">3.1.1 Completar Actividad en CRM</span>
+                                            <span class="block text-sm text-gray-500">Al culminar: marcar como "Completada" o "Cancelada"</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step3_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">3.2 Programación de Taxi y Van</span>
+                                            <span class="block text-sm text-gray-500">Enviar 1 día antes. Taxi por tiempo.</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://portal.directoapp.pe/intranet/" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-yellow-50 hover:border-yellow-300 transition-colors text-yellow-500" title="Taxi Directo">
+                                            <i class="fa-solid fa-taxi"></i>
+                                        </a>
+                                        <a href="https://cabify.com/app/order-new" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-purple-50 hover:border-purple-300 transition-colors text-purple-600" title="Cabify">
+                                            <i class="fa-solid fa-car"></i>
+                                        </a>
                                     </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step3_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">3.2 Programación de Taxi y Van</span>
-                                        <span class="block text-sm text-gray-500">Enviar 1 día antes (hasta las 6pm). Taxi por tiempo. Van solicitada con anticipación.</span>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step3_4" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">3.3 Solicitud de Material</span>
+                                            <span class="block text-sm text-gray-500">Solicitar 1 día antes vía formulario</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=E7z54CaJykKz0FKgpp0gL073JBC3PiVMo2kl-EIRITPUQ1g3UERLQ1NBSODOSUJNWkg4RFg1UkIQOS4u" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-orange-50 hover:border-orange-300 transition-colors text-orange-500" title="Formulario Material">
+                                            <i class="fa-brands fa-microsoft"></i>
+                                        </a>
                                     </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step3_4" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">3.3 Solicitud de Material</span>
-                                        <span class="block text-sm text-gray-500">Solicitar 1 día antes vía formulario</span>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step3_5" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">3.4 Solicitud para Charlas/Test OV</span>
+                                            <span class="block text-sm text-gray-500">Anticipación: Charlas 24h/15d, Talleres 15d.</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://docs.google.com/spreadsheets/d/1pa0c8Wrm3fJwy8nKQZ6e_AeTg90Aw98U" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-600" title="Matriz de Solicitudes">
+                                            <i class="fa-solid fa-table-list"></i>
+                                        </a>
                                     </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step3_5" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">3.4 Solicitud para Charlas/Test OV</span>
-                                        <span class="block text-sm text-gray-500">Charlas: 24h ant. (15 días si es nueva). Talleres: 15 días ant. Taxi de psicólogo 1 día antes.</span>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step3_6" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">3.5 / 3.7 Digitalización y Registro Fichas</span>
+                                            <span class="block text-sm text-gray-500">EasyPanel y Drive</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://wiener-prospeccion.swnb5v.easypanel.host/login" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-brand-50 hover:border-brand-300 transition-colors text-brand-500" title="EasyPanel">
+                                            <i class="fa-solid fa-file-arrow-up"></i>
+                                        </a>
+                                        <a href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=E7z54CaJykKz0FKgpp0gL073JBC3PiVMo2kl-EIRITRUOUZOTIgwNFZCVE5KVjdQVjVJVEFCSINRUC4u" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-orange-50 hover:border-orange-300 transition-colors text-orange-500" title="Registro Drive">
+                                            <i class="fa-brands fa-microsoft"></i>
+                                        </a>
                                     </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step3_6" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">3.5 / 3.7 Digitalización y Registro de Fichas</span>
-                                        <span class="block text-sm text-gray-500">Subir a EasyPanel y registrar en Drive mensualmente</span>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1">
+                                        <input type="checkbox" id="step3_7" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div>
+                                            <span class="block font-medium text-gray-800">3.6 Status de Cartera</span>
+                                            <span class="block text-sm text-gray-500">Mantener cartera actualizada en Sharepoint</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-2">
+                                        <a href="https://wienercarrion-my.sharepoint.com/:x:/r/personal/claudia_quevedo_uwiener_edu_pe/_layouts/15/Doc.aspx?sourcedoc=%7Bc89fc1ca-4dbb-44ab-86d1-eb1c3e3e350c%7D" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors text-blue-600" title="Status Cartera">
+                                            <i class="fa-solid fa-folder-tree"></i>
+                                        </a>
                                     </div>
-                                </label>
-                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
-                                    <input type="checkbox" id="step3_7" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                    <div>
-                                        <span class="block font-medium text-gray-800">3.6 Status de Cartera</span>
-                                        <span class="block text-sm text-gray-500">Mantener cartera actualizada en Sharepoint</span>
-                                    </div>
-                                </label>
+                                </div>
+
                             </div>
                         </div>
 
@@ -268,96 +374,6 @@ html_content = """<!DOCTYPE html>
                             </ul>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-
-        <div id="enlaces" class="tab-content">
-            <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-brand-700">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">Enlaces</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <a href="https://intranet.uwiener.edu.pe/sso.asp" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
-                        <div class="p-3 bg-white rounded-full shadow-sm text-brand-600 group-hover:text-brand-500 mr-4">
-                            <i class="fa-solid fa-desktop text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Intranet Wiener</h4>
-                            <p class="text-xs text-gray-500 mt-1">Marcaciones de ingreso y salida.</p>
-                        </div>
-                    </a>
-                    <a href="https://chat.whatsapp.com/lup4kmBMb0yFlyjFhxD2yR?s=cl&p=a&ilr=1" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
-                        <div class="p-3 bg-white rounded-full shadow-sm text-green-500 mr-4">
-                            <i class="fa-brands fa-whatsapp text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">WP: Rutas y Ubicaciones</h4>
-                            <p class="text-xs text-gray-500 mt-1">Enviar ubicación en tiempo real.</p>
-                        </div>
-                    </a>
-                    <a href="https://chat.whatsapp.com/GFuEXtnI0OKEQWEqfLLy45" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
-                        <div class="p-3 bg-white rounded-full shadow-sm text-green-500 mr-4">
-                            <i class="fa-brands fa-whatsapp text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">WP: Informes de Salida</h4>
-                            <p class="text-xs text-gray-500 mt-1">Fotos de salida, cuaderno y campo.</p>
-                        </div>
-                    </a>
-                    <a href="https://crm.zoho.com/crm/unorbertwiener/tab/Dashboards/5985073000906900079" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
-                        <div class="p-3 bg-white rounded-full shadow-sm text-blue-500 mr-4">
-                            <i class="fa-solid fa-chart-pie text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">CRM Zoho</h4>
-                            <p class="text-xs text-gray-500 mt-1">Registro de actividades y estados.</p>
-                        </div>
-                    </a>
-                    <a href="https://portal.directoapp.pe/intranet/" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
-                        <div class="p-3 bg-white rounded-full shadow-sm text-yellow-500 mr-4">
-                            <i class="fa-solid fa-taxi text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Taxi Directo</h4>
-                            <p class="text-xs text-gray-500 mt-1">Reserva de taxis por tiempo.</p>
-                        </div>
-                    </a>
-                    <a href="https://cabify.com/app/order-new" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
-                        <div class="p-3 bg-white rounded-full shadow-sm text-purple-600 mr-4">
-                            <i class="fa-solid fa-car text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Cabify</h4>
-                            <p class="text-xs text-gray-500 mt-1">Alternativa de movilidad.</p>
-                        </div>
-                    </a>
-                    <a href="https://wiener-prospeccion.swnb5v.easypanel.host/login" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
-                        <div class="p-3 bg-white rounded-full shadow-sm text-brand-500 mr-4">
-                            <i class="fa-solid fa-file-arrow-up text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Digitalización Fichas</h4>
-                            <p class="text-xs text-gray-500 mt-1">EasyPanel. Credenciales: Correo + DNI</p>
-                        </div>
-                    </a>
-                    <a href="https://docs.google.com/spreadsheets/d/1pa0c8Wrm3fJwy8nKQZ6e_AeTg90Aw98U/edit?pli=1&gid=1687091713#gid=1687091713" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
-                        <div class="p-3 bg-white rounded-full shadow-sm text-green-600 mr-4">
-                            <i class="fa-solid fa-table-list text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Solicitud Charlas OV</h4>
-                            <p class="text-xs text-gray-500 mt-1">Formatos para docentes/padres/alumnos.</p>
-                        </div>
-                    </a>
-                    <a href="#" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
-                        <div class="p-3 bg-white rounded-full shadow-sm text-orange-500 mr-4">
-                            <i class="fa-brands fa-microsoft text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Forms / Sharepoint</h4>
-                            <p class="text-xs text-gray-500 mt-1">Merchandising, Drive y Cartera (Ver Links)</p>
-                        </div>
-                    </a>
                 </div>
             </div>
         </div>
@@ -532,17 +548,17 @@ html_content = """<!DOCTYPE html>
 
             sec2Cbs.forEach(cb => {
                 cb.disabled = !sec1Done;
-                const parent = cb.closest('label');
-                parent.classList.toggle('opacity-50', !sec1Done);
-                parent.classList.toggle('cursor-not-allowed', !sec1Done);
+                const parentLabel = cb.closest('label');
+                parentLabel.classList.toggle('opacity-50', !sec1Done);
+                parentLabel.classList.toggle('cursor-not-allowed', !sec1Done);
                 if(!sec1Done) cb.checked = false;
             });
 
             sec3Cbs.forEach(cb => {
                 cb.disabled = !sec2Done;
-                const parent = cb.closest('label');
-                parent.classList.toggle('opacity-50', !sec2Done);
-                parent.classList.toggle('cursor-not-allowed', !sec2Done);
+                const parentLabel = cb.closest('label');
+                parentLabel.classList.toggle('opacity-50', !sec2Done);
+                parentLabel.classList.toggle('cursor-not-allowed', !sec2Done);
                 if(!sec2Done) cb.checked = false;
             });
 
@@ -650,7 +666,7 @@ html_content = """<!DOCTYPE html>
             
             document.getElementById(tabId).classList.add('active');
             
-            const btnMap = { 'asesor': 0, 'enlaces': 1, 'jefatura': 2 };
+            const btnMap = { 'asesor': 0, 'jefatura': 1 };
             document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
 
             if(tabId === 'jefatura') { renderDashboard(); }
@@ -735,9 +751,3 @@ html_content = """<!DOCTYPE html>
     </script>
 </body>
 </html>
-"""
-
-with open("Tracker_Ruta_Prospeccion.html", "w", encoding="utf-8") as file:
-    file.write(html_content)
-
-print("HTML file successfully completely updated.")

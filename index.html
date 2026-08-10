@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+html_content = """<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -132,7 +132,7 @@
                     <div class="text-sm text-gray-500 mb-4 bg-yellow-50 p-3 rounded border border-yellow-200 flex items-start">
                         <i class="fa-solid fa-circle-info text-yellow-500 mr-2 mt-0.5 shrink-0"></i>
                         <div>
-                            <strong>Nota:</strong> Debes completar todas las micrometas de una sección para continuar con las siguientes.
+                            <strong>Nota:</strong> Debes completar la micrometa anterior para poder continuar con la siguiente.
                         </div>
                     </div>
 
@@ -512,7 +512,7 @@
 
         let stateMemory = { sec1: false, sec2: false, sec3: false };
 
-        const checkboxes = document.querySelectorAll('.step-checkbox');
+        const checkboxes = Array.from(document.querySelectorAll('.step-checkbox'));
         const totalSteps = checkboxes.length;
         
         checkboxes.forEach(cb => { 
@@ -522,16 +522,14 @@
         });
 
         function getActiveSubphaseLabel() {
-            const cbs = Array.from(document.querySelectorAll('.step-checkbox'));
-            
             let lastCheckedLabel = "";
             let nextUncheckedLabel = "";
             
-            for(let i=0; i<cbs.length; i++) {
-                if(cbs[i].checked) {
-                    lastCheckedLabel = cbs[i].nextElementSibling.querySelector('span').innerText;
+            for(let i=0; i<checkboxes.length; i++) {
+                if(checkboxes[i].checked) {
+                    lastCheckedLabel = checkboxes[i].nextElementSibling.querySelector('span').innerText;
                 } else {
-                    nextUncheckedLabel = cbs[i].nextElementSibling.querySelector('span').innerText;
+                    nextUncheckedLabel = checkboxes[i].nextElementSibling.querySelector('span').innerText;
                     break;
                 }
             }
@@ -544,6 +542,29 @@
         }
 
         function updateProgress(triggerAutoSave = false) {
+            
+            // 1. Lógica de Bloqueo Secuencial Estricto (Micrometas)
+            for (let i = 1; i < totalSteps; i++) {
+                const previousChecked = checkboxes[i-1].checked;
+                
+                checkboxes[i].disabled = !previousChecked;
+                
+                const parentLabel = checkboxes[i].closest('label');
+                parentLabel.classList.toggle('opacity-50', !previousChecked);
+                parentLabel.classList.toggle('cursor-not-allowed', !previousChecked);
+                
+                if (!previousChecked) {
+                    checkboxes[i].checked = false;
+                }
+            }
+            
+            // Asegurar que el primer paso siempre esté libre
+            if(totalSteps > 0) {
+                checkboxes[0].disabled = false;
+                checkboxes[0].closest('label').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            // 2. Lógica de Acordeones
             const sec1Cbs = Array.from(document.querySelectorAll('#sec1 .step-checkbox'));
             const sec2Cbs = Array.from(document.querySelectorAll('#sec2 .step-checkbox'));
             const sec3Cbs = Array.from(document.querySelectorAll('#sec3 .step-checkbox'));
@@ -551,22 +572,6 @@
             const sec1Done = sec1Cbs.every(cb => cb.checked);
             const sec2Done = sec2Cbs.every(cb => cb.checked);
             const sec3Done = sec3Cbs.every(cb => cb.checked);
-
-            sec2Cbs.forEach(cb => {
-                cb.disabled = !sec1Done;
-                const parentLabel = cb.closest('label');
-                parentLabel.classList.toggle('opacity-50', !sec1Done);
-                parentLabel.classList.toggle('cursor-not-allowed', !sec1Done);
-                if(!sec1Done) cb.checked = false;
-            });
-
-            sec3Cbs.forEach(cb => {
-                cb.disabled = !sec2Done;
-                const parentLabel = cb.closest('label');
-                parentLabel.classList.toggle('opacity-50', !sec2Done);
-                parentLabel.classList.toggle('cursor-not-allowed', !sec2Done);
-                if(!sec2Done) cb.checked = false;
-            });
 
             if (sec1Done && !stateMemory.sec1) {
                 stateMemory.sec1 = true;
@@ -583,6 +588,7 @@
                 setTimeout(() => { toggleSection('sec3', false); }, 200);
             } else if (!sec3Done) { stateMemory.sec3 = false; }
 
+            // 3. Cálculos de Progreso Visual
             const checkedSteps = document.querySelectorAll('.step-checkbox:checked').length;
             const percentage = Math.round((checkedSteps / totalSteps) * 100);
             
@@ -619,7 +625,7 @@
             if (!asesor) return;
 
             let checkboxStates = {};
-            document.querySelectorAll('.step-checkbox').forEach(cb => {
+            checkboxes.forEach(cb => {
                 checkboxStates[cb.id] = cb.checked;
             });
 

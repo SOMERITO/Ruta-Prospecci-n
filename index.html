@@ -1,0 +1,693 @@
+html_content = """<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruta 360 PRO | Portal de Asesores</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#e4f9fa',
+                            100: '#ccf4f6',
+                            200: '#99eaf0',
+                            300: '#66dfe9',
+                            400: '#33d5e3',
+                            500: '#2fcbd1',
+                            600: '#26a2a7',
+                            700: '#1c7a7d',
+                            800: '#135154',
+                            900: '#09292a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active { border-bottom: 2px solid #2fcbd1; color: #09292a; font-weight: bold; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #99eaf0; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2fcbd1; }
+        
+        .accordion-content { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; overflow: hidden; }
+        .accordion-content.hidden-section { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border-top-width: 0;}
+        .accordion-content.open-section { max-height: 800px; opacity: 1; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
+
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 -translate-y-20 opacity-0 transition-all duration-500 bg-brand-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center z-50 pointer-events-none border-b-4 border-brand-500">
+        <i class="fa-solid fa-cloud-arrow-up text-3xl text-brand-400 mr-4"></i>
+        <div>
+            <h4 class="font-bold text-lg leading-tight">Guardado Automático</h4>
+            <p id="toastMessage" class="text-sm text-brand-100 mt-1">Progreso sincronizado en tiempo real.</p>
+        </div>
+    </div>
+
+    <nav class="bg-brand-900 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-route text-2xl text-brand-500"></i>
+                    <span class="font-bold text-xl tracking-wide">Ruta 360 PRO</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="bg-white shadow relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-8" id="tabs">
+                <button onclick="switchTab('asesor')" class="tab-btn active py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
+                    <i class="fa-solid fa-user-check mr-2"></i>Tracker Asesor
+                </button>
+                <button onclick="switchTab('enlaces')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
+                    <i class="fa-solid fa-link mr-2"></i>Enlaces
+                </button>
+                <button onclick="switchTab('jefatura')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
+                    <i class="fa-solid fa-chart-line mr-2"></i>Dashboard Jefatura
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <div id="asesor" class="tab-content active">
+            
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6 border-t-4 border-brand-500 sticky top-0 z-20">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-800 mb-2">1. Identifícate para ver tu ruta:</label>
+                        <select id="asesorName" class="w-full border-2 border-brand-200 rounded-lg shadow-sm focus:border-brand-500 focus:ring-brand-500 p-3 bg-brand-50 font-medium text-gray-800 transition-colors">
+                            <option value="">-- Selecciona tu nombre --</option>
+                            <option value="Dana Nicolls Lizarme Tenorio">Dana Nicolls Lizarme Tenorio</option>
+                            <option value="Doris Carolina Herrera Castro">Doris Carolina Herrera Castro</option>
+                            <option value="Fiorella Eduarda Camayo Quiñones">Fiorella Eduarda Camayo Quiñones</option>
+                            <option value="Jose Luis Zevallos Anfossi">Jose Luis Zevallos Anfossi</option>
+                            <option value="Jose Martin Garcia Segura">Jose Martin Garcia Segura</option>
+                            <option value="Jose Reynaldo Munar Moya">Jose Reynaldo Munar Moya</option>
+                            <option value="Joseph Alexander Cortez Reyes">Joseph Alexander Cortez Reyes</option>
+                            <option value="Judith Roxana Falcon Caja">Judith Roxana Falcon Caja</option>
+                            <option value="Nicolas Alonso Acevedo Rubio">Nicolas Alonso Acevedo Rubio</option>
+                            <option value="Yessenia Cueva Pinto">Yessenia Cueva Pinto</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Actual (Solo Lectura)</label>
+                        <input type="date" id="trackerDate" class="w-full border-gray-300 rounded-lg shadow-sm bg-gray-100 text-gray-500 p-3" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div id="trackerWorkspace" class="transition-opacity duration-500 opacity-0 pointer-events-none">
+                
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6 border border-gray-100">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Progreso de <span id="displayName" class="text-brand-600"></span></h2>
+                    
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div class="flex justify-between items-end mb-2">
+                            <div>
+                                <span class="block text-sm font-semibold text-brand-900">Avance del día: <span id="progressText" class="font-bold text-brand-600">0/14 Pasos (0%)</span></span>
+                                <span class="block text-xs text-brand-700 mt-1">Fase actual: <span id="currentPhaseText" class="font-bold bg-brand-100 px-2 py-1 rounded">1. Marcación</span></span>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3 mb-1 mt-2 shadow-inner">
+                            <div id="progressBar" class="bg-brand-400 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <p id="completionMessage" class="text-xs text-brand-600 font-bold hidden mt-2"><i class="fa-solid fa-circle-check mr-1"></i>¡Ruta completada al 100%!</p>
+                    </div>
+
+                    <div class="text-sm text-gray-500 mb-4 bg-yellow-50 p-3 rounded border border-yellow-200 flex items-start">
+                        <i class="fa-solid fa-circle-info text-yellow-500 mr-2 mt-0.5"></i>
+                        <div>
+                            <strong>Nota:</strong> Debes completar todas las micrometas de una sección para desbloquear la siguiente. 
+                        </div>
+                    </div>
+
+                    <form id="trackerForm" class="space-y-4">
+                        
+                        <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                            <button type="button" onclick="toggleSection('sec1')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
+                                <h3 class="text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-regular fa-clock mr-2 text-brand-500"></i>1. Marcación</h3>
+                                <i class="fa-solid fa-chevron-up transform transition-transform duration-300 text-gray-400" id="icon-sec1"></i>
+                            </button>
+                            <div id="sec1" class="accordion-content open-section bg-white px-4 pb-4 border-t border-gray-200 space-y-2 mt-2">
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step1_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">1.1 Marcación Intranet</span>
+                                        <span class="block text-sm text-gray-500">L-V: 8:00am y 6:00pm | Sáb: 9:00am y 12:00pm</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step1_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">1.2 Ubicación en Grupo WhatsApp</span>
+                                        <span class="block text-sm text-gray-500">Enviar al grupo "RUTAS Y UBICACIONES"</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step1_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">1.3 Foto de Informe de Salida</span>
+                                        <span class="block text-sm text-gray-500">En taxi/van de 7:50 am a 8:00 am máximo</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step1_4" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">1.4 Foto del Cuaderno de Asistencia (8:00am)</span>
+                                        <span class="block text-sm text-gray-500">Evidenciar puntualidad (Sede Centro / Sede Norte)</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                            <button type="button" onclick="toggleSection('sec2')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
+                                <h3 class="text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-map-location-dot mr-2 text-brand-500"></i>2. Prospección en Campo</h3>
+                                <i class="fa-solid fa-chevron-down transform transition-transform duration-300 text-gray-400 rotate-180" id="icon-sec2"></i>
+                            </button>
+                            <div id="sec2" class="accordion-content hidden-section bg-white px-4 pb-4 border-t border-gray-200 space-y-2 mt-2">
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step2_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">2.1 Foto de Actividades en Campo</span>
+                                        <span class="block text-sm text-gray-500">Enviar foto (charla, cita, test) o foto del colegio + status al grupo</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step2_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">2.2 Ficha de Actualización</span>
+                                        <span class="block text-sm text-gray-500">Llevar el día de visita y de la actividad para actualizar población</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step2_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">2.3 Llevar Materiales de Actividades</span>
+                                        <span class="block text-sm text-gray-500">Charla: Lapiceros, fichas, blocks. Feria: Mantel, banners, brochures, etc.</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                            <button type="button" onclick="toggleSection('sec3')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
+                                <h3 class="text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-folder-open mr-2 text-brand-500"></i>3. Gestión Administrativa</h3>
+                                <i class="fa-solid fa-chevron-down transform transition-transform duration-300 text-gray-400 rotate-180" id="icon-sec3"></i>
+                            </button>
+                            <div id="sec3" class="accordion-content hidden-section bg-white px-4 pb-4 border-t border-gray-200 space-y-2 mt-2">
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step3_1" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">3.1 Registro de Actividades en CRM</span>
+                                        <span class="block text-sm text-gray-500">Registrar 1 día antes en Zoho (hora, tipo de actividad)</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step3_2" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">3.1.1 Completar Actividad en CRM</span>
+                                        <span class="block text-sm text-gray-500">Al culminar: marcar como "Completada" o "Cancelada"</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step3_3" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">3.2 Programación de Taxi y Van</span>
+                                        <span class="block text-sm text-gray-500">Enviar 1 día antes (hasta las 6pm). Taxi por tiempo. Van solicitada con anticipación.</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step3_4" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">3.3 Solicitud de Material</span>
+                                        <span class="block text-sm text-gray-500">Solicitar 1 día antes vía formulario</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step3_5" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">3.4 Solicitud para Charlas/Test OV</span>
+                                        <span class="block text-sm text-gray-500">Charlas: 24h ant. (15 días si es nueva). Talleres: 15 días ant. Taxi de psicólogo 1 día antes.</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step3_6" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">3.5 / 3.7 Digitalización y Registro de Fichas</span>
+                                        <span class="block text-sm text-gray-500">Subir a EasyPanel y registrar en Drive mensualmente</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all cursor-pointer">
+                                    <input type="checkbox" id="step3_7" class="step-checkbox mt-1 h-5 w-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                    <div>
+                                        <span class="block font-medium text-gray-800">3.6 Status de Cartera</span>
+                                        <span class="block text-sm text-gray-500">Mantener cartera actualizada en Sharepoint</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded mt-6 shadow-sm">
+                            <h4 class="font-bold text-red-700 mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i> No Negociables</h4>
+                            <ul class="text-sm text-red-800 list-disc list-inside space-y-1">
+                                <li>El taxi para psicólogos desde domicilio es SOLO cuando salen a las 6:30 am, de lo contrario salen de Sede.</li>
+                                <li>Salida de casa de promotores máximo 6:30 am si la actividad empieza a las 7:30 am.</li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="enlaces" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-brand-700">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Enlaces</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <a href="https://intranet.uwiener.edu.pe/sso.asp" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
+                        <div class="p-3 bg-white rounded-full shadow-sm text-brand-600 group-hover:text-brand-500 mr-4">
+                            <i class="fa-solid fa-desktop text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Intranet Wiener</h4>
+                            <p class="text-xs text-gray-500 mt-1">Marcaciones de ingreso y salida.</p>
+                        </div>
+                    </a>
+                    <a href="https://chat.whatsapp.com/lup4kmBMb0yFlyjFhxD2yR?s=cl&p=a&ilr=1" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
+                        <div class="p-3 bg-white rounded-full shadow-sm text-green-500 mr-4">
+                            <i class="fa-brands fa-whatsapp text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">WP: Rutas y Ubicaciones</h4>
+                            <p class="text-xs text-gray-500 mt-1">Enviar ubicación en tiempo real.</p>
+                        </div>
+                    </a>
+                    <a href="https://chat.whatsapp.com/GFuEXtnI0OKEQWEqfLLy45" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
+                        <div class="p-3 bg-white rounded-full shadow-sm text-green-500 mr-4">
+                            <i class="fa-brands fa-whatsapp text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">WP: Informes de Salida</h4>
+                            <p class="text-xs text-gray-500 mt-1">Fotos de salida, cuaderno y campo.</p>
+                        </div>
+                    </a>
+                    <a href="https://crm.zoho.com/crm/unorbertwiener/tab/Dashboards/5985073000906900079" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
+                        <div class="p-3 bg-white rounded-full shadow-sm text-blue-500 mr-4">
+                            <i class="fa-solid fa-chart-pie text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">CRM Zoho</h4>
+                            <p class="text-xs text-gray-500 mt-1">Registro de actividades y estados.</p>
+                        </div>
+                    </a>
+                    <a href="https://portal.directoapp.pe/intranet/" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
+                        <div class="p-3 bg-white rounded-full shadow-sm text-yellow-500 mr-4">
+                            <i class="fa-solid fa-taxi text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Taxi Directo</h4>
+                            <p class="text-xs text-gray-500 mt-1">Reserva de taxis por tiempo.</p>
+                        </div>
+                    </a>
+                    <a href="https://cabify.com/app/order-new" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
+                        <div class="p-3 bg-white rounded-full shadow-sm text-purple-600 mr-4">
+                            <i class="fa-solid fa-car text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Cabify</h4>
+                            <p class="text-xs text-gray-500 mt-1">Alternativa de movilidad.</p>
+                        </div>
+                    </a>
+                    <a href="https://wiener-prospeccion.swnb5v.easypanel.host/login" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
+                        <div class="p-3 bg-white rounded-full shadow-sm text-brand-500 mr-4">
+                            <i class="fa-solid fa-file-arrow-up text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Digitalización Fichas</h4>
+                            <p class="text-xs text-gray-500 mt-1">EasyPanel. Credenciales: Correo + DNI</p>
+                        </div>
+                    </a>
+                    <a href="https://docs.google.com/spreadsheets/d/1pa0c8Wrm3fJwy8nKQZ6e_AeTg90Aw98U/edit?pli=1&gid=1687091713#gid=1687091713" target="_blank" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
+                        <div class="p-3 bg-white rounded-full shadow-sm text-green-600 mr-4">
+                            <i class="fa-solid fa-table-list text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Solicitud Charlas OV</h4>
+                            <p class="text-xs text-gray-500 mt-1">Formatos para docentes/padres/alumnos.</p>
+                        </div>
+                    </a>
+                    <a href="#" class="flex items-start p-4 border border-gray-200 rounded-lg hover:shadow-md hover:border-brand-300 transition-all bg-gray-50 group">
+                        <div class="p-3 bg-white rounded-full shadow-sm text-orange-500 mr-4">
+                            <i class="fa-brands fa-microsoft text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 group-hover:text-brand-600">Forms / Sharepoint</h4>
+                            <p class="text-xs text-gray-500 mt-1">Merchandising, Drive y Cartera (Ver Links)</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="jefatura" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6 border-t-4 border-brand-600">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Dashboard de Seguimiento</h2>
+                        <p class="text-sm text-gray-500 mt-1">Supervisora: <span class="font-semibold text-brand-900">Camila Ortiz</span></p>
+                    </div>
+                </div>
+                
+                <p class="text-gray-500 mb-6">Monitoreo del progreso diario en tiempo real. Visualiza en qué parte de la ruta de prospección se encuentra cada asesor.</p>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asesor</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Progreso General</th>
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fase Actual</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardTableBody" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="emptyDashboardState" class="text-center py-10 text-gray-400 hidden">
+                    <i class="fa-solid fa-inbox text-4xl mb-3 text-brand-200"></i>
+                    <p>No hay registros en el día de hoy aún.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const dateInput = document.getElementById('trackerDate');
+        
+        function getLocalDateString() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        dateInput.value = getLocalDateString();
+        
+        window.addEventListener('focus', () => { 
+            const newDate = getLocalDateString();
+            if (dateInput.value !== newDate) {
+                dateInput.value = newDate;
+                if(document.getElementById('asesorName').value !== "") {
+                    loadUserWorkspace();
+                }
+            }
+        });
+
+        const asesorSelect = document.getElementById('asesorName');
+        const trackerWorkspace = document.getElementById('trackerWorkspace');
+        const displayName = document.getElementById('displayName');
+        let currentToastTimeout;
+
+        asesorSelect.addEventListener('change', loadUserWorkspace);
+
+        function loadUserWorkspace() {
+            const asesor = asesorSelect.value;
+            const date = dateInput.value;
+            
+            if (!asesor) {
+                trackerWorkspace.classList.add('opacity-0', 'pointer-events-none');
+                return;
+            }
+
+            displayName.innerText = asesor;
+            trackerWorkspace.classList.remove('opacity-0', 'pointer-events-none');
+
+            const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
+            const userRecord = data.find(r => r.asesor === asesor && r.date === date);
+
+            document.querySelectorAll('.step-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+
+            stateMemory = { sec1: false, sec2: false, sec3: false };
+            
+            toggleSection('sec1', true);
+            toggleSection('sec2', false);
+            toggleSection('sec3', false);
+
+            if (userRecord && userRecord.checkboxStates) {
+                for (const [id, isChecked] of Object.entries(userRecord.checkboxStates)) {
+                    const cb = document.getElementById(id);
+                    if (cb) cb.checked = isChecked;
+                }
+            }
+
+            updateProgress(false); 
+        }
+
+        function toggleSection(id, forceOpen = null) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+            
+            const isHidden = content.classList.contains('hidden-section');
+            
+            if (forceOpen === true || (forceOpen === null && isHidden)) {
+                content.classList.remove('hidden-section');
+                content.classList.add('open-section');
+                icon.classList.remove('rotate-180', 'text-gray-400');
+                icon.classList.add('text-brand-500'); 
+            } else if (forceOpen === false || (forceOpen === null && !isHidden)) {
+                content.classList.add('hidden-section');
+                content.classList.remove('open-section');
+                icon.classList.add('rotate-180', 'text-gray-400');
+                icon.classList.remove('text-brand-500');
+            }
+        }
+
+        let stateMemory = { sec1: false, sec2: false, sec3: false };
+
+        const checkboxes = document.querySelectorAll('.step-checkbox');
+        const totalSteps = checkboxes.length;
+        
+        checkboxes.forEach(cb => { 
+            cb.addEventListener('change', () => {
+                updateProgress(true);
+            }); 
+        });
+
+        function updateProgress(triggerAutoSave = false) {
+            const sec1Cbs = Array.from(document.querySelectorAll('#sec1 .step-checkbox'));
+            const sec2Cbs = Array.from(document.querySelectorAll('#sec2 .step-checkbox'));
+            const sec3Cbs = Array.from(document.querySelectorAll('#sec3 .step-checkbox'));
+
+            const sec1Done = sec1Cbs.every(cb => cb.checked);
+            const sec2Done = sec2Cbs.every(cb => cb.checked);
+            const sec3Done = sec3Cbs.every(cb => cb.checked);
+
+            sec2Cbs.forEach(cb => {
+                cb.disabled = !sec1Done;
+                const parent = cb.closest('label');
+                parent.classList.toggle('opacity-50', !sec1Done);
+                parent.classList.toggle('cursor-not-allowed', !sec1Done);
+                if(!sec1Done) cb.checked = false;
+            });
+
+            sec3Cbs.forEach(cb => {
+                cb.disabled = !sec2Done;
+                const parent = cb.closest('label');
+                parent.classList.toggle('opacity-50', !sec2Done);
+                parent.classList.toggle('cursor-not-allowed', !sec2Done);
+                if(!sec2Done) cb.checked = false;
+            });
+
+            if (sec1Done && !stateMemory.sec1) {
+                stateMemory.sec1 = true;
+                setTimeout(() => { toggleSection('sec1', false); toggleSection('sec2', true); }, 200);
+            } else if (!sec1Done) { stateMemory.sec1 = false; }
+
+            if (sec2Done && !stateMemory.sec2) {
+                stateMemory.sec2 = true;
+                setTimeout(() => { toggleSection('sec2', false); toggleSection('sec3', true); }, 200);
+            } else if (!sec2Done) { stateMemory.sec2 = false; }
+            
+            if (sec3Done && !stateMemory.sec3) {
+                stateMemory.sec3 = true;
+                setTimeout(() => { toggleSection('sec3', false); }, 200);
+            } else if (!sec3Done) { stateMemory.sec3 = false; }
+
+            const checkedSteps = document.querySelectorAll('.step-checkbox:checked').length;
+            const percentage = Math.round((checkedSteps / totalSteps) * 100);
+            
+            document.getElementById('progressText').innerText = `${checkedSteps}/${totalSteps} Pasos (${percentage}%)`;
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+
+            let phaseName = "1. Marcación";
+            if (sec3Done) {
+                phaseName = "Ruta Completada";
+                document.getElementById('completionMessage').classList.remove('hidden');
+                document.getElementById('progressBar').classList.replace('bg-brand-400', 'bg-brand-500');
+            } else {
+                if (sec2Done) phaseName = "3. Gestión Administrativa";
+                else if (sec1Done) phaseName = "2. Prospección en Campo";
+                
+                document.getElementById('completionMessage').classList.add('hidden');
+                document.getElementById('progressBar').classList.replace('bg-brand-500', 'bg-brand-400');
+            }
+            
+            document.getElementById('currentPhaseText').innerText = phaseName;
+            
+            if(triggerAutoSave) {
+                autoSaveRecord(checkedSteps, percentage, phaseName);
+            }
+
+            return phaseName;
+        }
+
+        function autoSaveRecord(completedCount, percentage, phaseName) {
+            const asesor = asesorSelect.value;
+            const date = dateInput.value;
+            if (!asesor) return;
+
+            let checkboxStates = {};
+            document.querySelectorAll('.step-checkbox').forEach(cb => {
+                checkboxStates[cb.id] = cb.checked;
+            });
+
+            const newRecord = {
+                id: Date.now(),
+                asesor: asesor,
+                date: date,
+                completed: completedCount,
+                total: totalSteps,
+                percentage: percentage,
+                phase: phaseName,
+                checkboxStates: checkboxStates
+            };
+
+            let data = JSON.parse(localStorage.getItem('trackerData') || '[]');
+            
+            const existingIndex = data.findIndex(r => r.asesor === asesor && r.date === date);
+            if (existingIndex >= 0) {
+                data[existingIndex] = newRecord;
+            } else {
+                data.push(newRecord);
+            }
+
+            localStorage.setItem('trackerData', JSON.stringify(data));
+            
+            if(document.getElementById('jefatura').classList.contains('active')) {
+                renderDashboard();
+            }
+
+            showAutoSaveToast();
+        }
+
+        function showAutoSaveToast() {
+            const toast = document.getElementById('toast');
+            clearTimeout(currentToastTimeout);
+            
+            toast.classList.remove('-translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-5', 'opacity-100');
+
+            currentToastTimeout = setTimeout(() => {
+                toast.classList.remove('translate-y-5', 'opacity-100');
+                toast.classList.add('-translate-y-20', 'opacity-0');
+            }, 2000);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            
+            const btnMap = { 'asesor': 0, 'enlaces': 1, 'jefatura': 2 };
+            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
+
+            if(tabId === 'jefatura') { renderDashboard(); }
+        }
+
+        function renderDashboard() {
+            const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
+            const tbody = document.getElementById('dashboardTableBody');
+            const emptyState = document.getElementById('emptyDashboardState');
+            const tableParent = tbody.parentElement;
+            
+            const today = dateInput.value;
+            const todayData = data.filter(r => r.date === today);
+
+            tbody.innerHTML = '';
+
+            if (todayData.length === 0) {
+                emptyState.classList.remove('hidden');
+                tableParent.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tableParent.classList.remove('hidden');
+
+            todayData.sort((a, b) => b.percentage - a.percentage);
+
+            const getPhaseColorClass = (phaseName) => {
+                switch(phaseName) {
+                    case "1. Marcación": return "bg-blue-100 text-blue-800 border-blue-200";
+                    case "2. Prospección en Campo": return "bg-purple-100 text-purple-800 border-purple-200";
+                    case "3. Gestión Administrativa": return "bg-orange-100 text-orange-800 border-orange-200";
+                    case "Ruta Completada": return "bg-green-100 text-green-800 border-green-200";
+                    default: return "bg-gray-100 text-gray-800 border-gray-200";
+                }
+            };
+
+            todayData.forEach(record => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+                
+                const phaseColor = getPhaseColorClass(record.phase);
+                const statusHtml = `<span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full shadow-sm border ${phaseColor}">${record.phase}</span>`;
+
+                const progressHtml = `
+                    <div class="flex items-center justify-center">
+                        <span class="mr-2 text-sm text-gray-700 font-semibold w-12 text-right">${record.percentage}%</span>
+                        <div class="w-24 bg-gray-200 rounded-full h-2">
+                            <div class="bg-brand-500 h-2 rounded-full shadow-inner" style="width: ${record.percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${record.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${record.asesor}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">${progressHtml}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">${statusHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+    </script>
+</body>
+</html>
+"""
+
+with open("Tracker_Ruta_Prospeccion.html", "w", encoding="utf-8") as file:
+    file.write(html_content)
+
+print("HTML file updated to revert color settings, remove specific text, and update title.")

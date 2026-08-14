@@ -384,16 +384,29 @@
                             </div>
                         </div>
 
+                        <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded mt-6 shadow-sm">
+                            <h4 class="font-bold text-red-700 mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i> No Negociables</h4>
+                            <ul class="text-xs sm:text-sm text-red-800 list-disc list-inside space-y-1">
+                                <li>Salida de casa de promotores máximo 6:30 am si la actividad empieza a las 7:30 am.</li>
+                            </ul>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
 
-        <div id="jefatura" class="tab-content">
+        <div id="jefatura" class="tab-content relative">
+            
+            <div id="dashboardSyncOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-[1px] z-50 hidden flex-col items-center justify-center rounded-xl transition-all h-full w-full">
+                <i class="fa-solid fa-satellite-dish fa-spin text-4xl text-brand-500 mb-3"></i>
+                <h3 class="text-lg font-bold text-brand-900 tracking-wide">Actualización en camino...</h3>
+                <p class="text-brand-600 text-sm font-medium mt-1 animate-pulse">Sincronizando datos</p>
+            </div>
+
             <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-2 sm:space-y-0">
                     <div>
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Dashboard de Seguimiento</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i>Dashboard de Seguimiento</h2>
                     </div>
                 </div>
 
@@ -422,13 +435,19 @@
         <!-- ================= TAB: AVANCE ================= -->
         <div id="avance" class="tab-content">
             <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600 relative" id="avanceCaptureContainer">
+                
+                <div id="avanceSyncOverlay" class="absolute inset-0 bg-white/90 backdrop-blur-[2px] z-50 hidden flex-col items-center justify-center rounded-xl transition-all">
+                    <i class="fa-solid fa-satellite-dish fa-spin text-5xl text-brand-500 mb-4"></i>
+                    <h3 class="text-xl font-extrabold text-brand-900 tracking-wide">Actualización en camino...</h3>
+                    <p class="text-brand-600 font-medium mt-2 animate-pulse">Sincronizando datos en tiempo real</p>
+                </div>
+
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
                     <div>
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Métricas de Avance</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800"><i class="fa-solid fa-chart-pie text-brand-500 mr-2"></i>Métricas de Avance</h2>
                     </div>
                     
-                    <!-- Botón animado de captura -->
-                    <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white h-10 w-10 rounded-full text-lg shadow-md transition-colors flex items-center justify-center animate-bounce shrink-0" title="Copiar Imagen">
+                    <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white h-10 w-10 rounded-full text-lg shadow-md transition-all flex items-center justify-center hover:animate-bounce shrink-0" title="Copiar Imagen">
                         <i class="fa-solid fa-camera"></i>
                     </button>
                 </div>
@@ -450,19 +469,18 @@
                         </tbody>
                     </table>
                 </div>
-
-                <!-- Loading Overlay para Avance -->
-                <div id="avanceSyncOverlay" class="absolute inset-0 bg-white/90 backdrop-blur-[2px] z-50 hidden flex-col items-center justify-center rounded-xl transition-all">
-                    <i class="fa-solid fa-satellite-dish fa-spin text-5xl text-brand-500 mb-4"></i>
-                    <h3 class="text-xl font-extrabold text-brand-900 tracking-wide">Actualización en camino...</h3>
-                    <p class="text-brand-600 font-medium mt-2 animate-pulse">Sincronizando datos en tiempo real</p>
-                </div>
             </div>
         </div>
 
     </main>
 
     <script>
+        const asesoresList = [
+            "Dana Nicolls Lizarme Tenorio", "Doris Carolina Herrera Castro", "Fiorella Eduarda Camayo Quiñones",
+            "Jose Luis Zevallos Anfossi", "Jose Martin Garcia Segura", "Jose Reynaldo Munar Moya",
+            "Joseph Alexander Cortez Reyes", "Judith Roxana Falcon Caja", "Yessenia Cueva Pinto"
+        ];
+
         // Fechas automáticas
         const dateInput = document.getElementById('trackerDate');
         
@@ -679,31 +697,36 @@
 
             localStorage.setItem('trackerData', JSON.stringify(data));
             
-            if(document.getElementById('jefatura').classList.contains('active')) renderDashboard();
+            // Si el jefe está viendo el dashboard, actualizarlo de fondo
+            if(document.getElementById('jefatura').classList.contains('active')) {
+                renderDashboard();
+            }
         }
 
         // Lógica del Dashboard Jefatura
         function renderDashboard() {
             const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
             const tbody = document.getElementById('dashboardTableBody');
-            const emptyState = document.getElementById('emptyDashboardState');
-            const tableParent = tbody.parentElement;
             
             const today = dateInput.value;
             const todayData = data.filter(r => r.date === today);
 
             tbody.innerHTML = '';
 
-            if (todayData.length === 0) {
-                emptyState.classList.remove('hidden');
-                tableParent.classList.add('hidden');
-                return;
-            }
+            // Generar la lista completa para que aparezcan todos los asesores, incluso los que no marcaron nada
+            const fullDashboardData = asesoresList.map(asesorName => {
+                const existing = todayData.find(r => r.asesor === asesorName);
+                if (existing) return existing;
+                return {
+                    asesor: asesorName,
+                    date: today,
+                    percentage: 0,
+                    phase: "Sin Iniciar",
+                    subphase: "Esperando inicio"
+                };
+            });
 
-            emptyState.classList.add('hidden');
-            tableParent.classList.remove('hidden');
-
-            todayData.sort((a, b) => b.percentage - a.percentage);
+            fullDashboardData.sort((a, b) => b.percentage - a.percentage);
 
             const getPhaseColorClass = (phaseName) => {
                 switch(phaseName) {
@@ -711,7 +734,7 @@
                     case "2. Prospección en Campo": return "bg-purple-100 text-purple-800 border-purple-200";
                     case "3. Gestión Administrativa": return "bg-orange-100 text-orange-800 border-orange-200";
                     case "Ruta Completada": return "bg-green-100 text-green-800 border-green-200";
-                    default: return "bg-gray-100 text-gray-800 border-gray-200";
+                    default: return "bg-gray-100 text-gray-500 border-gray-200";
                 }
             };
             
@@ -721,11 +744,11 @@
                     case "2. Prospección en Campo": return "text-purple-600";
                     case "3. Gestión Administrativa": return "text-orange-600";
                     case "Ruta Completada": return "text-green-600";
-                    default: return "text-gray-600";
+                    default: return "text-gray-500";
                 }
             };
 
-            todayData.forEach(record => {
+            fullDashboardData.forEach(record => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50 transition-colors";
                 
@@ -775,7 +798,7 @@
         ];
 
         function loadAvanceData() {
-            let data = JSON.parse(localStorage.getItem('avanceMetricsV3'));
+            let data = JSON.parse(localStorage.getItem('avanceMetricsV4'));
             if (!data || data.length === 0) {
                 data = JSON.parse(JSON.stringify(defaultAvanceData));
             }
@@ -840,7 +863,7 @@
         }
 
         function updateAvance(idx, field, val) {
-            // Activar pantalla de carga visual
+            // Activar pantalla de carga visual (falsa solicitud de red)
             const overlay = document.getElementById('avanceSyncOverlay');
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
@@ -848,7 +871,7 @@
             setTimeout(() => {
                 let data = loadAvanceData();
                 data[idx][field] = Number(val) || 0;
-                localStorage.setItem('avanceMetricsV3', JSON.stringify(data));
+                localStorage.setItem('avanceMetricsV4', JSON.stringify(data));
                 renderAvance();
                 
                 // Ocultar pantalla de carga
@@ -857,9 +880,11 @@
             }, 600);
         }
 
-        // Detectar cambios realizados en otra pestaña
+        // ==========================================
+        // EVENTOS DE SINCRONIZACIÓN EN TIEMPO REAL (STORAGE)
+        // ==========================================
         window.addEventListener('storage', (e) => {
-            if (e.key === 'avanceMetricsV3') {
+            if (e.key === 'avanceMetricsV4') {
                 if(document.getElementById('avance').classList.contains('active')) {
                     const overlay = document.getElementById('avanceSyncOverlay');
                     overlay.classList.remove('hidden');
@@ -870,8 +895,17 @@
                         overlay.classList.remove('flex');
                     }, 600);
                 }
-            } else if (e.key === 'trackerData' && document.getElementById('jefatura').classList.contains('active')) {
-                renderDashboard();
+            } else if (e.key === 'trackerData') {
+                if (document.getElementById('jefatura').classList.contains('active')) {
+                    const overlay = document.getElementById('dashboardSyncOverlay');
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                    setTimeout(() => {
+                        renderDashboard();
+                        overlay.classList.add('hidden');
+                        overlay.classList.remove('flex');
+                    }, 600);
+                }
             }
         });
 
@@ -883,13 +917,19 @@
             
             // Estado de carga del botón
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btn.classList.remove('animate-bounce');
+            btn.classList.remove('hover:animate-bounce');
             btn.disabled = true;
 
             const container = document.getElementById('avanceCaptureContainer');
             btn.style.opacity = '0'; // Ocultar el botón para que no salga en la foto
             
             try {
+                // FIX para Inputs: forzar el valor al atributo HTML para que html2canvas los detecte bien
+                const inputs = container.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.setAttribute('value', input.value);
+                });
+
                 // Tomar captura
                 const canvas = await html2canvas(container, {
                     scale: 2, // Alta calidad
@@ -913,7 +953,7 @@
                             btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
                             btn.classList.replace('bg-emerald-500', 'bg-brand-500');
                             btn.classList.replace('hover:bg-emerald-600', 'hover:bg-brand-600');
-                            btn.classList.add('animate-bounce');
+                            btn.classList.add('hover:animate-bounce');
                             btn.disabled = false;
                         }, 2000);
                         
@@ -921,7 +961,7 @@
                         console.error("Error al copiar al portapapeles: ", err);
                         alert("Tu navegador no soporta el copiado directo. Intenta usar otro navegador como Edge o Safari.");
                         btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
-                        btn.classList.add('animate-bounce');
+                        btn.classList.add('hover:animate-bounce');
                         btn.disabled = false;
                     }
                 }, "image/png");
@@ -929,7 +969,7 @@
                 console.error("Error al generar imagen: ", err);
                 btn.style.opacity = '1';
                 btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
-                btn.classList.add('animate-bounce');
+                btn.classList.add('hover:animate-bounce');
                 btn.disabled = false;
             }
         }

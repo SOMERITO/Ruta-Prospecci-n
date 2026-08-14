@@ -44,6 +44,12 @@
         .accordion-content { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; overflow: hidden; }
         .accordion-content.hidden-section { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border-top-width: 0;}
         .accordion-content.open-section { max-height: 1200px; opacity: 1; }
+        
+        /* Ocultar las flechitas en los campos de números para que se vea más limpio */
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; margin: 0; 
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
@@ -75,6 +81,9 @@
                 </button>
                 <button onclick="switchTab('jefatura')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
                     <i class="fa-solid fa-chart-line mr-2"></i>Dashboard Jefatura
+                </button>
+                <button onclick="switchTab('avance')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
+                    <i class="fa-solid fa-ranking-star mr-2"></i>Avance
                 </button>
             </div>
         </div>
@@ -357,7 +366,7 @@
                                         </div>
                                     </label>
                                     <div class="flex space-x-2 ml-1 shrink-0">
-                                        <a href="https://forms.microsoft.com/pages/responsepage.aspx?id=E7z54CaJykKzOFKgpp0gLO73JBC3PiVMo2kI-EIRlTpUQ1gzSUo4Q1hGSURHNlRBNlNOQ0oxQUhYWi4u&route=shorturl" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-orange-50 hover:border-orange-300 transition-colors text-orange-500" title="Registro Fichas">
+                                        <a href="https://forms.microsoft.com/pages/responsepage.aspx?id=E7z54CaJykKzOFKgpp0gLO73JBC3PiVMo2kI-EIRlTpUQ1gzSUo4Q1hGSURHNlRBNlNOQ0oxQUhYWi4u&route=shorturl" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-orange-50 hover:border-orange-300 transition-colors text-orange-500" title="Registro Fichas Actualización">
                                             <i class="fa-brands fa-microsoft"></i>
                                         </a>
                                     </div>
@@ -384,7 +393,6 @@
                         <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded mt-6 shadow-sm">
                             <h4 class="font-bold text-red-700 mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i> No Negociables</h4>
                             <ul class="text-xs sm:text-sm text-red-800 list-disc list-inside space-y-1">
-                                <li>El taxi para psicólogos desde domicilio es SOLO cuando salen a las 6:30 am, de lo contrario salen de Sede.</li>
                                 <li>Salida de casa de promotores máximo 6:30 am si la actividad empieza a las 7:30 am.</li>
                             </ul>
                         </div>
@@ -393,6 +401,7 @@
             </div>
         </div>
 
+        <!-- ================= TAB: JEFATURA ================= -->
         <div id="jefatura" class="tab-content">
             <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-2 sm:space-y-0">
@@ -426,9 +435,43 @@
             </div>
         </div>
 
+        <!-- ================= TAB: AVANCE ================= -->
+        <div id="avance" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-2 sm:space-y-0">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Métricas de Avance</h2>
+                        <p class="text-sm text-gray-500 mt-1">Supervisora: <span class="font-semibold text-brand-900">Camila Ortiz</span></p>
+                    </div>
+                </div>
+                
+                <p class="text-sm sm:text-base text-gray-500 mb-6">Ingresa los datos manualmente en las columnas "Logro" y "Meta". Los porcentajes se calcularán automáticamente.</p>
+
+                <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asesor</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Meta</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Avance</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">%</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Proyección</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Logro Final</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">% Final</th>
+                            </tr>
+                        </thead>
+                        <tbody id="avanceTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <script>
+        // Fechas automáticas
         const dateInput = document.getElementById('trackerDate');
         
         function getLocalDateString() {
@@ -458,12 +501,39 @@
             }
         });
 
+        // Lógica de Pestañas
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            
+            const btnMap = { 'asesor': 0, 'jefatura': 1, 'avance': 2 };
+            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
+
+            if(tabId === 'jefatura') { 
+                renderDashboard(); 
+            } else if(tabId === 'avance') {
+                renderAvance();
+            }
+        }
+
+        // Lógica del Tracker
         const asesorSelect = document.getElementById('asesorName');
         const trackerWorkspace = document.getElementById('trackerWorkspace');
         const displayName = document.getElementById('displayName');
         let currentToastTimeout;
+        let stateMemory = { sec1: false, sec2: false, sec3: false };
+        const checkboxes = Array.from(document.querySelectorAll('.step-checkbox'));
+        const totalSteps = checkboxes.length;
 
         asesorSelect.addEventListener('change', loadUserWorkspace);
+
+        checkboxes.forEach(cb => { 
+            cb.addEventListener('change', () => {
+                updateProgress(true);
+            }); 
+        });
 
         function loadUserWorkspace() {
             const asesor = asesorSelect.value;
@@ -480,10 +550,7 @@
             const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
             const userRecord = data.find(r => r.asesor === asesor && r.date === date);
 
-            document.querySelectorAll('.step-checkbox').forEach(cb => {
-                cb.checked = false;
-            });
-
+            checkboxes.forEach(cb => { cb.checked = false; });
             stateMemory = { sec1: false, sec2: false, sec3: false };
             
             toggleSection('sec1', true);
@@ -503,7 +570,6 @@
         function toggleSection(id, forceOpen = null) {
             const content = document.getElementById(id);
             const icon = document.getElementById('icon-' + id);
-            
             const isHidden = content.classList.contains('hidden-section');
             
             if (forceOpen === true || (forceOpen === null && isHidden)) {
@@ -519,17 +585,6 @@
             }
         }
 
-        let stateMemory = { sec1: false, sec2: false, sec3: false };
-
-        const checkboxes = Array.from(document.querySelectorAll('.step-checkbox'));
-        const totalSteps = checkboxes.length;
-        
-        checkboxes.forEach(cb => { 
-            cb.addEventListener('change', () => {
-                updateProgress(true);
-            }); 
-        });
-
         function getActiveSubphaseLabel() {
             let lastCheckedLabel = "";
             let nextUncheckedLabel = "";
@@ -542,38 +597,25 @@
                     break;
                 }
             }
-            
-            if(!nextUncheckedLabel && lastCheckedLabel) {
-                return "Todas completadas";
-            }
-            
+            if(!nextUncheckedLabel && lastCheckedLabel) return "Todas completadas";
             return nextUncheckedLabel || "Esperando inicio";
         }
 
         function updateProgress(triggerAutoSave = false) {
-            
-            // 1. Lógica de Bloqueo Secuencial Estricto (Micrometas)
             for (let i = 1; i < totalSteps; i++) {
                 const previousChecked = checkboxes[i-1].checked;
-                
                 checkboxes[i].disabled = !previousChecked;
-                
                 const parentLabel = checkboxes[i].closest('label');
                 parentLabel.classList.toggle('opacity-50', !previousChecked);
                 parentLabel.classList.toggle('cursor-not-allowed', !previousChecked);
-                
-                if (!previousChecked) {
-                    checkboxes[i].checked = false;
-                }
+                if (!previousChecked) checkboxes[i].checked = false;
             }
             
-            // Asegurar que el primer paso siempre esté libre
             if(totalSteps > 0) {
                 checkboxes[0].disabled = false;
                 checkboxes[0].closest('label').classList.remove('opacity-50', 'cursor-not-allowed');
             }
 
-            // 2. Lógica de Acordeones
             const sec1Cbs = Array.from(document.querySelectorAll('#sec1 .step-checkbox'));
             const sec2Cbs = Array.from(document.querySelectorAll('#sec2 .step-checkbox'));
             const sec3Cbs = Array.from(document.querySelectorAll('#sec3 .step-checkbox'));
@@ -597,7 +639,6 @@
                 setTimeout(() => { toggleSection('sec3', false); }, 200);
             } else if (!sec3Done) { stateMemory.sec3 = false; }
 
-            // 3. Cálculos de Progreso Visual
             const checkedSteps = document.querySelectorAll('.step-checkbox:checked').length;
             const percentage = Math.round((checkedSteps / totalSteps) * 100);
             
@@ -616,14 +657,11 @@
                 document.getElementById('completionMessage').classList.add('hidden');
                 document.getElementById('progressBar').classList.replace('bg-brand-500', 'bg-brand-400');
             }
-            
             document.getElementById('currentPhaseText').innerText = phaseName;
             
             const subphaseName = getActiveSubphaseLabel();
             
-            if(triggerAutoSave) {
-                autoSaveRecord(checkedSteps, percentage, phaseName, subphaseName);
-            }
+            if(triggerAutoSave) autoSaveRecord(checkedSteps, percentage, phaseName, subphaseName);
 
             return {phase: phaseName, subphase: subphaseName};
         }
@@ -634,65 +672,38 @@
             if (!asesor) return;
 
             let checkboxStates = {};
-            checkboxes.forEach(cb => {
-                checkboxStates[cb.id] = cb.checked;
-            });
+            checkboxes.forEach(cb => { checkboxStates[cb.id] = cb.checked; });
 
             const newRecord = {
-                id: Date.now(),
-                asesor: asesor,
-                date: date,
-                completed: completedCount,
-                total: totalSteps,
-                percentage: percentage,
-                phase: phaseName,
-                subphase: subphaseName,
-                checkboxStates: checkboxStates
+                id: Date.now(), asesor: asesor, date: date, completed: completedCount,
+                total: totalSteps, percentage: percentage, phase: phaseName,
+                subphase: subphaseName, checkboxStates: checkboxStates
             };
 
             let data = JSON.parse(localStorage.getItem('trackerData') || '[]');
-            
             const existingIndex = data.findIndex(r => r.asesor === asesor && r.date === date);
-            if (existingIndex >= 0) {
-                data[existingIndex] = newRecord;
-            } else {
-                data.push(newRecord);
-            }
+            
+            if (existingIndex >= 0) data[existingIndex] = newRecord;
+            else data.push(newRecord);
 
             localStorage.setItem('trackerData', JSON.stringify(data));
             
-            if(document.getElementById('jefatura').classList.contains('active')) {
-                renderDashboard();
-            }
-
+            if(document.getElementById('jefatura').classList.contains('active')) renderDashboard();
             showAutoSaveToast();
         }
 
         function showAutoSaveToast() {
             const toast = document.getElementById('toast');
             clearTimeout(currentToastTimeout);
-            
             toast.classList.remove('-translate-y-20', 'opacity-0');
             toast.classList.add('translate-y-5', 'opacity-100');
-
             currentToastTimeout = setTimeout(() => {
                 toast.classList.remove('translate-y-5', 'opacity-100');
                 toast.classList.add('-translate-y-20', 'opacity-0');
             }, 2000);
         }
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            
-            const btnMap = { 'asesor': 0, 'jefatura': 1 };
-            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
-
-            if(tabId === 'jefatura') { renderDashboard(); }
-        }
-
+        // Lógica del Dashboard Jefatura
         function renderDashboard() {
             const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
             const tbody = document.getElementById('dashboardTableBody');
@@ -743,7 +754,6 @@
                 const subphaseColorText = getSubphaseColorClass(record.phase);
                 
                 let phaseHtml = `<span class="px-3 sm:px-4 py-1 sm:py-2 inline-flex text-xs sm:text-sm font-bold rounded-full shadow-sm border ${phaseColor} whitespace-nowrap">${record.phase}</span>`;
-                
                 if(record.subphase && record.phase !== "Ruta Completada") {
                     phaseHtml += `<div class="mt-2 text-[10px] sm:text-xs font-semibold ${subphaseColorText} tracking-wide text-center"><i class="fa-solid fa-chevron-right text-[8px] sm:text-[10px] mr-1 opacity-70"></i>${record.subphase}</div>`;
                 }
@@ -757,10 +767,8 @@
                     </div>
                 `;
 
-                const formattedDate = formatDateToDMY(record.date);
-
                 tr.innerHTML = `
-                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">${formattedDate}</td>
+                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">${formatDateToDMY(record.date)}</td>
                     <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-gray-900">${record.asesor}</td>
                     <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-center">${progressHtml}</td>
                     <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-center flex flex-col items-center justify-center min-h-[4rem]">${phaseHtml}</td>
@@ -769,6 +777,96 @@
             });
         }
 
+        // ==========================================
+        // LÓGICA DE LA PESTAÑA AVANCE
+        // ==========================================
+
+        const defaultAvanceData = [
+            { asesor: "Dana Nicolls Lizarme Tenorio", meta: 721, avance: 665, proyeccion: 0 },
+            { asesor: "Doris Carolina Herrera Castro", meta: 721, avance: 589, proyeccion: 0 },
+            { asesor: "Fiorella Eduarda Camayo Quiñones", meta: 721, avance: 713, proyeccion: 0 },
+            { asesor: "Jose Luis Zevallos Anfossi", meta: 670, avance: 0, proyeccion: 0 },
+            { asesor: "Jose Martin Garcia Segura", meta: 670, avance: 616, proyeccion: 0 },
+            { asesor: "Jose Reynaldo Munar Moya", meta: 670, avance: 613, proyeccion: 0 },
+            { asesor: "Joseph Alexander Cortez Reyes", meta: 670, avance: 422, proyeccion: 0 },
+            { asesor: "Judith Roxana Falcon Caja", meta: 670, avance: 553, proyeccion: 0 },
+            { asesor: "Yessenia Cueva Pinto", meta: 670, avance: 0, proyeccion: 0 }
+        ];
+
+        function loadAvanceData() {
+            let data = JSON.parse(localStorage.getItem('avanceMetricsV2'));
+            if (!data || data.length === 0) {
+                data = JSON.parse(JSON.stringify(defaultAvanceData));
+            }
+            return data;
+        }
+
+        function getAvanceBadgeColor(pct) {
+            if (pct <= 79) return "bg-red-100 text-red-800 border-red-200"; 
+            if (pct <= 99) return "bg-amber-100 text-amber-800 border-amber-200";
+            return "bg-emerald-100 text-emerald-800 border-emerald-200"; 
+        }
+
+        function renderAvance() {
+            const data = loadAvanceData();
+            const tbody = document.getElementById('avanceTableBody');
+            tbody.innerHTML = '';
+            
+            let totalMeta = 0;
+            let totalAvance = 0;
+            let totalProyeccion = 0;
+            
+            data.forEach((row, idx) => {
+                totalMeta += row.meta;
+                totalAvance += row.avance;
+                totalProyeccion += row.proyeccion;
+                
+                let pct1 = row.meta > 0 ? Math.round((row.avance / row.meta) * 100) : 0;
+                let logroFinal = row.avance + row.proyeccion;
+                let pct2 = row.meta > 0 ? Math.round((logroFinal / row.meta) * 100) : 0;
+                
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-4 py-3 text-xs sm:text-sm font-bold text-gray-900 whitespace-nowrap">${row.asesor}</td>
+                    <td class="px-2 py-3 text-center"><input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500" value="${row.meta}" onchange="updateAvance(${idx}, 'meta', this.value)"></td>
+                    <td class="px-2 py-3 text-center"><input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500" value="${row.avance}" onchange="updateAvance(${idx}, 'avance', this.value)"></td>
+                    <td class="px-2 sm:px-4 py-3 text-center"><span class="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full border ${getAvanceBadgeColor(pct1)}">${pct1}%</span></td>
+                    <td class="px-2 py-3 text-center"><input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500" value="${row.proyeccion}" onchange="updateAvance(${idx}, 'proyeccion', this.value)"></td>
+                    <td class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-bold text-gray-700">${logroFinal}</td>
+                    <td class="px-2 sm:px-4 py-3 text-center"><span class="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full border ${getAvanceBadgeColor(pct2)}">${pct2}%</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Add "Logro Equipo" Row
+            let totalLogroFinal = totalAvance + totalProyeccion;
+            let totalPct1 = totalMeta > 0 ? Math.round((totalAvance / totalMeta) * 100) : 0;
+            let totalPct2 = totalMeta > 0 ? Math.round((totalLogroFinal / totalMeta) * 100) : 0;
+            
+            let trTotal = document.createElement('tr');
+            trTotal.className = "bg-brand-50 border-t-2 border-brand-200";
+            trTotal.innerHTML = `
+                <td class="px-4 py-4 text-sm font-bold text-brand-900 whitespace-nowrap uppercase">Logro Equipo</td>
+                <td class="px-2 py-4 text-center text-sm font-bold text-gray-800">${totalMeta}</td>
+                <td class="px-2 py-4 text-center text-sm font-bold text-gray-800">${totalAvance}</td>
+                <td class="px-2 sm:px-4 py-4 text-center"><span class="px-3 py-1 text-xs font-bold rounded-full border ${getAvanceBadgeColor(totalPct1)}">${totalPct1}%</span></td>
+                <td class="px-2 py-4 text-center text-sm font-bold text-gray-800">${totalProyeccion}</td>
+                <td class="px-2 sm:px-4 py-4 text-center text-sm font-bold text-brand-700">${totalLogroFinal}</td>
+                <td class="px-2 sm:px-4 py-4 text-center"><span class="px-3 py-1 text-xs font-bold rounded-full border ${getAvanceBadgeColor(totalPct2)}">${totalPct2}%</span></td>
+            `;
+            tbody.appendChild(trTotal);
+        }
+
+        function updateAvance(idx, field, val) {
+            let data = loadAvanceData();
+            data[idx][field] = Number(val) || 0;
+            localStorage.setItem('avanceMetricsV2', JSON.stringify(data));
+            renderAvance();
+        }
+
+        // Initialize progress logic
+        updateProgress();
     </script>
 </body>
 </html>

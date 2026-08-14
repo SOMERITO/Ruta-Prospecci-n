@@ -395,6 +395,7 @@
             </div>
         </div>
 
+        <!-- ================= TAB: JEFATURA ================= -->
         <div id="jefatura" class="tab-content relative">
             
             <div id="dashboardSyncOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-[1px] z-50 hidden flex-col items-center justify-center rounded-xl transition-all h-full w-full">
@@ -406,7 +407,7 @@
             <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-2 sm:space-y-0">
                     <div>
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i>Dashboard de Seguimiento</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Dashboard de Seguimiento</h2>
                     </div>
                 </div>
 
@@ -444,10 +445,10 @@
 
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
                     <div>
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800"><i class="fa-solid fa-chart-pie text-brand-500 mr-2"></i>Métricas de Avance</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Métricas de Avance</h2>
                     </div>
                     
-                    <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white h-10 w-10 rounded-full text-lg shadow-md transition-all flex items-center justify-center hover:animate-bounce shrink-0" title="Copiar Imagen">
+                    <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white h-10 w-10 rounded-full text-lg shadow-md transition-colors flex items-center justify-center shrink-0" title="Copiar Imagen">
                         <i class="fa-solid fa-camera"></i>
                     </button>
                 </div>
@@ -798,7 +799,7 @@
         ];
 
         function loadAvanceData() {
-            let data = JSON.parse(localStorage.getItem('avanceMetricsV4'));
+            let data = JSON.parse(localStorage.getItem('avanceMetricsV5'));
             if (!data || data.length === 0) {
                 data = JSON.parse(JSON.stringify(defaultAvanceData));
             }
@@ -871,7 +872,7 @@
             setTimeout(() => {
                 let data = loadAvanceData();
                 data[idx][field] = Number(val) || 0;
-                localStorage.setItem('avanceMetricsV4', JSON.stringify(data));
+                localStorage.setItem('avanceMetricsV5', JSON.stringify(data));
                 renderAvance();
                 
                 // Ocultar pantalla de carga
@@ -884,7 +885,7 @@
         // EVENTOS DE SINCRONIZACIÓN EN TIEMPO REAL (STORAGE)
         // ==========================================
         window.addEventListener('storage', (e) => {
-            if (e.key === 'avanceMetricsV4') {
+            if (e.key === 'avanceMetricsV5') {
                 if(document.getElementById('avance').classList.contains('active')) {
                     const overlay = document.getElementById('avanceSyncOverlay');
                     overlay.classList.remove('hidden');
@@ -917,24 +918,42 @@
             
             // Estado de carga del botón
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btn.classList.remove('hover:animate-bounce');
             btn.disabled = true;
 
             const container = document.getElementById('avanceCaptureContainer');
-            btn.style.opacity = '0'; // Ocultar el botón para que no salga en la foto
+            btn.style.opacity = '0'; // Ocultar el botón temporalmente
             
-            try {
-                // FIX para Inputs: forzar el valor al atributo HTML para que html2canvas los detecte bien
-                const inputs = container.querySelectorAll('input');
-                inputs.forEach(input => {
-                    input.setAttribute('value', input.value);
-                });
+            // Reemplazar inputs por Divs temporales para que Html2Canvas no corte los números
+            const inputs = container.querySelectorAll('input[type="number"]');
+            const replacements = [];
+            
+            inputs.forEach(input => {
+                const div = document.createElement('div');
+                div.className = input.className;
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.justifyContent = 'center';
+                div.style.height = input.offsetHeight + 'px';
+                div.innerText = input.value;
+                
+                input.parentNode.insertBefore(div, input);
+                input.style.display = 'none';
+                
+                replacements.push({ input: input, div: div });
+            });
 
+            try {
                 // Tomar captura
                 const canvas = await html2canvas(container, {
-                    scale: 2, // Alta calidad
+                    scale: 2, 
                     backgroundColor: "#ffffff",
                     logging: false
+                });
+                
+                // Restaurar inputs
+                replacements.forEach(rep => {
+                    rep.div.remove();
+                    rep.input.style.display = '';
                 });
                 
                 btn.style.opacity = '1'; // Mostrar botón de nuevo
@@ -953,23 +972,25 @@
                             btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
                             btn.classList.replace('bg-emerald-500', 'bg-brand-500');
                             btn.classList.replace('hover:bg-emerald-600', 'hover:bg-brand-600');
-                            btn.classList.add('hover:animate-bounce');
                             btn.disabled = false;
                         }, 2000);
                         
                     } catch (err) {
-                        console.error("Error al copiar al portapapeles: ", err);
-                        alert("Tu navegador no soporta el copiado directo. Intenta usar otro navegador como Edge o Safari.");
+                        console.error("Error al copiar: ", err);
+                        alert("Tu navegador no soporta el copiado directo. Intenta usar Chrome o Edge.");
                         btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
-                        btn.classList.add('hover:animate-bounce');
                         btn.disabled = false;
                     }
                 }, "image/png");
             } catch (err) {
                 console.error("Error al generar imagen: ", err);
+                // Restaurar inputs en caso de error
+                replacements.forEach(rep => {
+                    rep.div.remove();
+                    rep.input.style.display = '';
+                });
                 btn.style.opacity = '1';
                 btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
-                btn.classList.add('hover:animate-bounce');
                 btn.disabled = false;
             }
         }

@@ -33,13 +33,11 @@
         .tab-content.active { display: block; }
         .tab-btn.active { border-bottom: 2px solid #2fcbd1; color: #09292a; font-weight: bold; }
         
-        /* Custom scrollbar for general page */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #99eaf0; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #2fcbd1; }
         
-        /* Hide scrollbar for specific horizontal containers */
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -119,7 +117,7 @@
                     <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-2 space-y-2 sm:space-y-0">
                             <div>
-                                <span class="block text-sm font-semibold text-brand-900">Avance del día: <span id="progressText" class="font-bold text-brand-600">0/14 Pasos (0%)</span></span>
+                                <span class="block text-sm font-semibold text-brand-900">Avance del día: <span id="progressText" class="font-bold text-brand-600">0/15 Pasos (0%)</span></span>
                                 <span class="block text-xs text-brand-700 mt-1">Fase actual: <span id="currentPhaseText" class="font-bold bg-brand-100 px-2 py-1 rounded">1. Marcación</span></span>
                             </div>
                         </div>
@@ -132,13 +130,13 @@
                     <div class="text-sm text-gray-500 mb-4 bg-yellow-50 p-3 rounded border border-yellow-200 flex items-start">
                         <i class="fa-solid fa-circle-info text-yellow-500 mr-2 mt-0.5 shrink-0"></i>
                         <div>
-                            <strong>Nota:</strong> Debes completar todas las micrometas de una sección para continuar con las siguientes.
+                            <strong>Nota:</strong> Debes completar la micrometa anterior para poder continuar con la siguiente.
                         </div>
                     </div>
 
                     <form id="trackerForm" class="space-y-4">
                         
-                        <!-- Meta 1 -->
+                        <!-- Meta 1: Marcación -->
                         <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                             <button type="button" onclick="toggleSection('sec1')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
                                 <h3 class="text-base sm:text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-regular fa-clock mr-2 text-brand-500"></i>1. Marcación</h3>
@@ -191,25 +189,10 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
-                                        <input type="checkbox" id="step1_4" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div class="min-w-0 pr-2">
-                                            <span class="block font-medium text-gray-800 break-words">1.4 Foto del Cuaderno de Asistencia</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">Evidenciar puntualidad a las 8:00 am</span>
-                                        </div>
-                                    </label>
-                                    <div class="flex space-x-2 ml-1 shrink-0">
-                                        <a href="https://chat.whatsapp.com/GFuEXtnI0OKEQWEqfLLy45" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Cuaderno de Asistencia">
-                                            <i class="fa-brands fa-whatsapp text-lg"></i>
-                                        </a>
-                                    </div>
-                                </div>
-
                             </div>
                         </div>
 
-                        <!-- Meta 2 -->
+                        <!-- Meta 2: Prospección -->
                         <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                             <button type="button" onclick="toggleSection('sec2')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
                                 <h3 class="text-base sm:text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-map-location-dot mr-2 text-brand-500"></i>2. Prospección en Campo</h3>
@@ -222,7 +205,7 @@
                                         <input type="checkbox" id="step2_1" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
                                         <div class="min-w-0 pr-2">
                                             <span class="block font-medium text-gray-800 break-words">2.1 Foto de Actividades en Campo</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">Enviar foto de la actividad o estatus del colegio al grupo</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Reportar actividades mediante fotos y en descripción, el status del colegio</span>
                                         </div>
                                     </label>
                                     <div class="flex space-x-2 ml-1 shrink-0">
@@ -237,7 +220,7 @@
                                         <input type="checkbox" id="step2_2" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
                                         <div class="min-w-0">
                                             <span class="block font-medium text-gray-800 break-words">2.2 Ficha de Actualización</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">Llevar el día de visita y de la actividad</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Actualizar ficha el día de visita y volver a actualizar el día de la actividad</span>
                                         </div>
                                     </label>
                                 </div>
@@ -246,8 +229,8 @@
                                     <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
                                         <input type="checkbox" id="step2_3" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
                                         <div class="min-w-0">
-                                            <span class="block font-medium text-gray-800 break-words">2.3 Llevar Materiales de Actividades</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">Charla: Lapiceros, fichas. Feria: Mantel, banners, etc.</span>
+                                            <span class="block font-medium text-gray-800 break-words">2.3 Material para Actividades</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Lapiceros, fichas, blocks, etc...</span>
                                         </div>
                                     </label>
                                 </div>
@@ -255,7 +238,7 @@
                             </div>
                         </div>
 
-                        <!-- Meta 3 -->
+                        <!-- Meta 3: Gestión Administrativa -->
                         <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                             <button type="button" onclick="toggleSection('sec3')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
                                 <h3 class="text-base sm:text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-folder-open mr-2 text-brand-500"></i>3. Gestión Administrativa</h3>
@@ -268,7 +251,7 @@
                                         <input type="checkbox" id="step3_1" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
                                         <div class="min-w-0 pr-2">
                                             <span class="block font-medium text-gray-800 break-words">3.1 Registro de Actividades en CRM</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">Registrar 1 día antes en Zoho</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Registrar las actividades del día siguiente.</span>
                                         </div>
                                     </label>
                                     <div class="flex space-x-2 ml-1 shrink-0">
@@ -282,7 +265,7 @@
                                     <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
                                         <input type="checkbox" id="step3_2" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
                                         <div class="min-w-0">
-                                            <span class="block font-medium text-gray-800 break-words">3.1.1 Completar Actividad en CRM</span>
+                                            <span class="block font-medium text-gray-800 break-words">3.2 Actualizar estado de actividad en CRM</span>
                                             <span class="block text-xs sm:text-sm text-gray-500">Marcar como "Completada" o "Cancelada"</span>
                                         </div>
                                     </label>
@@ -292,8 +275,8 @@
                                     <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
                                         <input type="checkbox" id="step3_3" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
                                         <div class="min-w-0 pr-2">
-                                            <span class="block font-medium text-gray-800 break-words">3.2 Programación de Taxi y Van</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">Enviar 1 día antes. Taxi por tiempo.</span>
+                                            <span class="block font-medium text-gray-800 break-words">3.3 Programación de Taxi y Van</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Enviar foto de taxi o formato de van un día antes (<strong>El taxi tiene que ser por tiempo</strong>).</span>
                                         </div>
                                     </label>
                                     <div class="flex space-x-1 sm:space-x-2 ml-1 shrink-0">
@@ -310,7 +293,7 @@
                                     <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
                                         <input type="checkbox" id="step3_4" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
                                         <div class="min-w-0 pr-2">
-                                            <span class="block font-medium text-gray-800 break-words">3.3 Solicitud de Material</span>
+                                            <span class="block font-medium text-gray-800 break-words">3.4 Solicitud de Material - Merch</span>
                                             <span class="block text-xs sm:text-sm text-gray-500">Solicitar 1 día antes vía formulario</span>
                                         </div>
                                     </label>
@@ -325,8 +308,8 @@
                                     <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
                                         <input type="checkbox" id="step3_5" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
                                         <div class="min-w-0 pr-2">
-                                            <span class="block font-medium text-gray-800 break-words">3.4 Solicitud para Charlas/Test OV</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">Anticipación: Charlas 24h/15d, Talleres 15d.</span>
+                                            <span class="block font-medium text-gray-800 break-words">3.5 Solicitud de Charlas OV (Charlas con psicólogos)</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Charla para alumnos, padres, docentes, solicitud nueva. Se debe programar taxi ida y vuelta para los psicólogos.</span>
                                         </div>
                                     </label>
                                     <div class="flex space-x-2 ml-1 shrink-0">
@@ -340,14 +323,11 @@
                                     <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
                                         <input type="checkbox" id="step3_6" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
                                         <div class="min-w-0 pr-2">
-                                            <span class="block font-medium text-gray-800 break-words">3.5 / 3.7 Digitalización y Registro Fichas</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">EasyPanel y Drive</span>
+                                            <span class="block font-medium text-gray-800 break-words">3.6 Registrar fichas de datos</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Antes de subir las fichas, es importante subir la cantidad de fichas y colegios al drive.</span>
                                         </div>
                                     </label>
-                                    <div class="flex space-x-1 sm:space-x-2 ml-1 shrink-0">
-                                        <a href="https://wiener-prospeccion.swnb5v.easypanel.host/login" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-brand-50 hover:border-brand-300 transition-colors text-brand-500" title="EasyPanel">
-                                            <i class="fa-solid fa-file-arrow-up"></i>
-                                        </a>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
                                         <a href="https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=E7z54CaJykKz0FKgpp0gL073JBC3PiVMo2kl-EIRITRUOUZOTIgwNFZCVE5KVjdQVjVJVEFCSINRUC4u" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-orange-50 hover:border-orange-300 transition-colors text-orange-500" title="Registro Drive">
                                             <i class="fa-brands fa-microsoft"></i>
                                         </a>
@@ -358,8 +338,33 @@
                                     <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
                                         <input type="checkbox" id="step3_7" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
                                         <div class="min-w-0 pr-2">
-                                            <span class="block font-medium text-gray-800 break-words">3.6 Status de Cartera</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">Mantener cartera en Sharepoint</span>
+                                            <span class="block font-medium text-gray-800 break-words">3.7 Digitalización de fichas de datos</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Se deberá subir las fichas mediante el aplicativo verificando que todos los datos estén bien subidos sin espacios ni guiones en el número del celular de lo contrario se edita.</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="https://wiener-prospeccion.swnb5v.easypanel.host/login" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-brand-50 hover:border-brand-300 transition-colors text-brand-500" title="EasyPanel">
+                                            <i class="fa-solid fa-file-arrow-up"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_8" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0">
+                                            <span class="block font-medium text-gray-800 break-words">3.8 Registro de Fichas de Actualización</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Es importante subir todas las fichas de actualización diariamente.</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_9" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.9 Status de Cartera</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Actualizar cartera colocando las actividades o status con el colegio.</span>
                                         </div>
                                     </label>
                                     <div class="flex space-x-2 ml-1 shrink-0">
@@ -543,7 +548,6 @@
 
         function updateProgress(triggerAutoSave = false) {
             
-            // 1. Lógica de Bloqueo Secuencial Estricto (Micrometas)
             for (let i = 1; i < totalSteps; i++) {
                 const previousChecked = checkboxes[i-1].checked;
                 
@@ -558,13 +562,11 @@
                 }
             }
             
-            // Asegurar que el primer paso siempre esté libre
             if(totalSteps > 0) {
                 checkboxes[0].disabled = false;
                 checkboxes[0].closest('label').classList.remove('opacity-50', 'cursor-not-allowed');
             }
 
-            // 2. Lógica de Acordeones
             const sec1Cbs = Array.from(document.querySelectorAll('#sec1 .step-checkbox'));
             const sec2Cbs = Array.from(document.querySelectorAll('#sec2 .step-checkbox'));
             const sec3Cbs = Array.from(document.querySelectorAll('#sec3 .step-checkbox'));
@@ -588,7 +590,6 @@
                 setTimeout(() => { toggleSection('sec3', false); }, 200);
             } else if (!sec3Done) { stateMemory.sec3 = false; }
 
-            // 3. Cálculos de Progreso Visual
             const checkedSteps = document.querySelectorAll('.step-checkbox:checked').length;
             const percentage = Math.round((checkedSteps / totalSteps) * 100);
             

@@ -6,6 +6,8 @@
     <title>Ruta Prospección</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Script necesario para la captura de pantalla -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -45,7 +47,7 @@
         .accordion-content.hidden-section { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border-top-width: 0;}
         .accordion-content.open-section { max-height: 1200px; opacity: 1; }
         
-        /* Ocultar las flechitas en los campos de números para que se vea más limpio */
+        /* Ocultar flechas en los campos numéricos */
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { 
             -webkit-appearance: none; margin: 0; 
@@ -401,7 +403,6 @@
             </div>
         </div>
 
-        <!-- ================= TAB: JEFATURA ================= -->
         <div id="jefatura" class="tab-content">
             <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-2 sm:space-y-0">
@@ -437,17 +438,17 @@
 
         <!-- ================= TAB: AVANCE ================= -->
         <div id="avance" class="tab-content">
-            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
-                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-2 sm:space-y-0">
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600 relative" id="avanceCaptureContainer">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
                     <div>
                         <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Métricas de Avance</h2>
-                        <p class="text-sm text-gray-500 mt-1">Supervisora: <span class="font-semibold text-brand-900">Camila Ortiz</span></p>
                     </div>
+                    <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center">
+                        <i class="fa-solid fa-camera mr-2"></i>Copiar Imagen
+                    </button>
                 </div>
                 
-                <p class="text-sm sm:text-base text-gray-500 mb-6">Ingresa los datos manualmente en las columnas "Logro" y "Meta". Los porcentajes se calcularán automáticamente.</p>
-
-                <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg bg-white">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -461,9 +462,15 @@
                             </tr>
                         </thead>
                         <tbody id="avanceTableBody" class="bg-white divide-y divide-gray-200">
-                            <!-- Populated by JS -->
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Loading Overlay para Avance -->
+                <div id="avanceSyncOverlay" class="absolute inset-0 bg-white/90 backdrop-blur-[2px] z-50 hidden flex-col items-center justify-center rounded-xl transition-all">
+                    <i class="fa-solid fa-satellite-dish fa-spin text-5xl text-brand-500 mb-4"></i>
+                    <h3 class="text-xl font-extrabold text-brand-900 tracking-wide">Actualización en camino...</h3>
+                    <p class="text-brand-600 font-medium mt-2 animate-pulse">Sincronizando datos en tiempo real</p>
                 </div>
             </div>
         </div>
@@ -471,7 +478,6 @@
     </main>
 
     <script>
-        // Fechas automáticas
         const dateInput = document.getElementById('trackerDate');
         
         function getLocalDateString() {
@@ -501,39 +507,12 @@
             }
         });
 
-        // Lógica de Pestañas
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            
-            const btnMap = { 'asesor': 0, 'jefatura': 1, 'avance': 2 };
-            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
-
-            if(tabId === 'jefatura') { 
-                renderDashboard(); 
-            } else if(tabId === 'avance') {
-                renderAvance();
-            }
-        }
-
-        // Lógica del Tracker
         const asesorSelect = document.getElementById('asesorName');
         const trackerWorkspace = document.getElementById('trackerWorkspace');
         const displayName = document.getElementById('displayName');
         let currentToastTimeout;
-        let stateMemory = { sec1: false, sec2: false, sec3: false };
-        const checkboxes = Array.from(document.querySelectorAll('.step-checkbox'));
-        const totalSteps = checkboxes.length;
 
         asesorSelect.addEventListener('change', loadUserWorkspace);
-
-        checkboxes.forEach(cb => { 
-            cb.addEventListener('change', () => {
-                updateProgress(true);
-            }); 
-        });
 
         function loadUserWorkspace() {
             const asesor = asesorSelect.value;
@@ -550,7 +529,10 @@
             const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
             const userRecord = data.find(r => r.asesor === asesor && r.date === date);
 
-            checkboxes.forEach(cb => { cb.checked = false; });
+            document.querySelectorAll('.step-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+
             stateMemory = { sec1: false, sec2: false, sec3: false };
             
             toggleSection('sec1', true);
@@ -570,6 +552,7 @@
         function toggleSection(id, forceOpen = null) {
             const content = document.getElementById(id);
             const icon = document.getElementById('icon-' + id);
+            
             const isHidden = content.classList.contains('hidden-section');
             
             if (forceOpen === true || (forceOpen === null && isHidden)) {
@@ -585,6 +568,17 @@
             }
         }
 
+        let stateMemory = { sec1: false, sec2: false, sec3: false };
+
+        const checkboxes = Array.from(document.querySelectorAll('.step-checkbox'));
+        const totalSteps = checkboxes.length;
+        
+        checkboxes.forEach(cb => { 
+            cb.addEventListener('change', () => {
+                updateProgress(true);
+            }); 
+        });
+
         function getActiveSubphaseLabel() {
             let lastCheckedLabel = "";
             let nextUncheckedLabel = "";
@@ -597,18 +591,28 @@
                     break;
                 }
             }
-            if(!nextUncheckedLabel && lastCheckedLabel) return "Todas completadas";
+            
+            if(!nextUncheckedLabel && lastCheckedLabel) {
+                return "Todas completadas";
+            }
+            
             return nextUncheckedLabel || "Esperando inicio";
         }
 
         function updateProgress(triggerAutoSave = false) {
+            
             for (let i = 1; i < totalSteps; i++) {
                 const previousChecked = checkboxes[i-1].checked;
+                
                 checkboxes[i].disabled = !previousChecked;
+                
                 const parentLabel = checkboxes[i].closest('label');
                 parentLabel.classList.toggle('opacity-50', !previousChecked);
                 parentLabel.classList.toggle('cursor-not-allowed', !previousChecked);
-                if (!previousChecked) checkboxes[i].checked = false;
+                
+                if (!previousChecked) {
+                    checkboxes[i].checked = false;
+                }
             }
             
             if(totalSteps > 0) {
@@ -657,11 +661,14 @@
                 document.getElementById('completionMessage').classList.add('hidden');
                 document.getElementById('progressBar').classList.replace('bg-brand-500', 'bg-brand-400');
             }
+            
             document.getElementById('currentPhaseText').innerText = phaseName;
             
             const subphaseName = getActiveSubphaseLabel();
             
-            if(triggerAutoSave) autoSaveRecord(checkedSteps, percentage, phaseName, subphaseName);
+            if(triggerAutoSave) {
+                autoSaveRecord(checkedSteps, percentage, phaseName, subphaseName);
+            }
 
             return {phase: phaseName, subphase: subphaseName};
         }
@@ -672,38 +679,69 @@
             if (!asesor) return;
 
             let checkboxStates = {};
-            checkboxes.forEach(cb => { checkboxStates[cb.id] = cb.checked; });
+            checkboxes.forEach(cb => {
+                checkboxStates[cb.id] = cb.checked;
+            });
 
             const newRecord = {
-                id: Date.now(), asesor: asesor, date: date, completed: completedCount,
-                total: totalSteps, percentage: percentage, phase: phaseName,
-                subphase: subphaseName, checkboxStates: checkboxStates
+                id: Date.now(),
+                asesor: asesor,
+                date: date,
+                completed: completedCount,
+                total: totalSteps,
+                percentage: percentage,
+                phase: phaseName,
+                subphase: subphaseName,
+                checkboxStates: checkboxStates
             };
 
             let data = JSON.parse(localStorage.getItem('trackerData') || '[]');
-            const existingIndex = data.findIndex(r => r.asesor === asesor && r.date === date);
             
-            if (existingIndex >= 0) data[existingIndex] = newRecord;
-            else data.push(newRecord);
+            const existingIndex = data.findIndex(r => r.asesor === asesor && r.date === date);
+            if (existingIndex >= 0) {
+                data[existingIndex] = newRecord;
+            } else {
+                data.push(newRecord);
+            }
 
             localStorage.setItem('trackerData', JSON.stringify(data));
             
-            if(document.getElementById('jefatura').classList.contains('active')) renderDashboard();
+            if(document.getElementById('jefatura').classList.contains('active')) {
+                renderDashboard();
+            }
+
             showAutoSaveToast();
         }
 
         function showAutoSaveToast() {
             const toast = document.getElementById('toast');
             clearTimeout(currentToastTimeout);
+            
             toast.classList.remove('-translate-y-20', 'opacity-0');
             toast.classList.add('translate-y-5', 'opacity-100');
+
             currentToastTimeout = setTimeout(() => {
                 toast.classList.remove('translate-y-5', 'opacity-100');
                 toast.classList.add('-translate-y-20', 'opacity-0');
             }, 2000);
         }
 
-        // Lógica del Dashboard Jefatura
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            
+            const btnMap = { 'asesor': 0, 'jefatura': 1, 'avance': 2 };
+            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
+
+            if(tabId === 'jefatura') { 
+                renderDashboard(); 
+            } else if(tabId === 'avance') {
+                renderAvance();
+            }
+        }
+
         function renderDashboard() {
             const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
             const tbody = document.getElementById('dashboardTableBody');
@@ -754,6 +792,7 @@
                 const subphaseColorText = getSubphaseColorClass(record.phase);
                 
                 let phaseHtml = `<span class="px-3 sm:px-4 py-1 sm:py-2 inline-flex text-xs sm:text-sm font-bold rounded-full shadow-sm border ${phaseColor} whitespace-nowrap">${record.phase}</span>`;
+                
                 if(record.subphase && record.phase !== "Ruta Completada") {
                     phaseHtml += `<div class="mt-2 text-[10px] sm:text-xs font-semibold ${subphaseColorText} tracking-wide text-center"><i class="fa-solid fa-chevron-right text-[8px] sm:text-[10px] mr-1 opacity-70"></i>${record.subphase}</div>`;
                 }
@@ -767,8 +806,10 @@
                     </div>
                 `;
 
+                const formattedDate = formatDateToDMY(record.date);
+
                 tr.innerHTML = `
-                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">${formatDateToDMY(record.date)}</td>
+                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">${formattedDate}</td>
                     <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-gray-900">${record.asesor}</td>
                     <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-center">${progressHtml}</td>
                     <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-center flex flex-col items-center justify-center min-h-[4rem]">${phaseHtml}</td>
@@ -778,25 +819,21 @@
         }
 
         // ==========================================
-        // LÓGICA DE LA PESTAÑA AVANCE
+        // AVANCE TAB LOGIC (Sincronización en tiempo real)
         // ==========================================
 
-        const defaultAvanceData = [
-            { asesor: "Dana Nicolls Lizarme Tenorio", meta: 721, avance: 665, proyeccion: 0 },
-            { asesor: "Doris Carolina Herrera Castro", meta: 721, avance: 589, proyeccion: 0 },
-            { asesor: "Fiorella Eduarda Camayo Quiñones", meta: 721, avance: 713, proyeccion: 0 },
-            { asesor: "Jose Luis Zevallos Anfossi", meta: 670, avance: 0, proyeccion: 0 },
-            { asesor: "Jose Martin Garcia Segura", meta: 670, avance: 616, proyeccion: 0 },
-            { asesor: "Jose Reynaldo Munar Moya", meta: 670, avance: 613, proyeccion: 0 },
-            { asesor: "Joseph Alexander Cortez Reyes", meta: 670, avance: 422, proyeccion: 0 },
-            { asesor: "Judith Roxana Falcon Caja", meta: 670, avance: 553, proyeccion: 0 },
-            { asesor: "Yessenia Cueva Pinto", meta: 670, avance: 0, proyeccion: 0 }
+        const asesoresList = [
+            "Dana Nicolls Lizarme Tenorio", "Doris Carolina Herrera Castro", "Fiorella Eduarda Camayo Quiñones",
+            "Jose Luis Zevallos Anfossi", "Jose Martin Garcia Segura", "Jose Reynaldo Munar Moya",
+            "Joseph Alexander Cortez Reyes", "Judith Roxana Falcon Caja", "Yessenia Cueva Pinto"
         ];
 
         function loadAvanceData() {
             let data = JSON.parse(localStorage.getItem('avanceMetricsV2'));
             if (!data || data.length === 0) {
-                data = JSON.parse(JSON.stringify(defaultAvanceData));
+                data = asesoresList.map(a => ({
+                    asesor: a, meta: 0, avance: 0, proyeccion: 0
+                }));
             }
             return data;
         }
@@ -829,17 +866,17 @@
                 tr.className = "hover:bg-gray-50 transition-colors";
                 tr.innerHTML = `
                     <td class="px-4 py-3 text-xs sm:text-sm font-bold text-gray-900 whitespace-nowrap">${row.asesor}</td>
-                    <td class="px-2 py-3 text-center"><input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500" value="${row.meta}" onchange="updateAvance(${idx}, 'meta', this.value)"></td>
-                    <td class="px-2 py-3 text-center"><input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500" value="${row.avance}" onchange="updateAvance(${idx}, 'avance', this.value)"></td>
+                    <td class="px-2 py-3 text-center"><input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.meta}" onchange="updateAvance(${idx}, 'meta', this.value)"></td>
+                    <td class="px-2 py-3 text-center"><input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.avance}" onchange="updateAvance(${idx}, 'avance', this.value)"></td>
                     <td class="px-2 sm:px-4 py-3 text-center"><span class="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full border ${getAvanceBadgeColor(pct1)}">${pct1}%</span></td>
-                    <td class="px-2 py-3 text-center"><input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500" value="${row.proyeccion}" onchange="updateAvance(${idx}, 'proyeccion', this.value)"></td>
+                    <td class="px-2 py-3 text-center"><input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.proyeccion}" onchange="updateAvance(${idx}, 'proyeccion', this.value)"></td>
                     <td class="px-2 sm:px-4 py-3 text-center text-xs sm:text-sm font-bold text-gray-700">${logroFinal}</td>
                     <td class="px-2 sm:px-4 py-3 text-center"><span class="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full border ${getAvanceBadgeColor(pct2)}">${pct2}%</span></td>
                 `;
                 tbody.appendChild(tr);
             });
             
-            // Add "Logro Equipo" Row
+            // Fila final Logro Equipo
             let totalLogroFinal = totalAvance + totalProyeccion;
             let totalPct1 = totalMeta > 0 ? Math.round((totalAvance / totalMeta) * 100) : 0;
             let totalPct2 = totalMeta > 0 ? Math.round((totalLogroFinal / totalMeta) * 100) : 0;
@@ -859,13 +896,98 @@
         }
 
         function updateAvance(idx, field, val) {
-            let data = loadAvanceData();
-            data[idx][field] = Number(val) || 0;
-            localStorage.setItem('avanceMetricsV2', JSON.stringify(data));
-            renderAvance();
+            // Activar pantalla de carga visual (falsa solicitud de red)
+            const overlay = document.getElementById('avanceSyncOverlay');
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            setTimeout(() => {
+                let data = loadAvanceData();
+                data[idx][field] = Number(val) || 0;
+                localStorage.setItem('avanceMetricsV2', JSON.stringify(data));
+                renderAvance();
+                
+                // Ocultar pantalla de carga
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }, 600);
         }
 
-        // Initialize progress logic
+        // Detectar cambios realizados en otra pestaña de la misma computadora en tiempo real
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'avanceMetricsV2') {
+                if(document.getElementById('avance').classList.contains('active')) {
+                    const overlay = document.getElementById('avanceSyncOverlay');
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                    setTimeout(() => {
+                        renderAvance();
+                        overlay.classList.add('hidden');
+                        overlay.classList.remove('flex');
+                    }, 600);
+                }
+            } else if (e.key === 'trackerData' && document.getElementById('jefatura').classList.contains('active')) {
+                renderDashboard();
+            }
+        });
+
+        // ==========================================
+        // SCREENSHOT LOGIC
+        // ==========================================
+        async function copyAvanceScreenshot() {
+            const btn = document.getElementById('btnCopyAvance');
+            const originalHtml = btn.innerHTML;
+            
+            // Estado de carga del botón
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Capturando...';
+            btn.disabled = true;
+
+            const container = document.getElementById('avanceCaptureContainer');
+            btn.style.opacity = '0'; // Ocultar el botón para que no salga en la foto
+            
+            try {
+                // Tomar captura
+                const canvas = await html2canvas(container, {
+                    scale: 2, // Alta calidad
+                    backgroundColor: "#ffffff",
+                    logging: false
+                });
+                
+                btn.style.opacity = '1'; // Mostrar botón de nuevo
+                
+                canvas.toBlob(async function(blob) {
+                    try {
+                        const item = new ClipboardItem({ "image/png": blob });
+                        await navigator.clipboard.write([item]);
+                        
+                        // Mensaje de Éxito
+                        btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i>¡Copiado!';
+                        btn.classList.replace('bg-brand-500', 'bg-emerald-500');
+                        btn.classList.replace('hover:bg-brand-600', 'hover:bg-emerald-600');
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = originalHtml;
+                            btn.classList.replace('bg-emerald-500', 'bg-brand-500');
+                            btn.classList.replace('hover:bg-emerald-600', 'hover:bg-brand-600');
+                            btn.disabled = false;
+                        }, 2000);
+                        
+                    } catch (err) {
+                        console.error("Error al copiar al portapapeles: ", err);
+                        alert("Tu navegador no soporta el copiado directo. Intenta en Chrome o Microsoft Edge.");
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                    }
+                }, "image/png");
+            } catch (err) {
+                console.error("Error al generar imagen: ", err);
+                btn.style.opacity = '1';
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // Iniciar plataforma
         updateProgress();
     </script>
 </body>

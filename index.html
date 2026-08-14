@@ -56,14 +56,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
 
-    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 -translate-y-20 opacity-0 transition-all duration-500 bg-brand-900 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center z-50 pointer-events-none border-b-4 border-brand-500 w-11/12 max-w-md sm:w-auto">
-        <i class="fa-solid fa-cloud-arrow-up text-3xl text-brand-400 mr-4"></i>
-        <div>
-            <h4 class="font-bold text-lg leading-tight">Guardado Automático</h4>
-            <p id="toastMessage" class="text-sm text-brand-100 mt-1">Progreso sincronizado en tiempo real.</p>
-        </div>
-    </div>
-
     <nav class="bg-brand-900 text-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
@@ -85,7 +77,7 @@
                     <i class="fa-solid fa-chart-line mr-2"></i>Dashboard Jefatura
                 </button>
                 <button onclick="switchTab('avance')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
-                    <i class="fa-solid fa-ranking-star mr-2"></i>Avance
+                    <i class="fa-solid fa-chart-pie mr-2"></i>Avance
                 </button>
             </div>
         </div>
@@ -392,12 +384,6 @@
                             </div>
                         </div>
 
-                        <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded mt-6 shadow-sm">
-                            <h4 class="font-bold text-red-700 mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i> No Negociables</h4>
-                            <ul class="text-xs sm:text-sm text-red-800 list-disc list-inside space-y-1">
-                                <li>Salida de casa de promotores máximo 6:30 am si la actividad empieza a las 7:30 am.</li>
-                            </ul>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -408,11 +394,8 @@
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-2 sm:space-y-0">
                     <div>
                         <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Dashboard de Seguimiento</h2>
-                        <p class="text-sm text-gray-500 mt-1">Supervisora: <span class="font-semibold text-brand-900">Camila Ortiz</span></p>
                     </div>
                 </div>
-                
-                <p class="text-sm sm:text-base text-gray-500 mb-6">Monitoreo del progreso diario en tiempo real. Visualiza en qué parte de la ruta de prospección se encuentra cada asesor.</p>
 
                 <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -443,8 +426,10 @@
                     <div>
                         <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Métricas de Avance</h2>
                     </div>
-                    <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center">
-                        <i class="fa-solid fa-camera mr-2"></i>Copiar Imagen
+                    
+                    <!-- Botón animado de captura -->
+                    <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white h-10 w-10 rounded-full text-lg shadow-md transition-colors flex items-center justify-center animate-bounce shrink-0" title="Copiar Imagen">
+                        <i class="fa-solid fa-camera"></i>
                     </button>
                 </div>
                 
@@ -478,6 +463,7 @@
     </main>
 
     <script>
+        // Fechas automáticas
         const dateInput = document.getElementById('trackerDate');
         
         function getLocalDateString() {
@@ -507,12 +493,38 @@
             }
         });
 
+        // Lógica de Pestañas
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            
+            const btnMap = { 'asesor': 0, 'jefatura': 1, 'avance': 2 };
+            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
+
+            if(tabId === 'jefatura') { 
+                renderDashboard(); 
+            } else if(tabId === 'avance') {
+                renderAvance();
+            }
+        }
+
+        // Lógica del Tracker
         const asesorSelect = document.getElementById('asesorName');
         const trackerWorkspace = document.getElementById('trackerWorkspace');
         const displayName = document.getElementById('displayName');
-        let currentToastTimeout;
+        let stateMemory = { sec1: false, sec2: false, sec3: false };
+        const checkboxes = Array.from(document.querySelectorAll('.step-checkbox'));
+        const totalSteps = checkboxes.length;
 
         asesorSelect.addEventListener('change', loadUserWorkspace);
+
+        checkboxes.forEach(cb => { 
+            cb.addEventListener('change', () => {
+                updateProgress(true);
+            }); 
+        });
 
         function loadUserWorkspace() {
             const asesor = asesorSelect.value;
@@ -529,10 +541,7 @@
             const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
             const userRecord = data.find(r => r.asesor === asesor && r.date === date);
 
-            document.querySelectorAll('.step-checkbox').forEach(cb => {
-                cb.checked = false;
-            });
-
+            checkboxes.forEach(cb => { cb.checked = false; });
             stateMemory = { sec1: false, sec2: false, sec3: false };
             
             toggleSection('sec1', true);
@@ -552,7 +561,6 @@
         function toggleSection(id, forceOpen = null) {
             const content = document.getElementById(id);
             const icon = document.getElementById('icon-' + id);
-            
             const isHidden = content.classList.contains('hidden-section');
             
             if (forceOpen === true || (forceOpen === null && isHidden)) {
@@ -568,17 +576,6 @@
             }
         }
 
-        let stateMemory = { sec1: false, sec2: false, sec3: false };
-
-        const checkboxes = Array.from(document.querySelectorAll('.step-checkbox'));
-        const totalSteps = checkboxes.length;
-        
-        checkboxes.forEach(cb => { 
-            cb.addEventListener('change', () => {
-                updateProgress(true);
-            }); 
-        });
-
         function getActiveSubphaseLabel() {
             let lastCheckedLabel = "";
             let nextUncheckedLabel = "";
@@ -591,28 +588,18 @@
                     break;
                 }
             }
-            
-            if(!nextUncheckedLabel && lastCheckedLabel) {
-                return "Todas completadas";
-            }
-            
+            if(!nextUncheckedLabel && lastCheckedLabel) return "Todas completadas";
             return nextUncheckedLabel || "Esperando inicio";
         }
 
         function updateProgress(triggerAutoSave = false) {
-            
             for (let i = 1; i < totalSteps; i++) {
                 const previousChecked = checkboxes[i-1].checked;
-                
                 checkboxes[i].disabled = !previousChecked;
-                
                 const parentLabel = checkboxes[i].closest('label');
                 parentLabel.classList.toggle('opacity-50', !previousChecked);
                 parentLabel.classList.toggle('cursor-not-allowed', !previousChecked);
-                
-                if (!previousChecked) {
-                    checkboxes[i].checked = false;
-                }
+                if (!previousChecked) checkboxes[i].checked = false;
             }
             
             if(totalSteps > 0) {
@@ -661,14 +648,11 @@
                 document.getElementById('completionMessage').classList.add('hidden');
                 document.getElementById('progressBar').classList.replace('bg-brand-500', 'bg-brand-400');
             }
-            
             document.getElementById('currentPhaseText').innerText = phaseName;
             
             const subphaseName = getActiveSubphaseLabel();
             
-            if(triggerAutoSave) {
-                autoSaveRecord(checkedSteps, percentage, phaseName, subphaseName);
-            }
+            if(triggerAutoSave) autoSaveRecord(checkedSteps, percentage, phaseName, subphaseName);
 
             return {phase: phaseName, subphase: subphaseName};
         }
@@ -679,69 +663,26 @@
             if (!asesor) return;
 
             let checkboxStates = {};
-            checkboxes.forEach(cb => {
-                checkboxStates[cb.id] = cb.checked;
-            });
+            checkboxes.forEach(cb => { checkboxStates[cb.id] = cb.checked; });
 
             const newRecord = {
-                id: Date.now(),
-                asesor: asesor,
-                date: date,
-                completed: completedCount,
-                total: totalSteps,
-                percentage: percentage,
-                phase: phaseName,
-                subphase: subphaseName,
-                checkboxStates: checkboxStates
+                id: Date.now(), asesor: asesor, date: date, completed: completedCount,
+                total: totalSteps, percentage: percentage, phase: phaseName,
+                subphase: subphaseName, checkboxStates: checkboxStates
             };
 
             let data = JSON.parse(localStorage.getItem('trackerData') || '[]');
-            
             const existingIndex = data.findIndex(r => r.asesor === asesor && r.date === date);
-            if (existingIndex >= 0) {
-                data[existingIndex] = newRecord;
-            } else {
-                data.push(newRecord);
-            }
+            
+            if (existingIndex >= 0) data[existingIndex] = newRecord;
+            else data.push(newRecord);
 
             localStorage.setItem('trackerData', JSON.stringify(data));
             
-            if(document.getElementById('jefatura').classList.contains('active')) {
-                renderDashboard();
-            }
-
-            showAutoSaveToast();
+            if(document.getElementById('jefatura').classList.contains('active')) renderDashboard();
         }
 
-        function showAutoSaveToast() {
-            const toast = document.getElementById('toast');
-            clearTimeout(currentToastTimeout);
-            
-            toast.classList.remove('-translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-5', 'opacity-100');
-
-            currentToastTimeout = setTimeout(() => {
-                toast.classList.remove('translate-y-5', 'opacity-100');
-                toast.classList.add('-translate-y-20', 'opacity-0');
-            }, 2000);
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            
-            const btnMap = { 'asesor': 0, 'jefatura': 1, 'avance': 2 };
-            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
-
-            if(tabId === 'jefatura') { 
-                renderDashboard(); 
-            } else if(tabId === 'avance') {
-                renderAvance();
-            }
-        }
-
+        // Lógica del Dashboard Jefatura
         function renderDashboard() {
             const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
             const tbody = document.getElementById('dashboardTableBody');
@@ -792,7 +733,6 @@
                 const subphaseColorText = getSubphaseColorClass(record.phase);
                 
                 let phaseHtml = `<span class="px-3 sm:px-4 py-1 sm:py-2 inline-flex text-xs sm:text-sm font-bold rounded-full shadow-sm border ${phaseColor} whitespace-nowrap">${record.phase}</span>`;
-                
                 if(record.subphase && record.phase !== "Ruta Completada") {
                     phaseHtml += `<div class="mt-2 text-[10px] sm:text-xs font-semibold ${subphaseColorText} tracking-wide text-center"><i class="fa-solid fa-chevron-right text-[8px] sm:text-[10px] mr-1 opacity-70"></i>${record.subphase}</div>`;
                 }
@@ -819,21 +759,25 @@
         }
 
         // ==========================================
-        // AVANCE TAB LOGIC (Sincronización en tiempo real)
+        // LÓGICA DE LA PESTAÑA AVANCE
         // ==========================================
 
-        const asesoresList = [
-            "Dana Nicolls Lizarme Tenorio", "Doris Carolina Herrera Castro", "Fiorella Eduarda Camayo Quiñones",
-            "Jose Luis Zevallos Anfossi", "Jose Martin Garcia Segura", "Jose Reynaldo Munar Moya",
-            "Joseph Alexander Cortez Reyes", "Judith Roxana Falcon Caja", "Yessenia Cueva Pinto"
+        const defaultAvanceData = [
+            { asesor: "Dana Nicolls Lizarme Tenorio", meta: 721, avance: 665, proyeccion: 0 },
+            { asesor: "Doris Carolina Herrera Castro", meta: 721, avance: 589, proyeccion: 0 },
+            { asesor: "Fiorella Eduarda Camayo Quiñones", meta: 721, avance: 713, proyeccion: 0 },
+            { asesor: "Jose Luis Zevallos Anfossi", meta: 670, avance: 0, proyeccion: 0 },
+            { asesor: "Jose Martin Garcia Segura", meta: 670, avance: 616, proyeccion: 0 },
+            { asesor: "Jose Reynaldo Munar Moya", meta: 670, avance: 613, proyeccion: 0 },
+            { asesor: "Joseph Alexander Cortez Reyes", meta: 670, avance: 422, proyeccion: 0 },
+            { asesor: "Judith Roxana Falcon Caja", meta: 670, avance: 553, proyeccion: 0 },
+            { asesor: "Yessenia Cueva Pinto", meta: 670, avance: 0, proyeccion: 0 }
         ];
 
         function loadAvanceData() {
-            let data = JSON.parse(localStorage.getItem('avanceMetricsV2'));
+            let data = JSON.parse(localStorage.getItem('avanceMetricsV3'));
             if (!data || data.length === 0) {
-                data = asesoresList.map(a => ({
-                    asesor: a, meta: 0, avance: 0, proyeccion: 0
-                }));
+                data = JSON.parse(JSON.stringify(defaultAvanceData));
             }
             return data;
         }
@@ -896,7 +840,7 @@
         }
 
         function updateAvance(idx, field, val) {
-            // Activar pantalla de carga visual (falsa solicitud de red)
+            // Activar pantalla de carga visual
             const overlay = document.getElementById('avanceSyncOverlay');
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
@@ -904,7 +848,7 @@
             setTimeout(() => {
                 let data = loadAvanceData();
                 data[idx][field] = Number(val) || 0;
-                localStorage.setItem('avanceMetricsV2', JSON.stringify(data));
+                localStorage.setItem('avanceMetricsV3', JSON.stringify(data));
                 renderAvance();
                 
                 // Ocultar pantalla de carga
@@ -913,9 +857,9 @@
             }, 600);
         }
 
-        // Detectar cambios realizados en otra pestaña de la misma computadora en tiempo real
+        // Detectar cambios realizados en otra pestaña
         window.addEventListener('storage', (e) => {
-            if (e.key === 'avanceMetricsV2') {
+            if (e.key === 'avanceMetricsV3') {
                 if(document.getElementById('avance').classList.contains('active')) {
                     const overlay = document.getElementById('avanceSyncOverlay');
                     overlay.classList.remove('hidden');
@@ -936,10 +880,10 @@
         // ==========================================
         async function copyAvanceScreenshot() {
             const btn = document.getElementById('btnCopyAvance');
-            const originalHtml = btn.innerHTML;
             
             // Estado de carga del botón
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Capturando...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.classList.remove('animate-bounce');
             btn.disabled = true;
 
             const container = document.getElementById('avanceCaptureContainer');
@@ -961,28 +905,31 @@
                         await navigator.clipboard.write([item]);
                         
                         // Mensaje de Éxito
-                        btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i>¡Copiado!';
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
                         btn.classList.replace('bg-brand-500', 'bg-emerald-500');
                         btn.classList.replace('hover:bg-brand-600', 'hover:bg-emerald-600');
                         
                         setTimeout(() => {
-                            btn.innerHTML = originalHtml;
+                            btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
                             btn.classList.replace('bg-emerald-500', 'bg-brand-500');
                             btn.classList.replace('hover:bg-emerald-600', 'hover:bg-brand-600');
+                            btn.classList.add('animate-bounce');
                             btn.disabled = false;
                         }, 2000);
                         
                     } catch (err) {
                         console.error("Error al copiar al portapapeles: ", err);
-                        alert("Tu navegador no soporta el copiado directo. Intenta en Chrome o Microsoft Edge.");
-                        btn.innerHTML = originalHtml;
+                        alert("Tu navegador no soporta el copiado directo. Intenta usar otro navegador como Edge o Safari.");
+                        btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
+                        btn.classList.add('animate-bounce');
                         btn.disabled = false;
                     }
                 }, "image/png");
             } catch (err) {
                 console.error("Error al generar imagen: ", err);
                 btn.style.opacity = '1';
-                btn.innerHTML = originalHtml;
+                btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
+                btn.classList.add('animate-bounce');
                 btn.disabled = false;
             }
         }

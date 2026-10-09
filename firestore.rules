@@ -30,64 +30,42 @@ service cloud.firestore {
         && recordId == request.auth.uid + '_' + request.resource.data.date;
     }
 
-    // Profiles are provisioned manually by the project owner in Firebase Console.
-    // Clients can only read their own profile; no client can grant themselves a role.
+    // Profiles are created manually by the project owner. Clients cannot grant themselves a role.
     match /authorizedUsers/{uid} {
       allow get: if hasInstitutionalIdentity() && request.auth.uid == uid;
       allow list: if isSupervisor();
       allow create, update, delete: if false;
     }
 
-    // One document per adviser and date. Advisers may only access their own records.
-    // Supervisors can see all records for the team.
+    // Advisors can read and modify their own daily records; the supervisor can read all.
     match /trackerRecords/{recordId} {
       allow get, list: if isSupervisor()
         || (hasAuthorizedProfile() && resource.data.ownerUid == request.auth.uid);
-
       allow create: if canWriteOwnRecord(recordId);
       allow update: if resource.data.ownerUid == request.auth.uid && canWriteOwnRecord(recordId);
       allow delete: if false;
     }
 
-    // Team-wide metrics are stored in one document per month (YYYY-MM).
-    // Only the supervisor can inspect or change the selected month's figures.
+    // One document per month. Only the authorized supervisor can read or change monthly metrics.
     match /monthlyMetrics/{monthId} {
       allow get: if isSupervisor();
-      allow list: if false;
-      allow create, update, delete: if isSupervisor()
-        && monthId.matches('^[0-9]{4}-(0[1-9]|1[0-2])
-
-    // Authorized team members can read operational links, but only the supervisor
-    // can maintain them. These URLs are not embedded in public index.html.
-    match /appConfig/{documentId} {
-      allow get: if hasAuthorizedProfile();
       allow list: if false;
       allow create, update, delete: if isSupervisor();
     }
 
-    // Everything else is denied by default.
-    match /{document=**} {
-      allow read, write: if false;
-    }
-  }
-}
-);
-    }
-
-    // Legacy appData path is retained as supervisor-only; new monthly metrics do not use it.
+    // Legacy metrics path: supervisor only.
     match /appData/{documentId} {
       allow read, write: if isSupervisor();
     }
 
-    // Authorized team members can read operational links, but only the supervisor
-    // can maintain them. These URLs are not embedded in public index.html.
+    // Private operational links: every authorized user may read; only supervisor may manage.
     match /appConfig/{documentId} {
       allow get: if hasAuthorizedProfile();
       allow list: if false;
       allow create, update, delete: if isSupervisor();
     }
 
-    // Everything else is denied by default.
+    // Deny everything else.
     match /{document=**} {
       allow read, write: if false;
     }

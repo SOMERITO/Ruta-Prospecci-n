@@ -1227,10 +1227,6 @@
 
         let isAvanceEditMode = false;
 
-        // Metrics are no longer embedded in public HTML. Initial values are migrated
-        // from the supervisor's local backup or built from authorized profiles.
-        const defaultAvanceData = [];
-
         function loadAvanceData() {
             if (signedInUser && signedInProfile && signedInProfile.role === "supervisor" && sharedAvanceRows) {
                 return sharedAvanceRows;

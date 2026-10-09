@@ -37,14 +37,39 @@ Campos del documento:
 
 Los UID y perfiles se obtienen desde Authentication → Usuarios. No compartas contraseñas ni las guardes en el repositorio.
 
-## 4. Datos compartidos
+## 4. Recursos privados de la ruta
+
+Las URL operativas se leen desde el documento `appConfig/resources` de Firestore y no deben pegarse en `index.html`, porque el repositorio es público.
+
+Crea el documento `appConfig/resources` desde la consola de Firestore con un campo de tipo mapa llamado `links`. Dentro del mapa, agrega estas claves de tipo string y asigna a cada una la URL autorizada del recurso:
+
+- `intranet`
+- `grupoRutasUbicaciones`
+- `grupoInformeActividades`
+- `crmZoho`
+- `taxiDirecto`
+- `cabify`
+- `formularioMaterial`
+- `matrizSolicitudes`
+- `registroFichasDatos`
+- `digitalizacionFichas`
+- `actualizacionFichas`
+- `statusCartera`
+
+Las URL no se incluyen en este archivo de instrucciones. Recupéralas desde la fuente autorizada y confirma que son correctas antes de cargarlas. Una vez creado el documento, los miembros autorizados podrán abrir los recursos y el HTML público solo contendrá claves genéricas.
+
+## 5. Datos compartidos
 
 - Los avances diarios se guardan en `trackerRecords`, con un documento por UID y fecha.
 - Las métricas del equipo se guardan en `appData/avanceMetrics`; la supervisora es quien las administra.
-- La primera sesión de supervisora inicializa las métricas desde el respaldo local del navegador si existe; de lo contrario, usa los valores base que ya tiene la aplicación.
+- La primera sesión de supervisora intenta migrar las métricas de `avanceMetricsV6` del almacenamiento local de ese navegador. Si no existen, prepara una fila por asesor autorizado a partir de su campo numérico `meta`, con avance y proyección iniciales en cero. Revisa y completa estos valores antes de producción.
 - La primera sesión de cada asesor intenta migrar los registros locales de ese mismo asesor si la fecha aún no existe en Firestore.
 
-## 8. Verificaciones antes de producción
+## 6. Aviso sobre el historial público
+
+Quitar datos de la versión actual de `index.html` no borra automáticamente los commits anteriores de un repositorio público. Antes de considerar estos recursos privados, revisa la visibilidad del repositorio y el historial. Si un enlace es una invitación a un grupo privado y no debería haber sido público, solicita que se regenere.
+
+## 7. Verificaciones antes de producción
 
 - Probar con una cuenta supervisora y una cuenta asesora.
 - Confirmar que una cuenta no autorizada no puede consultar datos.

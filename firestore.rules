@@ -20,6 +20,16 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'supervisor';
     }
 
+    function canWriteOwnRecord(recordId) {
+      return hasAuthorizedProfile()
+        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'asesor'
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerEmail == request.auth.token.email
+        && request.resource.data.asesor == get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.asesorNombre
+        && request.resource.data.date is string
+        && recordId == request.auth.uid + '_' + request.resource.data.date;
+    }
+
     // Profiles are provisioned manually by the project owner in Firebase Console.
     // Clients can only read their own profile; no client can grant themselves a role.
     match /authorizedUsers/{uid} {
@@ -34,21 +44,22 @@ service cloud.firestore {
       allow get, list: if isSupervisor()
         || (hasAuthorizedProfile() && resource.data.ownerUid == request.auth.uid);
 
-      allow create, update: if isSupervisor()
-        || (
-          hasAuthorizedProfile()
-          && request.resource.data.ownerUid == request.auth.uid
-          && request.resource.data.ownerEmail == request.auth.token.email
-          && request.resource.data.asesor == get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.asesorNombre
-          && request.resource.data.date is string
-        );
-
-      allow delete: if isSupervisor();
+      allow create: if canWriteOwnRecord(recordId);
+      allow update: if resource.data.ownerUid == request.auth.uid && canWriteOwnRecord(recordId);
+      allow delete: if false;
     }
 
     // Team-wide advancement metrics are supervisor-only.
     match /appData/{documentId} {
       allow read, write: if isSupervisor();
+    }
+
+    // Authorized team members can read operational links, but only the supervisor
+    // can maintain them. These URLs are not embedded in public index.html.
+    match /appConfig/{documentId} {
+      allow get: if hasAuthorizedProfile();
+      allow list: if false;
+      allow create, update, delete: if isSupervisor();
     }
 
     // Everything else is denied by default.

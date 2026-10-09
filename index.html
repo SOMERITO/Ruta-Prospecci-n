@@ -634,6 +634,17 @@
                 dashboardTab.classList.add("hidden");
                 avanceTab.classList.remove("hidden");
                 switchTab("avance");
+            } else if (role === "asesor_compartido") {
+                dashboardTab.classList.add("hidden");
+                asesorTab.classList.remove("hidden");
+                avanceTab.classList.remove("hidden");
+                asesorSelect.disabled = false;
+                asesorSelect.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
+                advisorProfiles.forEach(profile => {
+                    asesorSelect.add(new Option(profile.asesorNombre, profile.asesorNombre));
+                });
+                switchTab("asesor");
+                loadUserWorkspace();
             }
         }
 
@@ -683,7 +694,7 @@
 
                 const profile = profileSnapshot.data() || {};
                 if ((profile.email || "").toLowerCase() !== email ||
-                    !["supervisor", "asesor", "lector"].includes(profile.role)) {
+                    !["supervisor", "asesor", "lector", "asesor_compartido"].includes(profile.role)) {
                     setAuthMessage("El perfil autorizado no coincide con esta cuenta. Contacta a la persona que administra Ruta Prospección.", "error");
                     await auth.signOut();
                     return;
@@ -691,7 +702,7 @@
 
                 signedInUser = user;
                 signedInProfile = profile;
-                if (profile.role === "supervisor") {
+                if (["supervisor", "asesor_compartido"].includes(profile.role)) {
                     await loadAuthorizedAdvisors();
                 }
                 try {
@@ -817,18 +828,23 @@
                     }
                 }
 
+                const activeAdvisorName = signedInProfile.role === "asesor"
+                    ? signedInProfile.asesorNombre
+                    : asesorSelect.value;
                 const previousActiveRecord = (sharedTrackerData || []).find(record =>
-                    record.date === dateInput.value
+                    record.date === dateInput.value &&
+                    (signedInProfile.role === "supervisor" || record.asesor === activeAdvisorName)
                 );
                 const nextActiveRecord = remoteRecords.find(record =>
-                    record.date === dateInput.value
+                    record.date === dateInput.value &&
+                    (signedInProfile.role === "supervisor" || record.asesor === activeAdvisorName)
                 );
                 sharedTrackerData = remoteRecords;
 
-                if (signedInProfile.role === "asesor") {
-                    if (!previousActiveRecord ||
+                if (["asesor", "asesor_compartido"].includes(signedInProfile.role)) {
+                    if (activeAdvisorName && (!previousActiveRecord ||
                         !nextActiveRecord ||
-                        !sameCheckboxStates(previousActiveRecord.checkboxStates, nextActiveRecord.checkboxStates)) {
+                        !sameCheckboxStates(previousActiveRecord.checkboxStates, nextActiveRecord.checkboxStates))) {
                         loadUserWorkspace();
                     }
                 } else if (document.getElementById("jefatura").classList.contains("active")) {
@@ -972,9 +988,17 @@
         let asesoresList = [];
         let advisorProfiles = [];
 
+        function normalizeAdvisorKey(name) {
+            return String(name || "")
+                .normalize("NFD")
+                .replace(/[\\u0300-\\u036f]/g, "")
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "_")
+                .replace(/^_+|_+$/g, "");
+        }
+
         async function loadAuthorizedAdvisors() {
-            // Team roster is stored separately from login accounts: the team only needs
-            // one shared read-only account, not one Firebase Auth user per adviser.
+            // The roster lives in Firestore; a shared login avoids an Auth user per adviser.
             const snapshot = await db.collection("appConfig").doc("roster").get();
             const roster = snapshot.exists && Array.isArray(snapshot.data().advisors)
                 ? snapshot.data().advisors
@@ -982,7 +1006,7 @@
 
             advisorProfiles = roster
                 .filter(name => typeof name === "string" && name.trim())
-                .map(name => ({ asesorNombre: name.trim() }))
+                .map(name => ({ asesorNombre: name.trim(), advisorKey: normalizeAdvisorKey(name) }))
                 .sort((a, b) => a.asesorNombre.localeCompare(b.asesorNombre, "es"));
 
             asesoresList = advisorProfiles.map(profile => profile.asesorNombre);
@@ -1070,7 +1094,7 @@
 
         function switchTab(tabId) {
             if (signedInProfile?.role === "lector" && tabId !== "avance") return;
-            if (signedInProfile?.role === "asesor" && tabId === "jefatura") return;
+            if (["asesor", "asesor_compartido"].includes(signedInProfile?.role) && tabId === "jefatura") return;
             if (signedInProfile?.role === "supervisor" && tabId === "asesor") return;
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1236,8 +1260,18 @@
         function autoSaveRecord(completedCount, percentage, phaseName, subphaseName) {
             const asesor = asesorSelect.value;
             const date = dateInput.value;
-            if (!asesor || !signedInUser || !signedInProfile || signedInProfile.role !== "asesor") return;
-            if (asesor !== signedInProfile.asesorNombre) return;
+            if (!asesor || !signedInUser || !signedInProfile) return;
+
+            const role = signedInProfile.role;
+            const sharedAccount = role === "asesor_compartido";
+            if (role !== "asesor" && !sharedAccount) return;
+            if (role === "asesor" && asesor !== signedInProfile.asesorNombre) return;
+
+            const advisorProfile = advisorProfiles.find(profile => profile.asesorNombre === asesor);
+            if (sharedAccount && (!advisorProfile || !asesoresList.includes(asesor))) {
+                alert("Selecciona un asesor válido del listado del equipo.");
+                return;
+            }
 
             const checkboxStates = {};
             checkboxes.forEach(cb => { checkboxStates[cb.id] = cb.checked; });
@@ -1256,6 +1290,14 @@
                 ownerEmail: signedInUser.email
             };
 
+            let documentId;
+            if (sharedAccount) {
+                newRecord.advisorKey = advisorProfile.advisorKey;
+                documentId = "shared_" + advisorProfile.advisorKey + "_" + date;
+            } else {
+                documentId = signedInUser.uid + "_" + date;
+            }
+
             const data = getTrackerData().slice();
             const existingIndex = data.findIndex(record => record.asesor === asesor && record.date === date);
             if (existingIndex >= 0) data[existingIndex] = newRecord;
@@ -1263,7 +1305,7 @@
             sharedTrackerData = data;
 
             db.collection("trackerRecords")
-                .doc(signedInUser.uid + "_" + date)
+                .doc(documentId)
                 .set(newRecord, { merge: true })
                 .catch(error => {
                     console.error("No se pudo guardar el avance en Firestore:", error);

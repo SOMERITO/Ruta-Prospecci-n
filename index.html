@@ -629,6 +629,11 @@
                 asesorSelect.disabled = true;
                 switchTab("asesor");
                 loadUserWorkspace();
+            } else if (role === "lector") {
+                asesorTab.classList.add("hidden");
+                dashboardTab.classList.add("hidden");
+                avanceTab.classList.remove("hidden");
+                switchTab("avance");
             }
         }
 
@@ -678,7 +683,7 @@
 
                 const profile = profileSnapshot.data() || {};
                 if ((profile.email || "").toLowerCase() !== email ||
-                    !["supervisor", "asesor"].includes(profile.role)) {
+                    !["supervisor", "asesor", "lector"].includes(profile.role)) {
                     setAuthMessage("El perfil autorizado no coincide con esta cuenta. Contacta a la persona que administra Ruta Prospección.", "error");
                     await auth.signOut();
                     return;
@@ -774,6 +779,7 @@
             stopDataSubscriptions();
             legacyMigrationAttempted = false;
 
+            if (signedInProfile.role !== "lector") {
             let trackerQuery = db.collection("trackerRecords");
             if (signedInProfile.role === "asesor") {
                 trackerQuery = trackerQuery.where("ownerUid", "==", signedInUser.uid);
@@ -831,6 +837,7 @@
             }, (error) => {
                 console.error("No se pudieron sincronizar los registros:", error);
             });
+            }
 
             const monthInput = document.getElementById("avanceMonth");
             if (!monthInput.value) monthInput.value = getCurrentMonthKey();
@@ -1059,6 +1066,7 @@
         });
 
         function switchTab(tabId) {
+            if (signedInProfile?.role === "lector" && tabId !== "avance") return;
             if (signedInProfile?.role === "asesor" && tabId === "jefatura") return;
             if (signedInProfile?.role === "supervisor" && tabId === "asesor") return;
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));

@@ -2,6 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Institutional accounts must be verified and use the university domain.
     function hasInstitutionalIdentity() {
       return request.auth != null
         && request.auth.token.email is string
@@ -9,10 +10,24 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
+    // Only this exact, verified Gmail address may be used for the team's shared login.
+    function hasSharedTeamIdentity() {
+      return request.auth != null
+        && request.auth.token.email == 'prospeccionwiener@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
     function hasAuthorizedProfile() {
-      return hasInstitutionalIdentity()
+      return request.auth != null
         && exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid))
-        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.email == request.auth.token.email;
+        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.email == request.auth.token.email
+        && (
+          (hasInstitutionalIdentity()
+            && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role != 'asesor_compartido')
+          ||
+          (hasSharedTeamIdentity()
+            && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'asesor_compartido')
+        );
     }
 
     function isSupervisor() {
@@ -48,16 +63,17 @@ service cloud.firestore {
         && recordId == request.auth.uid + '_' + request.resource.data.date;
     }
 
-    // Profiles are created manually by the project owner. Clients cannot grant themselves a role.
+    // User can only read their own profile document; profiles and roles cannot be changed by clients.
     match /authorizedUsers/{uid} {
-      allow get: if hasInstitutionalIdentity() && request.auth.uid == uid;
+      allow get: if request.auth != null
+        && request.auth.uid == uid
+        && (hasInstitutionalIdentity() || hasSharedTeamIdentity());
       allow list: if isSupervisor();
       allow create, update, delete: if false;
     }
 
-    // Advisors can read and modify their own daily records; the supervisor can read all.
-    // The supervisor and shared team account can read all daily progress.
-    // Individual adviser accounts (if used) can only access their own records.
+    // The supervisor and the shared team account can read all daily progress.
+    // Individual adviser accounts can only access their own records.
     match /trackerRecords/{recordId} {
       allow get, list: if isSupervisor()
         || isSharedAdvisor()
@@ -81,7 +97,7 @@ service cloud.firestore {
       allow read, write: if isSupervisor();
     }
 
-    // Private operational links: every authorized user may read; only supervisor may manage.
+    // Operational links and roster are private to authorized profiles.
     match /appConfig/{documentId} {
       allow get: if hasAuthorizedProfile();
       allow list: if false;

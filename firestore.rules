@@ -46,9 +46,10 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // One document per month. Only the authorized supervisor can read or change monthly metrics.
+    // One document per month. All authorized users may view team indicators;
+    // only the supervisor may create, edit, or delete monthly figures.
     match /monthlyMetrics/{monthId} {
-      allow get: if isSupervisor();
+      allow get: if hasAuthorizedProfile();
       allow list: if false;
       allow create, update, delete: if isSupervisor();
     }

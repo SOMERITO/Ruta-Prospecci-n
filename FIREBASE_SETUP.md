@@ -65,7 +65,9 @@ Para cada campo, copia la URL vigente desde la fuente autorizada y confirma que 
 
 - Los registros diarios se guardan en `trackerRecords`, con un documento por UID y fecha.
 - Las métricas globales se guardan en `appData/avanceMetrics`; solo la supervisora puede administrarlas.
-- La primera sesión de supervisora intenta recuperar las métricas que existan en `avanceMetricsV6` del almacenamiento local de ese navegador. Si no hay una copia local, crea una fila por asesor autorizado usando `meta`, con avance y proyección en cero.
+- Las métricas se guardan en `monthlyMetrics/{YYYY-MM}`, por ejemplo `monthlyMetrics/2026-10`. Cada mes queda separado; editar noviembre no modifica octubre.
+- Cada documento mensual contiene `month` (string), `rows` (array de mapas con `asesor`, `meta`, `avance`, `proyeccion`), `updatedBy` (UID) y `updatedAt` (timestamp).
+- Al abrir el mes actual, la aplicación intenta migrar métricas antiguas desde `avanceMetricsV6` del navegador de la supervisora si existe una copia local. Si no existe, los perfiles de asesores se muestran con valores iniciales en cero y la supervisora debe introducir las cifras del mes. No se copian valores a meses anteriores o futuros.
 - Cada asesor puede migrar desde su propio navegador los registros locales de su nombre, siempre que esa fecha todavía no esté en Firestore.
 - Los valores de métricas mostrados como datos iniciales en la versión anterior del HTML no se deben considerar migrados automáticamente. Antes de producción, comprueba los valores de origen y cárgalos en Firestore si siguen siendo vigentes.
 
@@ -81,6 +83,7 @@ Antes de usar datos reales:
 ## 7. Verificaciones antes de producción
 
 - Probar con una cuenta supervisora y una de asesor.
+- Cambiar de mes en la sección Avance, editar una meta y confirmar que solo cambia el documento de ese mes.
 - Comprobar que un correo institucional no autorizado no accede a Firestore.
 - Confirmar que un asesor no puede consultar los registros de otro ni modificar métricas globales.
 - Probar la sincronización en dos navegadores o dispositivos.

@@ -35,17 +35,25 @@ Para cada persona autorizada:
 
 Campos del perfil:
 - `email`: string, correo institucional exacto de esa cuenta.
-- `role`: string, `supervisor` para la supervisora o `asesor` para el asesor.
-- `asesorNombre`: string obligatorio para perfiles con rol `asesor`; debe coincidir con el nombre que se usará en el equipo.
+- `role`: string, `supervisor` para Camila, `asesor` para cuentas individuales o `lector` para la cuenta compartida de consulta.
+- `asesorNombre`: string obligatorio solo para perfiles con rol `asesor`.
 Las metas no se guardan en el perfil permanente del asesor porque cambian por mes; se registran en el documento mensual correspondiente.
 
 No compartas contraseñas ni las guardes en GitHub. El correo debe verificarse antes de que Firestore permita consultar datos.
 
-## 4. Recursos privados de la ruta
+## 4. Cuenta compartida de consulta
+
+Para usar una sola cuenta compartida para consultar indicadores, crea un usuario en Firebase Authentication con un correo real, verificable y cuyo buzón de recuperación controle Camila. El HTML de esta rama actualmente acepta correos terminados en `@uwiener.edu.pe`; si el correo general no tiene ese dominio, detente antes de usarlo, porque habrá que ajustar la validación.
+
+Luego crea `authorizedUsers/{UID}` con `email` (string con el correo exacto) y `role` (string: `lector`). No agregues `asesorNombre`. Esa cuenta mostrará solo la pestaña Avance y no podrá editar métricas ni marcar las tareas del registro diario. Como los usuarios comparten credenciales, Firebase no podrá identificar cuál asesor consulta la tabla. Tras la salida de alguien del equipo, Camila puede solicitar el restablecimiento de la contraseña con el correo y distribuir la nueva al resto del grupo autorizado.
+
+La supervisora debe mantener una cuenta separada con rol `supervisor`. Nunca compartas sus credenciales.
+
+## 5. Recursos privados de la ruta
 
 Las URL operativas se cargan desde Firestore, no desde el HTML público.
 
-En Firestore → Datos, crea la colección `appConfig` y el documento `resources`. Añade un campo de tipo **mapa** llamado `links`. Dentro del mapa agrega campos de tipo **string** con estas claves:
+En Firestore → Datos, crea la colección `appConfig` y el documento `roster` con un campo `advisors` de tipo array que contenga los nombres vigentes del equipo. La supervisora puede gestionar este listado. Después crea el documento `resources`. Añade un campo de tipo **mapa** llamado `links`. Dentro del mapa agrega campos de tipo **string** con estas claves:
 
 - `intranet`
 - `grupoRutasUbicaciones`
@@ -62,7 +70,7 @@ En Firestore → Datos, crea la colección `appConfig` y el documento `resources
 
 Para cada campo, copia la URL vigente desde la fuente autorizada y confirma que la supervisora permite su uso. No pongas esas URL en `index.html`, en este archivo ni en otros archivos públicos.
 
-## 5. Migración y métricas iniciales
+## 6. Migración y métricas iniciales
 
 - Los registros diarios se guardan en `trackerRecords`, con un documento por UID y fecha.
 - Las métricas se guardan en `monthlyMetrics/{YYYY-MM}`, por ejemplo `monthlyMetrics/2026-10`. Cada mes queda separado; editar noviembre no modifica octubre.
@@ -71,7 +79,7 @@ Para cada campo, copia la URL vigente desde la fuente autorizada y confirma que 
 - Cada asesor puede migrar desde su propio navegador los registros locales de su nombre, siempre que esa fecha todavía no esté en Firestore.
 - Los valores de métricas mostrados como datos iniciales en la versión anterior del HTML no se deben considerar migrados automáticamente. Antes de producción, comprueba los valores de origen y cárgalos en Firestore si siguen siendo vigentes.
 
-## 6. Aviso sobre el historial público
+## 7. Aviso sobre el historial público
 
 La rama actual deja de incrustar nombres del equipo, métricas iniciales y URL operativas en el HTML. Sin embargo, el repositorio principal sigue siendo público y los commits anteriores pueden conservar información que ya se publicó. Fusionar este cambio no borra el historial.
 
@@ -80,9 +88,9 @@ Antes de usar datos reales:
 - Si una invitación a un grupo privado de WhatsApp estuvo expuesta y no debía ser pública, solicita que se regenere.
 - No incluyas datos reales de prospectos/alumnos hasta completar la revisión de privacidad y seguridad.
 
-## 7. Verificaciones antes de producción
+## 8. Verificaciones antes de producción
 
-- Probar con una cuenta supervisora y una de asesor. Usar cuentas individuales; no compartir una cuenta con permisos de supervisora.
+- Probar con la cuenta supervisora de Camila y la cuenta compartida `lector`.
 - Abrir la sección Avance con una cuenta de asesor y confirmar que puede ver toda la tabla, pero no tiene botón para editar.
 - Cambiar de mes en la sección Avance como supervisora, editar una meta y confirmar que solo cambia el documento de ese mes.
 - Comprobar que un correo institucional no autorizado no accede a Firestore.

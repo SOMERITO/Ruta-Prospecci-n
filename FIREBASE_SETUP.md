@@ -7,7 +7,9 @@ Esta rama contiene una propuesta de inicio de sesión, permisos y sincronizació
 En Firebase Console → Authentication → Método de acceso:
 - Mantén habilitado **Correo electrónico/contraseña**.
 - No habilites el acceso anónimo ni agregues un formulario de registro público.
-- Cada persona usará su correo `@uwiener.edu.pe` y una contraseña exclusiva de Ruta Prospección; nunca se solicitará ni almacenará la contraseña de Outlook.
+- Camila ingresa con su cuenta institucional autorizada.
+- El equipo utiliza la única cuenta compartida exacta `prospeccionwiener@gmail.com`, con una contraseña exclusiva de Ruta Prospección. La contraseña de Gmail no se comparte con los asesores.
+- La cuenta general debe verificarse una vez desde el enlace enviado a ese buzón, que controla Camila.
 
 Después de desplegar el HTML, añade a Authentication → Configuración → Dominios autorizados el dominio exacto de GitHub Pages que sirve la página.
 
@@ -26,12 +28,12 @@ Las reglas:
 
 ## 3. Dar de alta cuentas y perfiles
 
-Para cada persona autorizada:
-1. En Authentication → Usuarios, elige **Agregar usuario**. Registra su correo institucional y asigna una contraseña temporal aleatoria.
-2. Tras el despliegue, la persona podrá pulsar **Olvidé mi contraseña** para recibir un enlace y definir su contraseña propia.
-3. En el primer inicio de sesión, la página solicita verificar el correo institucional. La persona debe abrir el enlace recibido y volver a iniciar sesión.
-4. Copia el UID que aparece en Authentication → Usuarios.
-5. En Firestore → Datos, crea un documento en la colección `authorizedUsers`, usando ese UID exacto como ID del documento.
+Para crear una cuenta autorizada:
+1. En Authentication → Usuarios, elige **Agregar usuario**.
+2. Para Camila, usa su correo institucional verificado. Para la cuenta del equipo, registra exactamente `prospeccionwiener@gmail.com` y define una contraseña aleatoria exclusiva de la aplicación.
+3. Copia el UID que aparece en Authentication → Usuarios.
+4. En Firestore → Datos, crea un documento en la colección `authorizedUsers`, usando ese UID exacto como ID del documento.
+5. Verifica el correo de la cuenta general desde el enlace que llegue a Gmail. Camila puede restablecer la contraseña de Ruta Prospección desde ese mismo buzón; no debe compartir la contraseña de Gmail.
 
 Campos del perfil:
 - `email`: string, correo institucional exacto de esa cuenta.
@@ -43,17 +45,19 @@ No compartas contraseñas ni las guardes en GitHub. El correo debe verificarse a
 
 ## 4. Cuenta compartida para registrar progreso
 
-Crea un solo usuario en Firebase Authentication con un correo real y verificable terminado en `@uwiener.edu.pe`, cuyo buzón de recuperación controle Camila. Si el correo general no tiene ese dominio, detente: antes habrá que ajustar la validación de correo en el HTML y volver a probarla.
+En Authentication → Usuarios, crea un solo usuario con el correo exacto `prospeccionwiener@gmail.com` y una contraseña exclusiva de Ruta Prospección. No uses ni compartas la contraseña de Gmail. La dirección exacta está autorizada en el código y en las reglas de esta rama; no se autoriza cualquier cuenta de Gmail.
 
 Después crea `authorizedUsers/{UID}` con:
-- `email`: string, correo exacto de esa cuenta.
+- `email`: string, exactamente `prospeccionwiener@gmail.com`.
 - `role`: string con el valor `asesor_compartido`.
 
 No agregues `asesorNombre` al perfil compartido. Al entrar, cada persona selecciona su nombre en la pestaña **Asesor**; sus casillas se guardan en un documento distinto por asesor y fecha, y los cambios se sincronizan en tiempo real con el panel de Camila. La cuenta compartida puede consultar todos los indicadores en Avance, pero no editar las métricas. Camila conserva su cuenta separada con rol `supervisor` y es la única que modifica metas mensuales.
 
+En el primer acceso, verifica `prospeccionwiener@gmail.com` desde el enlace que Firebase envía a ese buzón. Camila controla el buzón y la recuperación; los asesores reciben únicamente la contraseña de la aplicación. Si alguien deja el equipo, restablece la contraseña de Ruta Prospección y comparte la nueva solo con quienes sigan autorizados.
+
 **Limitación del acceso compartido:** Firebase no puede verificar qué persona física usa el nombre seleccionado. Cualquiera que conozca la contraseña compartida puede seleccionar otro asesor y modificar su progreso. La actividad queda atribuida a la cuenta general, no al asesor individual. Si en el futuro necesitan impedirlo, habrá que usar cuentas individuales o un segundo método de autenticación por persona.
 
-Cuando alguien deje el equipo, Camila puede restablecer la contraseña de la cuenta general desde el correo de recuperación y distribuir la nueva únicamente a los integrantes autorizados.
+**Limitación del acceso compartido:** Firebase no puede verificar qué persona física usa el nombre seleccionado. Cualquiera que conozca la contraseña compartida puede seleccionar otro asesor y modificar su progreso. La actividad queda atribuida a la cuenta general, no al asesor individual. Si en el futuro necesitan impedirlo, habrá que usar cuentas individuales o un segundo método de autenticación por persona.
 
 ## 5. Recursos privados de la ruta
 
@@ -102,7 +106,7 @@ Antes de usar datos reales:
 - Confirmar que la cuenta general permite elegir el nombre y marcar casillas en Asesor, y que Camila ve los cambios reflejados en el Dashboard.
 - Confirmar que la cuenta general puede ver Avance pero no modificar metas, avances de indicadores ni proyecciones mensuales.
 - Cambiar de mes en la sección Avance como supervisora, editar una meta y confirmar que solo cambia el documento de ese mes.
-- Comprobar que un correo institucional no autorizado no accede a Firestore.
+- Comprobar que un correo institucional no autorizado no accede a Firestore y que otra cuenta de Gmail tampoco puede iniciar sesión como cuenta compartida.
 - Confirmar que un asesor no puede consultar los registros de otro ni modificar métricas globales.
 - Probar la sincronización en dos navegadores o dispositivos.
 - Verificar recuperación de contraseña, confirmación del correo y cierre de sesión.

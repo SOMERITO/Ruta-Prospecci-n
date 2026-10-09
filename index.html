@@ -7,6 +7,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Firebase compat SDK: this repository is a single-file HTML app (no npm build step). -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -50,16 +54,64 @@
         input[type="number"]::-webkit-outer-spin-button { 
             -webkit-appearance: none; margin: 0; 
         }
+        #appContent { display: none; }
+        body.authenticated #appContent { display: flex; flex-direction: column; flex-grow: 1; }
+        body.authenticated #authGate { display: none !important; }
+        #authMessage:empty { display: none; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
 
+    <section id="authGate" class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
+            <div class="flex items-center justify-center mb-5">
+                <div class="h-14 w-14 rounded-2xl bg-brand-900 flex items-center justify-center">
+                    <i class="fa-solid fa-route text-2xl text-brand-400"></i>
+                </div>
+            </div>
+            <h1 class="text-2xl font-extrabold text-center text-gray-900">Ruta Prospección</h1>
+            <p class="text-sm text-gray-500 text-center mt-2 mb-6">Acceso privado para el equipo autorizado</p>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="loginEmail" class="block text-sm font-semibold text-gray-700 mb-1">Correo institucional</label>
+                    <input id="loginEmail" name="email" type="email" autocomplete="username" required
+                        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-brand-400 focus:border-brand-500"
+                        placeholder="nombre@uwiener.edu.pe">
+                </div>
+                <div>
+                    <label for="loginPassword" class="block text-sm font-semibold text-gray-700 mb-1">Contraseña de Ruta Prospección</label>
+                    <input id="loginPassword" name="password" type="password" autocomplete="current-password" required
+                        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-brand-400 focus:border-brand-500"
+                        placeholder="Tu contraseña de la aplicación">
+                </div>
+                <button id="loginSubmit" type="submit"
+                    class="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-lg p-3 transition-colors">
+                    Iniciar sesión
+                </button>
+            </form>
+            <div class="text-center mt-4">
+                <button id="resetPasswordBtn" type="button" class="text-sm font-semibold text-brand-700 hover:text-brand-900 underline">
+                    Olvidé mi contraseña
+                </button>
+            </div>
+            <p id="authMessage" role="status" aria-live="polite" class="mt-4 rounded-lg p-3 text-sm text-center bg-blue-50 text-blue-800"></p>
+            <p class="text-xs text-gray-400 text-center mt-5">El acceso se habilita individualmente. Tener un correo institucional no concede acceso automáticamente.</p>
+        </div>
+    </section>
+
+    <div id="appContent">
     <nav class="bg-brand-900 text-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-route text-2xl text-brand-500"></i>
                     <span class="font-bold text-xl tracking-wide">Ruta Prospección</span>
+                </div>
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <span id="signedInEmail" class="text-xs sm:text-sm text-brand-100 truncate max-w-[42vw]"></span>
+                    <button id="signOutBtn" type="button" class="hidden bg-brand-800 hover:bg-brand-700 border border-brand-700 rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold whitespace-nowrap">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i><span class="hidden sm:inline">Cerrar sesión</span><span class="sm:hidden">Salir</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -467,8 +519,334 @@
         </div>
 
     </main>
+    </div><!-- /#appContent -->
 
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQt1eHVwGiGp3j8M0F9NiuH8l0x8Yv80k",
+            authDomain: "ruta-prospeccion.firebaseapp.com",
+            projectId: "ruta-prospeccion",
+            storageBucket: "ruta-prospeccion.firebasestorage.app",
+            messagingSenderId: "663940859388",
+            appId: "1:663940859388:web:6b31d34135242f40ffde79"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let signedInUser = null;
+        let signedInProfile = null;
+        let sharedTrackerData = null;
+        let sharedAvanceRows = null;
+        let trackerUnsubscribe = null;
+        let avanceUnsubscribe = null;
+        let authStateGeneration = 0;
+        let legacyMigrationAttempted = false;
+
+        function parseLegacyTrackerData() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem("trackerData") || "[]");
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.warn("No se pudo leer el respaldo local de trackerData.", error);
+                return [];
+            }
+        }
+
+        function parseLegacyAvanceData() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem("avanceMetricsV6") || "null");
+                return Array.isArray(parsed) && parsed.length ? parsed : null;
+            } catch (error) {
+                console.warn("No se pudo leer el respaldo local de avance.", error);
+                return null;
+            }
+        }
+
+        function getTrackerData() {
+            // Mientras hay una sesión iniciada, los datos compartidos proceden de Firestore.
+            // El localStorage solo se conserva como respaldo de migración del sistema anterior.
+            if (signedInUser) return sharedTrackerData || [];
+            return parseLegacyTrackerData();
+        }
+
+        function setAuthMessage(message, kind = "info") {
+            const element = document.getElementById("authMessage");
+            if (!element) return;
+            element.textContent = message || "";
+            element.className = "mt-4 rounded-lg p-3 text-sm text-center";
+            if (kind === "error") element.classList.add("bg-red-50", "text-red-800");
+            else if (kind === "success") element.classList.add("bg-green-50", "text-green-800");
+            else element.classList.add("bg-blue-50", "text-blue-800");
+        }
+
+        function stopDataSubscriptions() {
+            if (typeof trackerUnsubscribe === "function") trackerUnsubscribe();
+            if (typeof avanceUnsubscribe === "function") avanceUnsubscribe();
+            trackerUnsubscribe = null;
+            avanceUnsubscribe = null;
+        }
+
+        function sameCheckboxStates(left, right) {
+            if (!left || !right) return false;
+            const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
+            for (const key of keys) {
+                if (Boolean(left[key]) !== Boolean(right[key])) return false;
+            }
+            return true;
+        }
+
+        function configureAuthorizedInterface() {
+            const tabButtons = Array.from(document.querySelectorAll("#tabs .tab-btn"));
+            const asesorTab = tabButtons[0];
+            const dashboardTab = tabButtons[1];
+            const avanceTab = tabButtons[2];
+            const role = signedInProfile.role;
+
+            document.getElementById("signedInEmail").textContent = signedInUser.email || "";
+            document.getElementById("signOutBtn").classList.remove("hidden");
+
+            if (role === "supervisor") {
+                asesorTab.classList.add("hidden");
+                dashboardTab.classList.remove("hidden");
+                avanceTab.classList.remove("hidden");
+                switchTab("jefatura");
+            } else {
+                dashboardTab.classList.add("hidden");
+                avanceTab.classList.add("hidden");
+                asesorTab.classList.remove("hidden");
+                const advisorName = signedInProfile.asesorNombre;
+                if (!advisorName || !asesoresList.includes(advisorName)) {
+                    throw new Error("La cuenta no tiene un nombre de asesor válido asignado en authorizedUsers.");
+                }
+                asesorSelect.value = advisorName;
+                asesorSelect.disabled = true;
+                switchTab("asesor");
+                loadUserWorkspace();
+            }
+        }
+
+        async function handleAuthState(user) {
+            const generation = ++authStateGeneration;
+            stopDataSubscriptions();
+            sharedTrackerData = null;
+            sharedAvanceRows = null;
+
+            if (!user) {
+                signedInUser = null;
+                signedInProfile = null;
+                document.body.classList.remove("authenticated");
+                document.getElementById("signOutBtn").classList.add("hidden");
+                document.getElementById("signedInEmail").textContent = "";
+                return;
+            }
+
+            try {
+                const email = (user.email || "").trim().toLowerCase();
+                if (!email.endsWith("@uwiener.edu.pe")) {
+                    setAuthMessage("Solo se admiten cuentas institucionales @uwiener.edu.pe.", "error");
+                    await auth.signOut();
+                    return;
+                }
+
+                if (!user.emailVerified) {
+                    try {
+                        await user.sendEmailVerification();
+                        setAuthMessage("Antes de ingresar, verifica tu correo institucional. Te enviamos un enlace; después de confirmarlo, vuelve a iniciar sesión.", "info");
+                    } catch (verificationError) {
+                        setAuthMessage("Tu correo todavía no está verificado. Revisa tu bandeja y solicita un nuevo enlace más tarde si fuera necesario.", "error");
+                    }
+                    await auth.signOut();
+                    return;
+                }
+
+                const profileSnapshot = await db.collection("authorizedUsers").doc(user.uid).get();
+                if (generation !== authStateGeneration) return;
+
+                if (!profileSnapshot.exists) {
+                    setAuthMessage("Tu cuenta existe, pero todavía no está autorizada para Ruta Prospección. Solicita acceso a la supervisora.", "error");
+                    await auth.signOut();
+                    return;
+                }
+
+                const profile = profileSnapshot.data() || {};
+                if ((profile.email || "").toLowerCase() !== email ||
+                    !["supervisor", "asesor"].includes(profile.role)) {
+                    setAuthMessage("El perfil autorizado no coincide con esta cuenta. Contacta a la persona que administra Ruta Prospección.", "error");
+                    await auth.signOut();
+                    return;
+                }
+
+                signedInUser = user;
+                signedInProfile = profile;
+                document.getElementById("authGate").classList.add("hidden");
+                document.body.classList.add("authenticated");
+                configureAuthorizedInterface();
+                startDataSubscriptions();
+                setAuthMessage("", "info");
+            } catch (error) {
+                console.error("No se pudo validar el acceso a Ruta Prospección:", error);
+                setAuthMessage(
+                    error && error.code === "permission-denied"
+                        ? "No se pudo comprobar la autorización en Firestore. Verifica que estén publicadas las reglas de seguridad y que tu perfil esté configurado."
+                        : "No se pudo validar tu acceso. Comprueba la conexión e inténtalo nuevamente.",
+                    "error"
+                );
+                await auth.signOut();
+            }
+        }
+
+        document.getElementById("loginForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+            const password = document.getElementById("loginPassword").value;
+            const button = document.getElementById("loginSubmit");
+
+            if (!email.endsWith("@uwiener.edu.pe")) {
+                setAuthMessage("Utiliza tu correo institucional terminado en @uwiener.edu.pe.", "error");
+                return;
+            }
+            button.disabled = true;
+            button.textContent = "Validando...";
+            setAuthMessage("");
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                console.error("Error de inicio de sesión:", error);
+                const messages = {
+                    "auth/invalid-credential": "El correo o la contraseña no son correctos.",
+                    "auth/user-not-found": "No encontramos una cuenta creada para este correo.",
+                    "auth/wrong-password": "El correo o la contraseña no son correctos.",
+                    "auth/too-many-requests": "Hubo demasiados intentos. Espera un momento e inténtalo nuevamente.",
+                    "auth/invalid-email": "Escribe un correo electrónico válido.",
+                    "auth/unauthorized-domain": "El dominio de esta página debe autorizarse en la configuración de Firebase Authentication."
+                };
+                setAuthMessage(messages[error.code] || "No se pudo iniciar sesión. Revisa los datos e inténtalo nuevamente.", "error");
+            } finally {
+                button.disabled = false;
+                button.textContent = "Iniciar sesión";
+            }
+        });
+
+        document.getElementById("resetPasswordBtn").addEventListener("click", async () => {
+            const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+            if (!email.endsWith("@uwiener.edu.pe")) {
+                setAuthMessage("Escribe primero tu correo institucional para solicitar el restablecimiento.", "error");
+                return;
+            }
+            try {
+                await auth.sendPasswordResetEmail(email);
+                setAuthMessage("Si existe una cuenta para ese correo, recibirás un mensaje para restablecer la contraseña.", "success");
+            } catch (error) {
+                console.error("Error al solicitar el restablecimiento:", error);
+                setAuthMessage("No se pudo enviar el correo de restablecimiento. Comprueba la dirección e inténtalo más tarde.", "error");
+            }
+        });
+
+        document.getElementById("signOutBtn").addEventListener("click", async () => {
+            await auth.signOut();
+            document.getElementById("loginPassword").value = "";
+            setAuthMessage("Has cerrado sesión.", "success");
+        });
+
+        function startDataSubscriptions() {
+            stopDataSubscriptions();
+            legacyMigrationAttempted = false;
+
+            let trackerQuery = db.collection("trackerRecords");
+            if (signedInProfile.role === "asesor") {
+                trackerQuery = trackerQuery.where("ownerUid", "==", signedInUser.uid);
+            }
+
+            trackerUnsubscribe = trackerQuery.onSnapshot(async (snapshot) => {
+                const remoteRecords = snapshot.docs.map(doc => doc.data());
+
+                // Migración conservadora: solo transfiere registros locales del asesor autenticado
+                // y únicamente las fechas que todavía no existen en Firestore.
+                if (signedInProfile.role === "asesor" && !legacyMigrationAttempted) {
+                    legacyMigrationAttempted = true;
+                    const localRecords = parseLegacyTrackerData();
+                    const remoteDates = new Set(remoteRecords.map(record => record.date));
+                    const missingRecords = localRecords.filter(record =>
+                        record.asesor === signedInProfile.asesorNombre &&
+                        record.date &&
+                        !remoteDates.has(record.date)
+                    );
+                    if (missingRecords.length) {
+                        try {
+                            await Promise.all(missingRecords.map(record =>
+                                db.collection("trackerRecords")
+                                    .doc(signedInUser.uid + "_" + record.date)
+                                    .set({
+                                        ...record,
+                                        ownerUid: signedInUser.uid,
+                                        ownerEmail: signedInUser.email,
+                                        asesor: signedInProfile.asesorNombre
+                                    }, { merge: true })
+                            ));
+                        } catch (migrationError) {
+                            console.error("La migración local de registros no se completó:", migrationError);
+                        }
+                    }
+                }
+
+                const previousActiveRecord = (sharedTrackerData || []).find(record =>
+                    record.date === dateInput.value
+                );
+                const nextActiveRecord = remoteRecords.find(record =>
+                    record.date === dateInput.value
+                );
+                sharedTrackerData = remoteRecords;
+
+                if (signedInProfile.role === "asesor") {
+                    if (!previousActiveRecord ||
+                        !nextActiveRecord ||
+                        !sameCheckboxStates(previousActiveRecord.checkboxStates, nextActiveRecord.checkboxStates)) {
+                        loadUserWorkspace();
+                    }
+                } else if (document.getElementById("jefatura").classList.contains("active")) {
+                    renderDashboard();
+                }
+            }, (error) => {
+                console.error("No se pudieron sincronizar los registros:", error);
+            });
+
+            if (signedInProfile.role === "supervisor") {
+                const avanceRef = db.collection("appData").doc("avanceMetrics");
+                let initializationAttempted = false;
+                avanceUnsubscribe = avanceRef.onSnapshot(async (snapshot) => {
+                    if (!snapshot.exists) {
+                        if (!initializationAttempted) {
+                            initializationAttempted = true;
+                            const legacyRows = parseLegacyAvanceData();
+                            const rows = legacyRows || JSON.parse(JSON.stringify(defaultAvanceData));
+                            try {
+                                await avanceRef.set({
+                                    rows,
+                                    updatedBy: signedInUser.uid,
+                                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                            } catch (error) {
+                                console.error("No se pudo inicializar el documento de avance:", error);
+                            }
+                        }
+                        return;
+                    }
+
+                    const data = snapshot.data() || {};
+                    sharedAvanceRows = Array.isArray(data.rows)
+                        ? data.rows
+                        : JSON.parse(JSON.stringify(defaultAvanceData));
+                    if (document.getElementById("avance").classList.contains("active")) {
+                        renderAvance();
+                    }
+                }, (error) => {
+                    console.error("No se pudieron sincronizar las métricas de avance:", error);
+                });
+            }
+        }
+
         const asesoresList = [
             "Dana Nicolls Lizarme Tenorio", "Doris Carolina Herrera Castro", "Fiorella Eduarda Camayo Quiñones",
             "Jose Luis Zevallos Anfossi", "Jose Martin Garcia Segura", "Jose Reynaldo Munar Moya",
@@ -505,6 +883,8 @@
         });
 
         function switchTab(tabId) {
+            if (signedInProfile?.role === "asesor" && tabId !== "asesor") return;
+            if (signedInProfile?.role === "supervisor" && tabId === "asesor") return;
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             
@@ -547,7 +927,7 @@
             displayName.innerText = asesor;
             trackerWorkspace.classList.remove('opacity-0', 'pointer-events-none');
 
-            const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
+            const data = getTrackerData();
             const userRecord = data.find(r => r.asesor === asesor && r.date === date);
 
             checkboxes.forEach(cb => { cb.checked = false; });
@@ -669,32 +1049,47 @@
         function autoSaveRecord(completedCount, percentage, phaseName, subphaseName) {
             const asesor = asesorSelect.value;
             const date = dateInput.value;
-            if (!asesor) return;
+            if (!asesor || !signedInUser || !signedInProfile || signedInProfile.role !== "asesor") return;
+            if (asesor !== signedInProfile.asesorNombre) return;
 
-            let checkboxStates = {};
+            const checkboxStates = {};
             checkboxes.forEach(cb => { checkboxStates[cb.id] = cb.checked; });
 
             const newRecord = {
-                id: Date.now(), asesor: asesor, date: date, completed: completedCount,
-                total: totalSteps, percentage: percentage, phase: phaseName,
-                subphase: subphaseName, checkboxStates: checkboxStates
+                id: Date.now(),
+                asesor,
+                date,
+                completed: completedCount,
+                total: totalSteps,
+                percentage,
+                phase: phaseName,
+                subphase: subphaseName,
+                checkboxStates,
+                ownerUid: signedInUser.uid,
+                ownerEmail: signedInUser.email
             };
 
-            let data = JSON.parse(localStorage.getItem('trackerData') || '[]');
-            const existingIndex = data.findIndex(r => r.asesor === asesor && r.date === date);
-            
+            const data = getTrackerData().slice();
+            const existingIndex = data.findIndex(record => record.asesor === asesor && record.date === date);
             if (existingIndex >= 0) data[existingIndex] = newRecord;
             else data.push(newRecord);
+            sharedTrackerData = data;
 
-            localStorage.setItem('trackerData', JSON.stringify(data));
-            
-            if(document.getElementById('jefatura').classList.contains('active')) {
+            db.collection("trackerRecords")
+                .doc(signedInUser.uid + "_" + date)
+                .set(newRecord, { merge: true })
+                .catch(error => {
+                    console.error("No se pudo guardar el avance en Firestore:", error);
+                    alert("No se pudo sincronizar este cambio con la nube. Revisa tu conexión antes de cerrar la página.");
+                });
+
+            if (document.getElementById("jefatura").classList.contains("active")) {
                 renderDashboard();
             }
         }
 
         function renderDashboard() {
-            const data = JSON.parse(localStorage.getItem('trackerData') || '[]');
+            const data = getTrackerData();
             const tbody = document.getElementById('dashboardTableBody');
             
             const today = dateInput.value;
@@ -784,11 +1179,10 @@
         ];
 
         function loadAvanceData() {
-            let data = JSON.parse(localStorage.getItem('avanceMetricsV6'));
-            if (!data || data.length === 0) {
-                data = JSON.parse(JSON.stringify(defaultAvanceData));
+            if (signedInUser && signedInProfile && signedInProfile.role === "supervisor" && sharedAvanceRows) {
+                return sharedAvanceRows;
             }
-            return data;
+            return parseLegacyAvanceData() || JSON.parse(JSON.stringify(defaultAvanceData));
         }
 
         function getAvanceBadgeColor(pct) {
@@ -871,19 +1265,38 @@
         }
 
         function updateAvance(idx, field, val) {
-            const overlay = document.getElementById('avanceSyncOverlay');
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
-            
-            setTimeout(() => {
-                let data = loadAvanceData();
-                data[idx][field] = Number(val) || 0;
-                localStorage.setItem('avanceMetricsV6', JSON.stringify(data));
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+
+            const overlay = document.getElementById("avanceSyncOverlay");
+            overlay.classList.remove("hidden");
+            overlay.classList.add("flex");
+
+            setTimeout(async () => {
+                const data = loadAvanceData().map(row => ({ ...row }));
+                if (!data[idx]) {
+                    overlay.classList.add("hidden");
+                    overlay.classList.remove("flex");
+                    return;
+                }
+
+                data[idx][field] = Math.max(0, Number(val) || 0);
+                sharedAvanceRows = data;
                 renderAvance();
-                
-                overlay.classList.add('hidden');
-                overlay.classList.remove('flex');
-            }, 600);
+
+                try {
+                    await db.collection("appData").doc("avanceMetrics").set({
+                        rows: data,
+                        updatedBy: signedInUser.uid,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                } catch (error) {
+                    console.error("No se pudo guardar el avance del equipo:", error);
+                    alert("No se pudo guardar la métrica en la nube. Revisa tu conexión e inténtalo otra vez.");
+                } finally {
+                    overlay.classList.add("hidden");
+                    overlay.classList.remove("flex");
+                }
+            }, 250);
         }
 
         window.addEventListener('storage', (e) => {
@@ -976,6 +1389,7 @@
         }
 
         updateProgress();
+        auth.onAuthStateChanged(handleAuthState);
     </script>
 </body>
 </html>

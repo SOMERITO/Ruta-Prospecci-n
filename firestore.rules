@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function hasInstitutionalIdentity() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email.matches('^[^@]+@uwiener[.]edu[.]pe$')
+        && request.auth.token.email_verified == true;
+    }
+
+    function hasAuthorizedProfile() {
+      return hasInstitutionalIdentity()
+        && exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.email == request.auth.token.email;
+    }
+
+    function isSupervisor() {
+      return hasAuthorizedProfile()
+        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'supervisor';
+    }
+
+    // Profiles are provisioned manually by the project owner in Firebase Console.
+    // Clients can only read their own profile; no client can grant themselves a role.
+    match /authorizedUsers/{uid} {
+      allow get: if hasInstitutionalIdentity() && request.auth.uid == uid;
+      allow list: if isSupervisor();
+      allow create, update, delete: if false;
+    }
+
+    // One document per adviser and date. Advisers may only access their own records.
+    // Supervisors can see all records for the team.
+    match /trackerRecords/{recordId} {
+      allow get, list: if isSupervisor()
+        || (hasAuthorizedProfile() && resource.data.ownerUid == request.auth.uid);
+
+      allow create, update: if isSupervisor()
+        || (
+          hasAuthorizedProfile()
+          && request.resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerEmail == request.auth.token.email
+          && request.resource.data.asesor == get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.asesorNombre
+          && request.resource.data.date is string
+        );
+
+      allow delete: if isSupervisor();
+    }
+
+    // Team-wide advancement metrics are supervisor-only.
+    match /appData/{documentId} {
+      allow read, write: if isSupervisor();
+    }
+
+    // Everything else is denied by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

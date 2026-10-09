@@ -801,27 +801,45 @@
 
                 // Migración conservadora: solo transfiere registros locales del asesor autenticado
                 // y únicamente las fechas que todavía no existen en Firestore.
-                if (signedInProfile.role === "asesor" && !legacyMigrationAttempted) {
+                if (["asesor", "asesor_compartido"].includes(signedInProfile.role) && !legacyMigrationAttempted) {
                     legacyMigrationAttempted = true;
                     const localRecords = parseLegacyTrackerData();
-                    const remoteDates = new Set(remoteRecords.map(record => record.date));
-                    const missingRecords = localRecords.filter(record =>
-                        record.asesor === signedInProfile.asesorNombre &&
-                        record.date &&
-                        !remoteDates.has(record.date)
-                    );
+                    const remoteKeys = new Set(remoteRecords.map(record => record.asesor + "::" + record.date));
+                    const allowedNames = signedInProfile.role === "asesor"
+                        ? [signedInProfile.asesorNombre]
+                        : asesoresList;
+                    const migratedKeys = new Set();
+                    const missingRecords = localRecords.filter(record => {
+                        const key = record.asesor + "::" + record.date;
+                        if (!record.date || !allowedNames.includes(record.asesor) ||
+                            remoteKeys.has(key) || migratedKeys.has(key)) return false;
+                        if (signedInProfile.role === "asesor_compartido" &&
+                            !advisorProfiles.some(profile => profile.asesorNombre === record.asesor)) return false;
+                        migratedKeys.add(key);
+                        return true;
+                    });
+
                     if (missingRecords.length) {
                         try {
-                            await Promise.all(missingRecords.map(record =>
-                                db.collection("trackerRecords")
-                                    .doc(signedInUser.uid + "_" + record.date)
-                                    .set({
-                                        ...record,
-                                        ownerUid: signedInUser.uid,
-                                        ownerEmail: signedInUser.email,
-                                        asesor: signedInProfile.asesorNombre
-                                    }, { merge: true })
-                            ));
+                            await Promise.all(missingRecords.map(record => {
+                                const shared = signedInProfile.role === "asesor_compartido";
+                                const advisor = shared
+                                    ? advisorProfiles.find(profile => profile.asesorNombre === record.asesor)
+                                    : null;
+                                const migratedRecord = {
+                                    ...record,
+                                    ownerUid: signedInUser.uid,
+                                    ownerEmail: signedInUser.email
+                                };
+                                const documentId = shared
+                                    ? "shared_" + advisor.advisorKey + "_" + record.date
+                                    : signedInUser.uid + "_" + record.date;
+                                if (shared) migratedRecord.advisorKey = advisor.advisorKey;
+
+                                return db.collection("trackerRecords")
+                                    .doc(documentId)
+                                    .set(migratedRecord, { merge: true });
+                            }));
                         } catch (migrationError) {
                             console.error("La migración local de registros no se completó:", migrationError);
                         }
@@ -991,22 +1009,26 @@
         function normalizeAdvisorKey(name) {
             return String(name || "")
                 .normalize("NFD")
-                .replace(/[\\u0300-\\u036f]/g, "")
+                .replace(/[\u0300-\u036f]/g, "")
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, "_")
                 .replace(/^_+|_+$/g, "");
         }
 
         async function loadAuthorizedAdvisors() {
-            // The roster lives in Firestore; a shared login avoids an Auth user per adviser.
+            // The roster is stored as a private map: normalized advisor key -> display name.
+            // This avoids embedding staff names or creating an Auth user for every adviser.
             const snapshot = await db.collection("appConfig").doc("roster").get();
-            const roster = snapshot.exists && Array.isArray(snapshot.data().advisors)
-                ? snapshot.data().advisors
-                : [];
+            const advisorMap = snapshot.exists && snapshot.data().advisorMap &&
+                typeof snapshot.data().advisorMap === "object"
+                ? snapshot.data().advisorMap
+                : {};
 
-            advisorProfiles = roster
-                .filter(name => typeof name === "string" && name.trim())
-                .map(name => ({ asesorNombre: name.trim(), advisorKey: normalizeAdvisorKey(name) }))
+            advisorProfiles = Object.entries(advisorMap)
+                .filter(([key, name]) => /^[a-z0-9_]+$/.test(key) &&
+                    typeof name === "string" && name.trim() &&
+                    key === normalizeAdvisorKey(name))
+                .map(([advisorKey, name]) => ({ asesorNombre: name.trim(), advisorKey }))
                 .sort((a, b) => a.asesorNombre.localeCompare(b.asesorNombre, "es"));
 
             asesoresList = advisorProfiles.map(profile => profile.asesorNombre);

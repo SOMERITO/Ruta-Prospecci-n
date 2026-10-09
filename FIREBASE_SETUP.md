@@ -32,7 +32,8 @@ Para cada usuario:
 Campos del documento:
 - `email` — string, exactamente el correo de la cuenta.
 - `role` — string; usa `supervisor` o `asesor`.
-- `asesorNombre` — string obligatorio para `asesor`, debe coincidir exactamente con el nombre asignado en Ruta Prospección. Para la supervisora no se necesita.
+- `asesorNombre` — string obligatorio para `asesor`. El nombre se carga desde este perfil y ya no se encuentra escrito en el HTML público.
+- `meta` — number opcional para asesores; meta del período usada al inicializar métricas nuevas.
 
 Los UID y perfiles se obtienen desde Authentication → Usuarios. No compartas contraseñas ni las guardes en el repositorio.
 
@@ -43,7 +44,7 @@ Los UID y perfiles se obtienen desde Authentication → Usuarios. No compartas c
 - La primera sesión de supervisora inicializa las métricas desde el respaldo local del navegador si existe; de lo contrario, usa los valores base que ya tiene la aplicación.
 - La primera sesión de cada asesor intenta migrar los registros locales de ese mismo asesor si la fecha aún no existe en Firestore.
 
-## 5. Verificaciones antes de producción
+## 8. Verificaciones antes de producción
 
 - Probar con una cuenta supervisora y una cuenta asesora.
 - Confirmar que una cuenta no autorizada no puede consultar datos.
@@ -54,3 +55,29 @@ Los UID y perfiles se obtienen desde Authentication → Usuarios. No compartas c
 ## Nota de privacidad pendiente
 
 El repositorio actual es público y el HTML existente contiene nombres, métricas iniciales y enlaces a recursos internos. Una pantalla de inicio de sesión no vuelve privado el código estático. Antes de fusionar o usar con datos reales, se debe revisar y retirar del HTML público la información no autorizada para difusión o definir una estrategia de alojamiento/repositorio privado compatible con el despliegue actual.
+
+
+## 6. Recursos privados de la ruta
+
+Las URL operativas se leen desde el documento `appConfig/resources` de Firestore y no deben volver a pegarse en `index.html`, porque el repositorio es público.
+
+Crea el documento `appConfig/resources` desde la consola de Firestore con un campo de tipo mapa llamado `links`. Dentro del mapa, agrega estas claves de tipo string y asigna a cada una la URL aprobada del recurso:
+
+- `intranet`
+- `grupoRutasUbicaciones`
+- `grupoInformeActividades`
+- `crmZoho`
+- `taxiDirecto`
+- `cabify`
+- `formularioMaterial`
+- `matrizSolicitudes`
+- `registroFichasDatos`
+- `digitalizacionFichas`
+- `actualizacionFichas`
+- `statusCartera`
+
+Las URL no se incluyen en este archivo de instrucciones. Recupéralas desde la fuente autorizada y confirma que son correctas antes de cargarlas. Una vez creado el documento, los miembros autorizados podrán abrir los recursos y el HTML público solo contendrá claves genéricas.
+
+## 7. Aviso sobre el historial público
+
+Quitar datos de la versión actual de `index.html` no borra automáticamente los commits anteriores de un repositorio público. Antes de considerar estos recursos privados, revisa la visibilidad del repositorio y el historial. Si alguno de los enlaces es una invitación a un grupo privado y no debería haber sido público, solicita que se regenere ese enlace.

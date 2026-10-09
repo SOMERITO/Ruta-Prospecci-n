@@ -608,14 +608,16 @@
             document.getElementById("signedInEmail").textContent = signedInUser.email || "";
             document.getElementById("signOutBtn").classList.remove("hidden");
 
+            document.getElementById("btnToggleEdit").classList.toggle("hidden", role !== "supervisor");
+
             if (role === "supervisor") {
                 asesorTab.classList.add("hidden");
                 dashboardTab.classList.remove("hidden");
                 avanceTab.classList.remove("hidden");
                 switchTab("jefatura");
-            } else {
+            } else if (role === "asesor") {
                 dashboardTab.classList.add("hidden");
-                avanceTab.classList.add("hidden");
+                avanceTab.classList.remove("hidden");
                 asesorTab.classList.remove("hidden");
                 const advisorName = signedInProfile.asesorNombre;
                 if (!advisorName) {
@@ -830,11 +832,9 @@
                 console.error("No se pudieron sincronizar los registros:", error);
             });
 
-            if (signedInProfile.role === "supervisor") {
-                const monthInput = document.getElementById("avanceMonth");
-                if (!monthInput.value) monthInput.value = getCurrentMonthKey();
-                subscribeToMetricsMonth(monthInput.value);
-            }
+            const monthInput = document.getElementById("avanceMonth");
+            if (!monthInput.value) monthInput.value = getCurrentMonthKey();
+            subscribeToMetricsMonth(monthInput.value);
         }
 
         function getCurrentMonthKey() {
@@ -887,7 +887,7 @@
                     currentMetricsDocumentExists = false;
                     // Only migrate the old browser-local metrics into the actual current month,
                     // never copy today's values into a historical or future month.
-                    if (monthKey === getCurrentMonthKey() && !legacyMetricsMigrationAttempted.has(monthKey)) {
+                    if (signedInProfile.role === "supervisor" && monthKey === getCurrentMonthKey() && !legacyMetricsMigrationAttempted.has(monthKey)) {
                         legacyMetricsMigrationAttempted.add(monthKey);
                         const legacyRows = parseLegacyAvanceData();
                         if (legacyRows) {
@@ -929,16 +929,31 @@
                 const record = snapshot.data() || {};
                 currentMetricsDocumentExists = true;
                 const savedRows = Array.isArray(record.rows) ? record.rows : [];
-                sharedAvanceRows = buildDefaultAvanceData().map(baseRow => {
-                    const saved = savedRows.find(row => row.asesor === baseRow.asesor);
-                    if (!saved) return baseRow;
-                    return {
-                        asesor: baseRow.asesor,
-                        meta: Math.max(0, Number(saved.meta) || 0),
-                        avance: Math.max(0, Number(saved.avance) || 0),
-                        proyeccion: Math.max(0, Number(saved.proyeccion) || 0)
-                    };
-                });
+                const normalizedSavedRows = savedRows
+                    .filter(row => row && typeof row.asesor === "string" && row.asesor.trim())
+                    .map(row => ({
+                        asesor: row.asesor,
+                        meta: Math.max(0, Number(row.meta) || 0),
+                        avance: Math.max(0, Number(row.avance) || 0),
+                        proyeccion: Math.max(0, Number(row.proyeccion) || 0)
+                    }));
+
+                if (signedInProfile.role === "supervisor") {
+                    const savedByName = new Map(normalizedSavedRows.map(row => [row.asesor, row]));
+                    const currentAdvisorRows = buildDefaultAvanceData().map(baseRow => {
+                        const saved = savedByName.get(baseRow.asesor);
+                        return saved ? { ...baseRow, ...saved } : baseRow;
+                    });
+                    const currentNames = new Set(currentAdvisorRows.map(row => row.asesor));
+                    // Keep historical rows for advisors no longer on the roster, so monthly history is not lost.
+                    sharedAvanceRows = [
+                        ...currentAdvisorRows,
+                        ...normalizedSavedRows.filter(row => !currentNames.has(row.asesor))
+                    ];
+                } else {
+                    // Authorized advisors can view every team's metrics but cannot edit them.
+                    sharedAvanceRows = normalizedSavedRows;
+                }
                 renderAvance();
                 updateMetricsMonthStatus("Datos guardados para " + formatMetricsMonth(monthKey) + ".", "success");
             }, (error) => {
@@ -964,9 +979,11 @@
         }
 
         function buildDefaultAvanceData() {
+            // Every month starts with empty numeric values. The supervisor records that month's meta;
+            // profile-level meta is deliberately ignored because it can change from month to month.
             return advisorProfiles.map(profile => ({
                 asesor: profile.asesorNombre,
-                meta: Number(profile.meta) || 0,
+                meta: 0,
                 avance: 0,
                 proyeccion: 0
             }));
@@ -1042,7 +1059,7 @@
         });
 
         function switchTab(tabId) {
-            if (signedInProfile?.role === "asesor" && tabId !== "asesor") return;
+            if (signedInProfile?.role === "asesor" && tabId === "jefatura") return;
             if (signedInProfile?.role === "supervisor" && tabId === "asesor") return;
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1339,6 +1356,7 @@
         }
 
         function toggleEditAvance() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
             isAvanceEditMode = !isAvanceEditMode;
             const btn = document.getElementById('btnToggleEdit');
             
@@ -1398,22 +1416,24 @@
                 tbody.appendChild(tr);
             });
             
-            let totalLogroFinal = totalAvance + totalProyeccion;
-            let totalPct1 = totalMeta > 0 ? Math.round((totalAvance / totalMeta) * 100) : 0;
-            let totalPct2 = totalMeta > 0 ? Math.round((totalLogroFinal / totalMeta) * 100) : 0;
-            
-            let trTotal = document.createElement('tr');
-            trTotal.className = "bg-brand-50 border-t-2 border-brand-200";
-            trTotal.innerHTML = `
-                <td class="px-4 py-5 text-sm font-bold text-brand-900 whitespace-nowrap uppercase">Logro Equipo</td>
-                <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalMeta}</td>
-                <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalAvance}</td>
-                <td class="px-2 sm:px-4 py-5 text-center"><span class="px-3 py-1 text-xs font-bold rounded-full border ${getAvanceBadgeColor(totalPct1)}">${totalPct1}%</span></td>
-                <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalProyeccion}</td>
-                <td class="px-2 sm:px-4 py-5 text-center text-sm font-bold text-brand-700">${totalLogroFinal}</td>
-                <td class="px-2 sm:px-4 py-5 text-center"><span class="px-3 py-1 text-xs font-bold rounded-full border ${getAvanceBadgeColor(totalPct2)}">${totalPct2}%</span></td>
-            `;
-            tbody.appendChild(trTotal);
+            if (data.length) {
+                let totalLogroFinal = totalAvance + totalProyeccion;
+                let totalPct1 = totalMeta > 0 ? Math.round((totalAvance / totalMeta) * 100) : 0;
+                let totalPct2 = totalMeta > 0 ? Math.round((totalLogroFinal / totalMeta) * 100) : 0;
+
+                let trTotal = document.createElement('tr');
+                trTotal.className = "bg-brand-50 border-t-2 border-brand-200";
+                trTotal.innerHTML = `
+                    <td class="px-4 py-5 text-sm font-bold text-brand-900 whitespace-nowrap uppercase">Logro Equipo</td>
+                    <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalMeta}</td>
+                    <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalAvance}</td>
+                    <td class="px-2 sm:px-4 py-5 text-center"><span class="px-3 py-1 text-xs font-bold rounded-full border ${getAvanceBadgeColor(totalPct1)}">${totalPct1}%</span></td>
+                    <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalProyeccion}</td>
+                    <td class="px-2 sm:px-4 py-5 text-center text-sm font-bold text-brand-700">${totalLogroFinal}</td>
+                    <td class="px-2 sm:px-4 py-5 text-center"><span class="px-3 py-1 text-xs font-bold rounded-full border ${getAvanceBadgeColor(totalPct2)}">${totalPct2}%</span></td>
+                `;
+                tbody.appendChild(trTotal);
+            }
         }
 
         function updateAvance(idx, field, val) {

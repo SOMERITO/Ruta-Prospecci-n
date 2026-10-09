@@ -45,6 +45,13 @@
         .accordion-content { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; overflow: hidden; }
         .accordion-content.hidden-section { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border-top-width: 0;}
         .accordion-content.open-section { max-height: 1200px; opacity: 1; }
+        .tab-btn { min-height: 44px; }
+        .tab-btn:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #2fcbd1; outline-offset: 2px; }
+        [hidden] { display: none !important; }
+        @media (max-width: 640px) {
+            .accordion-content.open-section { max-height: 2400px; }
+            body { padding-bottom: env(safe-area-inset-bottom); }
+        }
         
         input[type="number"]::-webkit-inner-spin-button, 
         input[type="number"]::-webkit-outer-spin-button { 
@@ -56,18 +63,23 @@
 
     <nav class="bg-brand-900 text-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
+                <div class="flex justify-between min-h-16 py-3 items-center gap-4">
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-route text-2xl text-brand-500"></i>
                     <span class="font-bold text-xl tracking-wide">Ruta Prospección</span>
                 </div>
+                    <div class="flex items-center gap-2 text-xs sm:text-sm">
+                        <span id="modeLabel" class="hidden sm:inline text-brand-100"></span>
+                        <a id="advisorModeLink" href="#" class="rounded-lg border border-brand-700 px-3 py-2 hover:bg-brand-800">Vista asesores</a>
+                        <a id="camilaModeLink" href="#" class="rounded-lg bg-brand-500 px-3 py-2 font-semibold text-brand-900 hover:bg-brand-400">Camila</a>
+                    </div>
             </div>
         </div>
     </nav>
 
     <div class="bg-white shadow relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex space-x-6 sm:space-x-8 overflow-x-auto whitespace-nowrap scrollbar-hide" id="tabs">
+            <div class="flex gap-5 sm:gap-8 overflow-x-auto whitespace-nowrap scrollbar-hide" id="tabs" role="tablist" aria-label="Secciones">
                 <button onclick="switchTab('asesor')" class="tab-btn active py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
                     <i class="fa-solid fa-user-check mr-2"></i>Asesor
                 </button>
@@ -77,11 +89,15 @@
                 <button onclick="switchTab('avance')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
                     <i class="fa-solid fa-chart-pie mr-2"></i>Avance
                 </button>
+                <button onclick="switchTab('movilidades')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
+                    <i class="fa-solid fa-car-side mr-2"></i>Movilidades
+                </button>
             </div>
         </div>
     </div>
 
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
+        <div id="modeBanner" class="mb-5 rounded-xl border px-4 py-3 text-sm" role="status"></div>
         
         <div id="asesor" class="tab-content active">
             
@@ -91,15 +107,6 @@
                         <label class="block text-sm font-bold text-gray-800 mb-2">1. Identifícate para ver tu ruta:</label>
                         <select id="asesorName" class="w-full border-2 border-brand-200 rounded-lg shadow-sm focus:border-brand-500 focus:ring-brand-500 p-3 bg-brand-50 font-medium text-gray-800 transition-colors">
                             <option value="">-- Selecciona tu nombre --</option>
-                            <option value="Dana Nicolls Lizarme Tenorio">Dana Nicolls Lizarme Tenorio</option>
-                            <option value="Doris Carolina Herrera Castro">Doris Carolina Herrera Castro</option>
-                            <option value="Fiorella Eduarda Camayo Quiñones">Fiorella Eduarda Camayo Quiñones</option>
-                            <option value="Jose Luis Zevallos Anfossi">Jose Luis Zevallos Anfossi</option>
-                            <option value="Jose Martin Garcia Segura">Jose Martin Garcia Segura</option>
-                            <option value="Jose Reynaldo Munar Moya">Jose Reynaldo Munar Moya</option>
-                            <option value="Joseph Alexander Cortez Reyes">Joseph Alexander Cortez Reyes</option>
-                            <option value="Judith Roxana Falcon Caja">Judith Roxana Falcon Caja</option>
-                            <option value="Yessenia Cueva Pinto">Yessenia Cueva Pinto</option>
                         </select>
                     </div>
                     <div>
@@ -107,6 +114,12 @@
                         <input type="date" id="trackerDate" class="w-full border-gray-300 rounded-lg shadow-sm bg-gray-100 text-gray-500 p-3" readonly>
                     </div>
                 </div>
+                <details class="editor-only mt-5 rounded-xl border border-gray-200 bg-gray-50 p-4" hidden>
+                    <summary class="cursor-pointer font-bold text-gray-800">Administrar lista de asesores</summary>
+                    <p class="mt-2 text-xs text-gray-500">Una persona por línea, en formato: Nombre completo | LC o LN.</p>
+                    <textarea id="rosterEditor" rows="7" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm" aria-label="Lista de asesores"></textarea>
+                    <button onclick="saveRoster()" class="mt-3 min-h-11 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar lista</button>
+                </details>
             </div>
 
             <div id="trackerWorkspace" class="transition-opacity duration-500 opacity-0 pointer-events-none">
@@ -117,7 +130,7 @@
                     <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-2 space-y-2 sm:space-y-0">
                             <div>
-                                <span class="block text-sm font-semibold text-brand-900">Avance del día: <span id="progressText" class="font-bold text-brand-600">0/14 Pasos (0%)</span></span>
+                                <span class="block text-sm font-semibold text-brand-900">Avance del día: <span id="progressText" class="font-bold text-brand-600">0 pasos (0%)</span></span>
                                 <span class="block text-xs text-brand-700 mt-1">Fase actual: <span id="currentPhaseText" class="font-bold bg-brand-100 px-2 py-1 rounded">1. Marcación</span></span>
                             </div>
                         </div>
@@ -223,16 +236,6 @@
                                     </label>
                                 </div>
 
-                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
-                                        <input type="checkbox" id="step2_3" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div class="min-w-0">
-                                            <span class="block font-medium text-gray-800 break-words">2.3 Material para Actividades</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">Lapiceros, fichas, blocks, etc...</span>
-                                        </div>
-                                    </label>
-                                </div>
-
                             </div>
                         </div>
 
@@ -277,26 +280,8 @@
                                         </div>
                                     </label>
                                     <div class="flex space-x-1 sm:space-x-2 ml-1 shrink-0">
-                                        <a href="https://portal.directoapp.pe/intranet/" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-yellow-50 hover:border-yellow-300 transition-colors text-yellow-500" title="Taxi Directo">
+                                        <a href="https://cloudnelica.com/avanzarmss/intranet/default.asp" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-brand-50 hover:border-brand-300 transition-colors text-brand-700" title="Abrir Avanza">
                                             <i class="fa-solid fa-taxi"></i>
-                                        </a>
-                                        <a href="https://cabify.com/app/order-new" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-purple-50 hover:border-purple-300 transition-colors text-purple-600" title="Cabify">
-                                            <i class="fa-solid fa-car"></i>
-                                        </a>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
-                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
-                                        <input type="checkbox" id="step3_4" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
-                                        <div class="min-w-0 pr-2">
-                                            <span class="block font-medium text-gray-800 break-words">3.4 Solicitud de Material - Merch</span>
-                                            <span class="block text-xs sm:text-sm text-gray-500">Solicitar 1 día antes vía formulario</span>
-                                        </div>
-                                    </label>
-                                    <div class="flex space-x-2 ml-1 shrink-0">
-                                        <a href="https://forms.cloud.microsoft/r/YXzyYN7Fic" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-orange-50 hover:border-orange-300 transition-colors text-orange-500" title="Formulario Material">
-                                            <i class="fa-brands fa-microsoft"></i>
                                         </a>
                                     </div>
                                 </div>
@@ -370,7 +355,7 @@
                                         </div>
                                     </label>
                                     <div class="flex space-x-2 ml-1 shrink-0">
-                                        <a href="https://wienercarrion-my.sharepoint.com/:x:/r/personal/claudia_quevedo_uwiener_edu_pe/_layouts/15/Doc.aspx?sourcedoc=%7Bc89fc1ca-4dbb-44ab-86d1-eb1c3e3e350c%7D" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors text-blue-600" title="Status Cartera">
+                                        <a href="https://wienercarrion-my.sharepoint.com/:x:/r/personal/claudia_quevedo_uwiener_edu_pe/_layouts/15/doc2.aspx?sourcedoc=%7Bd4040c96-61c9-4294-a97c-e1149f101d71%7D&amp;action=view&amp;activeCell=%27Vista_Equipo%27!M1010" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors text-blue-600" title="Abrir cartera de colegios">
                                             <i class="fa-solid fa-folder-tree"></i>
                                         </a>
                                     </div>
@@ -395,7 +380,7 @@
             <div id="dashboardSyncOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-[1px] z-50 hidden flex-col items-center justify-center rounded-xl transition-all h-full w-full">
                 <i class="fa-solid fa-satellite-dish fa-spin text-4xl text-brand-500 mb-3"></i>
                 <h3 class="text-lg font-bold text-brand-900 tracking-wide">Actualización en camino...</h3>
-                <p class="text-brand-600 text-sm font-medium mt-1 animate-pulse">Sincronizando datos</p>
+                <p class="text-brand-600 text-sm font-medium mt-1 animate-pulse">Actualizando esta vista</p>
             </div>
 
             <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
@@ -428,7 +413,7 @@
                 <div id="avanceSyncOverlay" class="absolute inset-0 bg-white/90 backdrop-blur-[2px] z-50 hidden flex-col items-center justify-center rounded-xl transition-all">
                     <i class="fa-solid fa-satellite-dish fa-spin text-5xl text-brand-500 mb-4"></i>
                     <h3 class="text-xl font-extrabold text-brand-900 tracking-wide">Actualización en camino...</h3>
-                    <p class="text-brand-600 font-medium mt-2 animate-pulse">Sincronizando datos en tiempo real</p>
+                    <p class="text-brand-600 font-medium mt-2 animate-pulse">Actualizando esta vista</p>
                 </div>
 
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
@@ -437,7 +422,7 @@
                     </div>
                     
                     <div class="flex space-x-3">
-                        <button onclick="toggleEditAvance()" id="btnToggleEdit" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center">
+                        <button onclick="toggleEditAvance()" id="btnToggleEdit" class="editor-only bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center" hidden>
                             <i class="fa-solid fa-pen mr-2"></i>Editar
                         </button>
                         <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white h-10 w-10 rounded-full text-lg shadow-md transition-all flex items-center justify-center shrink-0" title="Copiar Imagen">
@@ -451,9 +436,10 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asesor</th>
-                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Meta</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Meta 4.º secundaria</th>
                                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Avance</th>
                                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">%</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Referidos postulantes</th>
                                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Proyección</th>
                                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Logro Final</th>
                                 <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">% Final</th>
@@ -466,14 +452,115 @@
             </div>
         </div>
 
+        <div id="movilidades" class="tab-content">
+            <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.16em] text-brand-700">Control mensual</p>
+                        <h2 class="mt-1 text-xl sm:text-2xl font-bold text-gray-900"><i class="fa-solid fa-car-side text-brand-500 mr-2"></i>Avance de movilidades</h2>
+                        <p class="mt-1 text-sm text-gray-500">Registro de septiembre compartido por Camila</p>
+                    </div>
+                    <button id="btnEditMovilidad" onclick="toggleEditMovilidad()" class="editor-only rounded-lg bg-gray-100 px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-200" hidden>
+                        <i class="fa-solid fa-pen mr-2"></i>Editar registro
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                    <div class="rounded-xl bg-brand-50 border border-brand-100 p-4">
+                        <p class="text-xs font-bold uppercase tracking-wide text-brand-800">Total asignado</p>
+                        <p id="movilidadAssignedTotal" class="mt-1 text-2xl font-extrabold text-brand-900">S/ 25,000</p>
+                    </div>
+                    <div class="rounded-xl bg-gray-50 border border-gray-200 p-4">
+                        <p class="text-xs font-bold uppercase tracking-wide text-gray-600">Gasto total</p>
+                        <p id="movilidadSpentTotal" class="mt-1 text-2xl font-extrabold text-gray-900">S/ 31,345</p>
+                    </div>
+                    <div class="rounded-xl bg-rose-50 border border-rose-100 p-4">
+                        <p class="text-xs font-bold uppercase tracking-wide text-rose-700">Saldo total</p>
+                        <p id="movilidadBalanceTotal" class="mt-1 text-2xl font-extrabold text-rose-800">−S/ 6,345</p>
+                    </div>
+                </div>
+                <div class="mb-5 overflow-x-auto rounded-xl border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500">Asesor</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-gray-500">Asignado</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-gray-500">Gasto total</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-gray-500">Saldo</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-gray-500">Ejecución</th>
+                        </tr></thead>
+                        <tbody id="movilidadTableBody" class="divide-y divide-gray-100 bg-white"></tbody>
+                        <tfoot id="movilidadTableFoot" class="bg-brand-900 text-white"></tfoot>
+                    </table>
+                </div>
+                <p class="text-xs text-gray-500"><i class="fa-solid fa-circle-info mr-1 text-brand-600"></i>La ejecución es gasto ÷ monto asignado. El saldo es el presupuesto disponible; los valores negativos indican exceso sobre lo asignado.</p>
+            </section>
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
+                    <h3 class="font-bold text-gray-900"><i class="fa-solid fa-location-dot mr-2 text-brand-600"></i>Aplicativos de movilidad</h3>
+                    <p class="mt-3 text-sm text-gray-600">Lima Norte</p>
+                    <div class="mt-2 flex flex-wrap gap-2"><span class="rounded-full bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-800">Cabify</span><span class="rounded-full bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-800">Directo</span></div>
+                </div>
+                <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm">
+                    <h3 class="font-bold text-gray-900"><i class="fa-solid fa-file-lines mr-2 text-brand-600"></i>Plantilla de van</h3>
+                    <p class="mt-2 text-sm text-gray-600">Abrir la plantilla para programar la movilidad.</p>
+                    <a class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800" href="https://wienercarrion-my.sharepoint.com/:x:/r/personal/camila_ortiz_uwiener_edu_pe/_layouts/15/Doc.aspx?sourcedoc=%7BB2B437FB-FB43-499C-A8BB-89E74500178B%7D&amp;file=PLANTILLA%20VAN%20PROMOTOR.xlsx&amp;action=default&amp;mobileredirect=true&amp;DefaultItemOpen=1&amp;web=1" target="_blank" rel="noopener noreferrer"><i class="fa-solid fa-arrow-up-right-from-square mr-2"></i>Abrir plantilla</a>
+                </div>
+            </section>
+        </div>
+
     </main>
 
     <script>
-        const asesoresList = [
-            "Dana Nicolls Lizarme Tenorio", "Doris Carolina Herrera Castro", "Fiorella Eduarda Camayo Quiñones",
-            "Jose Luis Zevallos Anfossi", "Jose Martin Garcia Segura", "Jose Reynaldo Munar Moya",
-            "Joseph Alexander Cortez Reyes", "Judith Roxana Falcon Caja", "Yessenia Cueva Pinto"
+        const defaultAdvisorRoster = [
+            { name: "Doris Carolina Herrera Castro", campus: "LC" },
+            { name: "Jose Martin Garcia Segura", campus: "LC" },
+            { name: "Judith Roxana Falcon Caja", campus: "LC" },
+            { name: "Estrellita del Rosario Sanchez Razuri", campus: "LN" },
+            { name: "Dana Nicolls Lizarme Tenorio", campus: "LC" },
+            { name: "Jose Reynaldo Munar Moya", campus: "LN" },
+            { name: "Claudia Sofia Rodriguez Portilla", campus: "LN" },
+            { name: "Blanca Alexandra Angulo Rodriguez", campus: "LC" },
+            { name: "Yaqueline Nicole Felipe Pante", campus: "LC" },
+            { name: "Katherin Nicole Palomino Romero", campus: "LC" },
+            { name: "Stephany Valeria Leon Arapa", campus: "LC" }
         ];
+        const advisorRoster = JSON.parse(localStorage.getItem('advisorRosterV1') || 'null') || defaultAdvisorRoster;
+        const asesoresList = advisorRoster.map(advisor => advisor.name);
+        const isEditor = new URLSearchParams(window.location.search).get('vista') === 'camila';
+        const urlForView = mode => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('vista', mode);
+            return url.href;
+        };
+        document.getElementById('advisorModeLink').href = urlForView('asesores');
+        document.getElementById('camilaModeLink').href = urlForView('camila');
+        document.getElementById('modeLabel').textContent = isEditor ? 'Modo edición' : 'Solo lectura';
+        document.getElementById('modeBanner').className = isEditor
+            ? 'mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900'
+            : 'mb-5 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-900';
+        document.getElementById('modeBanner').innerHTML = isEditor
+            ? '<strong>Modo de edición.</strong> Los cambios se guardan en el almacenamiento de este navegador.'
+            : '<strong>Vista de asesores · Solo lectura.</strong> Consulta la ruta, métricas y movilidades del equipo.';
+        document.querySelectorAll('.editor-only').forEach(control => { control.hidden = !isEditor; });
+
+        const advisorSelect = document.getElementById('asesorName');
+        advisorRoster.forEach(advisor => {
+            const option = document.createElement('option');
+            option.value = advisor.name;
+            option.textContent = `${advisor.name} · ${advisor.campus}`;
+            advisorSelect.appendChild(option);
+        });
+        const rosterEditor = document.getElementById('rosterEditor');
+        if (rosterEditor) rosterEditor.value = advisorRoster.map(advisor => `${advisor.name} | ${advisor.campus}`).join('\n');
+
+        function saveRoster() {
+            const rows = rosterEditor.value.split('\n').map(line => line.trim()).filter(Boolean).map(line => {
+                const [name, campus = ''] = line.split('|').map(value => value.trim());
+                return { name, campus: campus.toUpperCase() };
+            }).filter(advisor => advisor.name);
+            if (!rows.length) return alert('Incluye al menos un asesor antes de guardar.');
+            localStorage.setItem('advisorRosterV1', JSON.stringify(rows));
+            window.location.reload();
+        }
 
         const dateInput = document.getElementById('trackerDate');
         
@@ -510,17 +597,18 @@
             
             document.getElementById(tabId).classList.add('active');
             
-            const btnMap = { 'asesor': 0, 'jefatura': 1, 'avance': 2 };
+            const btnMap = { 'asesor': 0, 'jefatura': 1, 'avance': 2, 'movilidades': 3 };
             document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
 
             if(tabId === 'jefatura') { 
                 renderDashboard(); 
             } else if(tabId === 'avance') {
                 renderAvance();
+            } else if(tabId === 'movilidades') {
+                renderMovilidades();
             }
         }
 
-        const asesorSelect = document.getElementById('asesorName');
         const trackerWorkspace = document.getElementById('trackerWorkspace');
         const displayName = document.getElementById('displayName');
         let stateMemory = { sec1: false, sec2: false, sec3: false };
@@ -604,7 +692,7 @@
         function updateProgress(triggerAutoSave = false) {
             for (let i = 1; i < totalSteps; i++) {
                 const previousChecked = checkboxes[i-1].checked;
-                checkboxes[i].disabled = !previousChecked;
+                checkboxes[i].disabled = !isEditor || !previousChecked;
                 const parentLabel = checkboxes[i].closest('label');
                 parentLabel.classList.toggle('opacity-50', !previousChecked);
                 parentLabel.classList.toggle('cursor-not-allowed', !previousChecked);
@@ -612,7 +700,7 @@
             }
             
             if(totalSteps > 0) {
-                checkboxes[0].disabled = false;
+                checkboxes[0].disabled = !isEditor;
                 checkboxes[0].closest('label').classList.remove('opacity-50', 'cursor-not-allowed');
             }
 
@@ -822,11 +910,13 @@
             
             let totalMeta = 0;
             let totalAvance = 0;
+            let totalReferidos = 0;
             let totalProyeccion = 0;
             
             data.forEach((row, idx) => {
                 totalMeta += row.meta;
                 totalAvance += row.avance;
+                totalReferidos += Number(row.referidos || 0);
                 totalProyeccion += row.proyeccion;
                 
                 let pct1 = row.meta > 0 ? Math.round((row.avance / row.meta) * 100) : 0;
@@ -838,6 +928,7 @@
                 
                 let metaCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.meta}" onchange="updateAvance(${idx}, 'meta', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.meta}</span>`;
                 let avanceCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.avance}" onchange="updateAvance(${idx}, 'avance', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.avance}</span>`;
+                let referidosCell = isAvanceEditMode ? `<input type="number" min="0" class="w-20 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${Number(row.referidos || 0)}" onchange="updateAvance(${idx}, 'referidos', this.value)" aria-label="Referidos postulantes de ${row.asesor}">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${Number(row.referidos || 0)}</span>`;
                 let proyeccionCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.proyeccion}" onchange="updateAvance(${idx}, 'proyeccion', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.proyeccion}</span>`;
 
                 tr.innerHTML = `
@@ -845,6 +936,7 @@
                     <td class="px-2 py-4 text-center">${metaCell}</td>
                     <td class="px-2 py-4 text-center">${avanceCell}</td>
                     <td class="px-2 sm:px-4 py-4 text-center"><span class="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full border ${getAvanceBadgeColor(pct1)}">${pct1}%</span></td>
+                    <td class="px-2 py-4 text-center">${referidosCell}</td>
                     <td class="px-2 py-4 text-center">${proyeccionCell}</td>
                     <td class="px-2 sm:px-4 py-4 text-center text-xs sm:text-sm font-bold text-gray-900">${logroFinal}</td>
                     <td class="px-2 sm:px-4 py-4 text-center"><span class="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full border ${getAvanceBadgeColor(pct2)}">${pct2}%</span></td>
@@ -863,6 +955,7 @@
                 <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalMeta}</td>
                 <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalAvance}</td>
                 <td class="px-2 sm:px-4 py-5 text-center"><span class="px-3 py-1 text-xs font-bold rounded-full border ${getAvanceBadgeColor(totalPct1)}">${totalPct1}%</span></td>
+                <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalReferidos}</td>
                 <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalProyeccion}</td>
                 <td class="px-2 sm:px-4 py-5 text-center text-sm font-bold text-brand-700">${totalLogroFinal}</td>
                 <td class="px-2 sm:px-4 py-5 text-center"><span class="px-3 py-1 text-xs font-bold rounded-full border ${getAvanceBadgeColor(totalPct2)}">${totalPct2}%</span></td>
@@ -908,7 +1001,11 @@
                         overlay.classList.add('hidden');
                         overlay.classList.remove('flex');
                     }, 600);
+                } else if (document.getElementById('asesor').classList.contains('active') && asesorSelect.value) {
+                    loadUserWorkspace();
                 }
+            } else if (e.key === 'movilidadSeptiembreV1' && document.getElementById('movilidades').classList.contains('active')) {
+                renderMovilidades();
             }
         });
 
@@ -973,6 +1070,86 @@
                 btn.disabled = false;
                 if(wasEditing) toggleEditAvance();
             }
+        }
+
+        const defaultMovilidadData = [
+            { asesor: 'CAROLINA', asignado: 2500, gasto: 4454 },
+            { asesor: 'MARTIN', asignado: 2500, gasto: 5572 },
+            { asesor: 'YESENIA', asignado: 2500, gasto: 4366 },
+            { asesor: 'JOSEPH', asignado: 2500, gasto: 2972 },
+            { asesor: 'DANA', asignado: 2500, gasto: 2513 },
+            { asesor: 'FIORELLA', asignado: 2500, gasto: 3286 },
+            { asesor: 'CLAUDIA', asignado: 2500, gasto: 3143 },
+            { asesor: 'ROSARIO', asignado: 2500, gasto: 458 },
+            { asesor: 'JUDITH', asignado: 2500, gasto: 4294 },
+            { asesor: 'VALERIA', asignado: 2500, gasto: 287 }
+        ];
+        let isMovilidadEditMode = false;
+
+        function loadMovilidadData() {
+            return JSON.parse(localStorage.getItem('movilidadSeptiembreV1') || 'null') || JSON.parse(JSON.stringify(defaultMovilidadData));
+        }
+
+        function formatMoney(value) {
+            return Number(value || 0).toLocaleString('es-PE', { maximumFractionDigits: 0 });
+        }
+
+        function renderMovilidades() {
+            const data = loadMovilidadData();
+            const body = document.getElementById('movilidadTableBody');
+            const foot = document.getElementById('movilidadTableFoot');
+            body.innerHTML = '';
+            let assignedTotal = 0;
+            let spentTotal = 0;
+
+            data.forEach((row, index) => {
+                const assigned = Number(row.asignado) || 0;
+                const spent = Number(row.gasto) || 0;
+                const balance = assigned - spent;
+                const execution = assigned ? Math.round((spent / assigned) * 100) : 0;
+                assignedTotal += assigned;
+                spentTotal += spent;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50';
+                const nameCell = isMovilidadEditMode
+                    ? `<input class="w-32 rounded-md border border-gray-300 px-2 py-2 text-sm font-semibold" value="${row.asesor}" onchange="updateMovilidad(${index}, 'asesor', this.value)" aria-label="Nombre del asesor">`
+                    : `<span class="font-semibold text-gray-900">${row.asesor}</span>`;
+                const assignedCell = isMovilidadEditMode
+                    ? `<input type="number" min="0" class="w-24 rounded-md border border-gray-300 px-2 py-2 text-right text-sm" value="${assigned}" onchange="updateMovilidad(${index}, 'asignado', this.value)" aria-label="Monto asignado">`
+                    : `S/ ${formatMoney(assigned)}`;
+                const spentCell = isMovilidadEditMode
+                    ? `<input type="number" min="0" class="w-24 rounded-md border border-gray-300 px-2 py-2 text-right text-sm" value="${spent}" onchange="updateMovilidad(${index}, 'gasto', this.value)" aria-label="Gasto total">`
+                    : `S/ ${formatMoney(spent)}`;
+                const balanceText = balance < 0 ? `−S/ ${formatMoney(Math.abs(balance))}` : `S/ ${formatMoney(balance)}`;
+                tr.innerHTML = `
+                    <td class="whitespace-nowrap px-4 py-3 text-sm">${nameCell}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right text-sm">${assignedCell}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">${spentCell}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right text-sm ${balance < 0 ? 'font-bold text-rose-700' : 'text-emerald-700'}">${balanceText}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right"><span class="rounded-full px-2.5 py-1 text-xs font-bold ${execution > 100 ? 'bg-rose-50 text-rose-700' : 'bg-brand-50 text-brand-800'}">${execution}%</span></td>`;
+                body.appendChild(tr);
+            });
+
+            const balanceTotal = assignedTotal - spentTotal;
+            const executionTotal = assignedTotal ? Math.round((spentTotal / assignedTotal) * 100) : 0;
+            document.getElementById('movilidadAssignedTotal').textContent = `S/ ${formatMoney(assignedTotal)}`;
+            document.getElementById('movilidadSpentTotal').textContent = `S/ ${formatMoney(spentTotal)}`;
+            document.getElementById('movilidadBalanceTotal').textContent = balanceTotal < 0 ? `−S/ ${formatMoney(Math.abs(balanceTotal))}` : `S/ ${formatMoney(balanceTotal)}`;
+            foot.innerHTML = `<tr><td class="px-4 py-3 text-sm font-extrabold uppercase">Total general</td><td class="px-4 py-3 text-right text-sm font-extrabold">S/ ${formatMoney(assignedTotal)}</td><td class="px-4 py-3 text-right text-sm font-extrabold">S/ ${formatMoney(spentTotal)}</td><td class="px-4 py-3 text-right text-sm font-extrabold">${balanceTotal < 0 ? `−S/ ${formatMoney(Math.abs(balanceTotal))}` : `S/ ${formatMoney(balanceTotal)}`}</td><td class="px-4 py-3 text-right text-sm font-extrabold">${executionTotal}%</td></tr>`;
+            const button = document.getElementById('btnEditMovilidad');
+            if (button) button.innerHTML = isMovilidadEditMode ? '<i class="fa-solid fa-check mr-2"></i>Finalizar edición' : '<i class="fa-solid fa-pen mr-2"></i>Editar registro';
+        }
+
+        function updateMovilidad(index, field, value) {
+            const data = loadMovilidadData();
+            data[index][field] = field === 'asesor' ? value.trim() : Math.max(0, Number(value) || 0);
+            localStorage.setItem('movilidadSeptiembreV1', JSON.stringify(data));
+            renderMovilidades();
+        }
+
+        function toggleEditMovilidad() {
+            isMovilidadEditMode = !isMovilidadEditMode;
+            renderMovilidades();
         }
 
         updateProgress();

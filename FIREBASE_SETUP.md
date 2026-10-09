@@ -18,7 +18,7 @@ Después de desplegar el HTML, añade a Authentication → Configuración → Do
 En Firebase Console → Firestore Database → **Reglas**, pega el contenido completo de `firestore.rules` de esta rama y pulsa **Publicar**. No uses reglas abiertas ni el modo de prueba.
 
 Las reglas:
-- Requieren inicio de sesión, correo institucional verificado y un perfil autorizado.
+- Requieren inicio de sesión, correo verificado (institucional para Camila y exacto `prospeccionwiener@gmail.com` para la cuenta compartida) y un perfil autorizado.
 - Impiden que un usuario cree o modifique su propio perfil o su rol.
 - Una cuenta compartida con rol `asesor_compartido` puede guardar el avance diario bajo el nombre seleccionado; una cuenta individual con rol `asesor`, si se usa, solo puede cambiar sus propios registros.
 - Todos los perfiles autorizados pueden consultar los indicadores mensuales del equipo.
@@ -36,7 +36,7 @@ Para crear una cuenta autorizada:
 5. Verifica el correo de la cuenta general desde el enlace que llegue a Gmail. Camila puede restablecer la contraseña de Ruta Prospección desde ese mismo buzón; no debe compartir la contraseña de Gmail.
 
 Campos del perfil:
-- `email`: string, correo institucional exacto de esa cuenta.
+- `email`: string, correo exacto de la cuenta; Camila usa el institucional y la cuenta compartida usa `prospeccionwiener@gmail.com`.
 - `role`: string, `supervisor` para Camila, `asesor_compartido` para la cuenta general del equipo o `asesor` para cuentas individuales opcionales.
 - `asesorNombre`: obligatorio solo para perfiles con rol `asesor`.
 Las metas no se guardan en el perfil permanente del asesor porque cambian por mes; se registran en el documento mensual correspondiente.
@@ -55,9 +55,7 @@ No agregues `asesorNombre` al perfil compartido. Al entrar, cada persona selecci
 
 En el primer acceso, verifica `prospeccionwiener@gmail.com` desde el enlace que Firebase envía a ese buzón. Camila controla el buzón y la recuperación; los asesores reciben únicamente la contraseña de la aplicación. Si alguien deja el equipo, restablece la contraseña de Ruta Prospección y comparte la nueva solo con quienes sigan autorizados.
 
-**Limitación del acceso compartido:** Firebase no puede verificar qué persona física usa el nombre seleccionado. Cualquiera que conozca la contraseña compartida puede seleccionar otro asesor y modificar su progreso. La actividad queda atribuida a la cuenta general, no al asesor individual. Si en el futuro necesitan impedirlo, habrá que usar cuentas individuales o un segundo método de autenticación por persona.
-
-**Limitación del acceso compartido:** Firebase no puede verificar qué persona física usa el nombre seleccionado. Cualquiera que conozca la contraseña compartida puede seleccionar otro asesor y modificar su progreso. La actividad queda atribuida a la cuenta general, no al asesor individual. Si en el futuro necesitan impedirlo, habrá que usar cuentas individuales o un segundo método de autenticación por persona.
+**Limitación del acceso compartido:** Firebase no puede verificar qué persona física usa el nombre seleccionado. Cualquiera que conozca la contraseña compartida puede seleccionar otro asesor y modificar su progreso. La actividad queda atribuida a la cuenta general, no al asesor individual. Además, el permiso técnico de la cuenta compartida permite leer registros diarios de todo el equipo para que funcione la sincronización. Si necesitan impedir que una persona pueda ver o modificar registros ajenos, deberán usar cuentas individuales u otro método de autenticación por persona.
 
 ## 5. Recursos privados de la ruta
 
@@ -107,7 +105,7 @@ Antes de usar datos reales:
 - Confirmar que la cuenta general puede ver Avance pero no modificar metas, avances de indicadores ni proyecciones mensuales.
 - Cambiar de mes en la sección Avance como supervisora, editar una meta y confirmar que solo cambia el documento de ese mes.
 - Comprobar que un correo institucional no autorizado no accede a Firestore y que otra cuenta de Gmail tampoco puede iniciar sesión como cuenta compartida.
-- Confirmar que un asesor no puede consultar los registros de otro ni modificar métricas globales.
+- Confirmar que una cuenta individual con rol `asesor` no puede consultar ni modificar registros ajenos. La cuenta compartida puede consultar los registros del equipo para sincronizarlos, pero no puede modificar métricas globales.
 - Probar la sincronización en dos navegadores o dispositivos.
 - Verificar recuperación de contraseña, confirmación del correo y cierre de sesión.
 - Mantener el proyecto en Spark sin vincular facturación y revisar el uso de cuotas.

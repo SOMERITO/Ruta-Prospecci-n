@@ -18,8 +18,8 @@ En Firebase Console → Firestore Database → **Reglas**, pega el contenido com
 Las reglas:
 - Requieren inicio de sesión, correo institucional verificado y un perfil autorizado.
 - Impiden que un usuario cree o modifique su propio perfil o su rol.
-- Permiten que los asesores consulten y modifiquen solo los registros diarios que les pertenecen.
-- Permiten a los asesores consultar sus indicadores y los de todo el equipo, sin editarlos.
+- Una cuenta compartida con rol `asesor_compartido` puede guardar el avance diario bajo el nombre seleccionado; una cuenta individual con rol `asesor`, si se usa, solo puede cambiar sus propios registros.
+- Todos los perfiles autorizados pueden consultar los indicadores mensuales del equipo.
 - Solo la supervisora puede crear, modificar o eliminar los documentos de métricas mensuales.
 - Permiten a personas autorizadas leer la configuración de recursos; solo la supervisora puede modificarla.
 - Deniegan cualquier otra ruta.
@@ -35,25 +35,33 @@ Para cada persona autorizada:
 
 Campos del perfil:
 - `email`: string, correo institucional exacto de esa cuenta.
-- `role`: string, `supervisor` para Camila, `asesor` para cuentas individuales o `lector` para la cuenta compartida de consulta.
-- `asesorNombre`: string obligatorio solo para perfiles con rol `asesor`.
+- `role`: string, `supervisor` para Camila, `asesor_compartido` para la cuenta general del equipo o `asesor` para cuentas individuales opcionales.
+- `asesorNombre`: obligatorio solo para perfiles con rol `asesor`.
 Las metas no se guardan en el perfil permanente del asesor porque cambian por mes; se registran en el documento mensual correspondiente.
 
 No compartas contraseñas ni las guardes en GitHub. El correo debe verificarse antes de que Firestore permita consultar datos.
 
-## 4. Cuenta compartida de consulta
+## 4. Cuenta compartida para registrar progreso
 
-Para usar una sola cuenta compartida para consultar indicadores, crea un usuario en Firebase Authentication con un correo real, verificable y cuyo buzón de recuperación controle Camila. El HTML de esta rama actualmente acepta correos terminados en `@uwiener.edu.pe`; si el correo general no tiene ese dominio, detente antes de usarlo, porque habrá que ajustar la validación.
+Crea un solo usuario en Firebase Authentication con un correo real y verificable terminado en `@uwiener.edu.pe`, cuyo buzón de recuperación controle Camila. Si el correo general no tiene ese dominio, detente: antes habrá que ajustar la validación de correo en el HTML y volver a probarla.
 
-Luego crea `authorizedUsers/{UID}` con `email` (string con el correo exacto) y `role` (string: `lector`). No agregues `asesorNombre`. Esa cuenta mostrará solo la pestaña Avance y no podrá editar métricas ni marcar las tareas del registro diario. Como los usuarios comparten credenciales, Firebase no podrá identificar cuál asesor consulta la tabla. Tras la salida de alguien del equipo, Camila puede solicitar el restablecimiento de la contraseña con el correo y distribuir la nueva al resto del grupo autorizado.
+Después crea `authorizedUsers/{UID}` con:
+- `email`: string, correo exacto de esa cuenta.
+- `role`: string con el valor `asesor_compartido`.
 
-La supervisora debe mantener una cuenta separada con rol `supervisor`. Nunca compartas sus credenciales.
+No agregues `asesorNombre` al perfil compartido. Al entrar, cada persona selecciona su nombre en la pestaña **Asesor**; sus casillas se guardan en un documento distinto por asesor y fecha, y los cambios se sincronizan en tiempo real con el panel de Camila. La cuenta compartida puede consultar todos los indicadores en Avance, pero no editar las métricas. Camila conserva su cuenta separada con rol `supervisor` y es la única que modifica metas mensuales.
+
+**Limitación del acceso compartido:** Firebase no puede verificar qué persona física usa el nombre seleccionado. Cualquiera que conozca la contraseña compartida puede seleccionar otro asesor y modificar su progreso. La actividad queda atribuida a la cuenta general, no al asesor individual. Si en el futuro necesitan impedirlo, habrá que usar cuentas individuales o un segundo método de autenticación por persona.
+
+Cuando alguien deje el equipo, Camila puede restablecer la contraseña de la cuenta general desde el correo de recuperación y distribuir la nueva únicamente a los integrantes autorizados.
 
 ## 5. Recursos privados de la ruta
 
 Las URL operativas se cargan desde Firestore, no desde el HTML público.
 
-En Firestore → Datos, crea la colección `appConfig` y el documento `roster` con un campo `advisors` de tipo array que contenga los nombres vigentes del equipo. La supervisora puede gestionar este listado. Después crea el documento `resources`. Añade un campo de tipo **mapa** llamado `links`. Dentro del mapa agrega campos de tipo **string** con estas claves:
+En Firestore → Datos, crea la colección `appConfig` y el documento `roster`. Añade un campo de tipo **mapa** llamado `advisorMap`. Cada entrada usa como clave el nombre normalizado (minúsculas, sin tildes, palabras separadas por guiones bajos) y como valor el nombre completo que debe mostrarse en la página. La supervisora administra este mapa. No pegues los nombres en el HTML ni en archivos públicos.
+
+Después crea el documento `resources`. Añade un campo de tipo **mapa** llamado `links`. Dentro del mapa agrega campos de tipo **string** con estas claves:
 
 - `intranet`
 - `grupoRutasUbicaciones`
@@ -72,7 +80,7 @@ Para cada campo, copia la URL vigente desde la fuente autorizada y confirma que 
 
 ## 6. Migración y métricas iniciales
 
-- Los registros diarios se guardan en `trackerRecords`, con un documento por UID y fecha.
+- Los registros diarios se guardan en `trackerRecords`. Con la cuenta compartida, cada documento usa la clave `shared_{advisorKey}_{YYYY-MM-DD}`, para separar el progreso por asesor y fecha. En la primera sesión, se intentan importar solo los registros locales que no existan ya en la nube.
 - Las métricas se guardan en `monthlyMetrics/{YYYY-MM}`, por ejemplo `monthlyMetrics/2026-10`. Cada mes queda separado; editar noviembre no modifica octubre.
 - Cada documento mensual contiene `month` (string), `rows` (array de mapas con `asesor`, `meta`, `avance`, `proyeccion`), `updatedBy` (UID) y `updatedAt` (timestamp).
 - Al abrir el mes actual, la aplicación intenta migrar métricas antiguas desde `avanceMetricsV6` del navegador de la supervisora si existe una copia local. Si no existe, los perfiles de asesores se muestran con valores iniciales en cero y la supervisora debe introducir las cifras del mes. No se copian valores a meses anteriores o futuros.
@@ -90,8 +98,9 @@ Antes de usar datos reales:
 
 ## 8. Verificaciones antes de producción
 
-- Probar con la cuenta supervisora de Camila y la cuenta compartida `lector`.
-- Abrir la sección Avance con una cuenta de asesor y confirmar que puede ver toda la tabla, pero no tiene botón para editar.
+- Probar con la cuenta supervisora de Camila y la cuenta compartida `asesor_compartido`.
+- Confirmar que la cuenta general permite elegir el nombre y marcar casillas en Asesor, y que Camila ve los cambios reflejados en el Dashboard.
+- Confirmar que la cuenta general puede ver Avance pero no modificar metas, avances de indicadores ni proyecciones mensuales.
 - Cambiar de mes en la sección Avance como supervisora, editar una meta y confirmar que solo cambia el documento de ese mes.
 - Comprobar que un correo institucional no autorizado no accede a Firestore.
 - Confirmar que un asesor no puede consultar los registros de otro ni modificar métricas globales.

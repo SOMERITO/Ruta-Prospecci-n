@@ -20,6 +20,24 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'supervisor';
     }
 
+    function isSharedAdvisor() {
+      return hasAuthorizedProfile()
+        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'asesor_compartido';
+    }
+
+    function canWriteSharedAdvisorRecord(recordId) {
+      return isSharedAdvisor()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerEmail == request.auth.token.email
+        && request.resource.data.asesor is string
+        && request.resource.data.advisorKey is string
+        && request.resource.data.advisorKey.matches('^[a-z0-9_]+$')
+        && request.resource.data.date is string
+        && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && get(/databases/$(database)/documents/appConfig/roster).data.advisorMap.get(request.resource.data.advisorKey, '') == request.resource.data.asesor
+        && recordId == 'shared_' + request.resource.data.advisorKey + '_' + request.resource.data.date;
+    }
+
     function canWriteOwnRecord(recordId) {
       return hasAuthorizedProfile()
         && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'asesor'
@@ -38,11 +56,15 @@ service cloud.firestore {
     }
 
     // Advisors can read and modify their own daily records; the supervisor can read all.
+    // The supervisor and shared team account can read all daily progress.
+    // Individual adviser accounts (if used) can only access their own records.
     match /trackerRecords/{recordId} {
       allow get, list: if isSupervisor()
+        || isSharedAdvisor()
         || (hasAuthorizedProfile() && resource.data.ownerUid == request.auth.uid);
-      allow create: if canWriteOwnRecord(recordId);
-      allow update: if resource.data.ownerUid == request.auth.uid && canWriteOwnRecord(recordId);
+      allow create: if canWriteOwnRecord(recordId) || canWriteSharedAdvisorRecord(recordId);
+      allow update: if resource.data.ownerUid == request.auth.uid
+        && (canWriteOwnRecord(recordId) || canWriteSharedAdvisorRecord(recordId));
       allow delete: if false;
     }
 

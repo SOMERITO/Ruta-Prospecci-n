@@ -1,47 +1,50 @@
 # Ruta Prospección — configuración de Firebase
 
-Esta rama prepara inicio de sesión privado y sincronización en Firestore. **No debe fusionarse ni ponerse en producción hasta publicar las reglas y crear los perfiles autorizados.**
+Esta rama contiene una propuesta de inicio de sesión, permisos y sincronización. No la fusiones ni la pongas en producción hasta completar y probar los pasos de configuración.
 
-## 1. Proveedor de autenticación
+## 1. Autenticación
 
 En Firebase Console → Authentication → Método de acceso:
-- Mantener habilitado **Correo electrónico/contraseña**.
-- No habilitar el registro público desde la interfaz. La página solo ofrece iniciar sesión y restablecer contraseña.
+- Mantén habilitado **Correo electrónico/contraseña**.
+- No habilites el acceso anónimo ni agregues un formulario de registro público.
+- Cada persona usará su correo `@uwiener.edu.pe` y una contraseña exclusiva de Ruta Prospección; nunca se solicitará ni almacenará la contraseña de Outlook.
 
-Las cuentas se provisionan manualmente. Cada integrante usa su correo `@uwiener.edu.pe`, pero la contraseña es exclusiva de Ruta Prospección. Nunca se debe pedir ni guardar su contraseña de Outlook.
+Después de desplegar el HTML, añade a Authentication → Configuración → Dominios autorizados el dominio exacto de GitHub Pages que sirve la página.
 
 ## 2. Publicar reglas de Firestore
 
-En Firebase Console → Firestore Database → **Reglas**, copiar el contenido completo de `firestore.rules` de este repositorio y pulsar **Publicar**.
+En Firebase Console → Firestore Database → **Reglas**, pega el contenido completo de `firestore.rules` de esta rama y pulsa **Publicar**. No uses reglas abiertas ni el modo de prueba.
 
 Las reglas:
-- Exigen una cuenta institucional verificada.
-- Permiten leer el propio perfil de `authorizedUsers`, pero impiden que clientes creen o editen perfiles y roles.
-- Permiten a asesores leer y escribir solo sus propios documentos de `trackerRecords`.
-- Permiten a la supervisora consultar los registros del equipo y administrar `appData/avanceMetrics`.
-- Deniegan las rutas no declaradas.
+- Requieren inicio de sesión, correo institucional verificado y un perfil autorizado.
+- Impiden que un usuario cree o modifique su propio perfil o su rol.
+- Permiten que los asesores consulten y modifiquen solo los registros diarios que les pertenecen.
+- Permiten a la supervisora consultar los registros del equipo y editar las métricas globales.
+- Permiten a personas autorizadas leer la configuración de recursos; solo la supervisora puede modificarla.
+- Deniegan cualquier otra ruta.
 
-## 3. Crear cuentas autorizadas
+## 3. Dar de alta cuentas y perfiles
 
-Para cada usuario:
-1. Authentication → Usuarios → **Agregar usuario**. Registra su correo institucional y genera una contraseña temporal aleatoria que no se reutilice.
-2. La persona puede usar **Olvidé mi contraseña** en la página para definir su propia contraseña mediante el correo de restablecimiento.
-3. Tras iniciar sesión, la página enviará un mensaje de verificación. Debe verificar el correo y volver a ingresar.
-4. En Firestore → Datos, crea una colección `authorizedUsers` y un documento cuyo ID sea el **UID** exacto de Authentication.
+Para cada persona autorizada:
+1. En Authentication → Usuarios, elige **Agregar usuario**. Registra su correo institucional y asigna una contraseña temporal aleatoria.
+2. Tras el despliegue, la persona podrá pulsar **Olvidé mi contraseña** para recibir un enlace y definir su contraseña propia.
+3. En el primer inicio de sesión, la página solicita verificar el correo institucional. La persona debe abrir el enlace recibido y volver a iniciar sesión.
+4. Copia el UID que aparece en Authentication → Usuarios.
+5. En Firestore → Datos, crea un documento en la colección `authorizedUsers`, usando ese UID exacto como ID del documento.
 
-Campos del documento:
-- `email` — string, exactamente el correo de la cuenta.
-- `role` — string; usa `supervisor` o `asesor`.
-- `asesorNombre` — string obligatorio para `asesor`. El nombre se carga desde este perfil y ya no se encuentra escrito en el HTML público.
-- `meta` — number opcional para asesores; meta del período usada al inicializar métricas nuevas.
+Campos del perfil:
+- `email`: string, correo institucional exacto de esa cuenta.
+- `role`: string, `supervisor` para la supervisora o `asesor` para el asesor.
+- `asesorNombre`: string obligatorio para perfiles con rol `asesor`; debe coincidir con el nombre que se usará en el equipo.
+- `meta`: number opcional para perfiles con rol `asesor`; se utiliza cuando hay que crear una fila de métricas nueva.
 
-Los UID y perfiles se obtienen desde Authentication → Usuarios. No compartas contraseñas ni las guardes en el repositorio.
+No compartas contraseñas ni las guardes en GitHub. El correo debe verificarse antes de que Firestore permita consultar datos.
 
 ## 4. Recursos privados de la ruta
 
-Las URL operativas se leen desde el documento `appConfig/resources` de Firestore y no deben pegarse en `index.html`, porque el repositorio es público.
+Las URL operativas se cargan desde Firestore, no desde el HTML público.
 
-Crea el documento `appConfig/resources` desde la consola de Firestore con un campo de tipo mapa llamado `links`. Dentro del mapa, agrega estas claves de tipo string y asigna a cada una la URL autorizada del recurso:
+En Firestore → Datos, crea la colección `appConfig` y el documento `resources`. Añade un campo de tipo **mapa** llamado `links`. Dentro del mapa agrega campos de tipo **string** con estas claves:
 
 - `intranet`
 - `grupoRutasUbicaciones`
@@ -56,53 +59,30 @@ Crea el documento `appConfig/resources` desde la consola de Firestore con un cam
 - `actualizacionFichas`
 - `statusCartera`
 
-Las URL no se incluyen en este archivo de instrucciones. Recupéralas desde la fuente autorizada y confirma que son correctas antes de cargarlas. Una vez creado el documento, los miembros autorizados podrán abrir los recursos y el HTML público solo contendrá claves genéricas.
+Para cada campo, copia la URL vigente desde la fuente autorizada y confirma que la supervisora permite su uso. No pongas esas URL en `index.html`, en este archivo ni en otros archivos públicos.
 
-## 5. Datos compartidos
+## 5. Migración y métricas iniciales
 
-- Los avances diarios se guardan en `trackerRecords`, con un documento por UID y fecha.
-- Las métricas del equipo se guardan en `appData/avanceMetrics`; la supervisora es quien las administra.
-- La primera sesión de supervisora intenta migrar las métricas de `avanceMetricsV6` del almacenamiento local de ese navegador. Si no existen, prepara una fila por asesor autorizado a partir de su campo numérico `meta`, con avance y proyección iniciales en cero. Revisa y completa estos valores antes de producción.
-- La primera sesión de cada asesor intenta migrar los registros locales de ese mismo asesor si la fecha aún no existe en Firestore.
+- Los registros diarios se guardan en `trackerRecords`, con un documento por UID y fecha.
+- Las métricas globales se guardan en `appData/avanceMetrics`; solo la supervisora puede administrarlas.
+- La primera sesión de supervisora intenta recuperar las métricas que existan en `avanceMetricsV6` del almacenamiento local de ese navegador. Si no hay una copia local, crea una fila por asesor autorizado usando `meta`, con avance y proyección en cero.
+- Cada asesor puede migrar desde su propio navegador los registros locales de su nombre, siempre que esa fecha todavía no esté en Firestore.
+- Los valores de métricas mostrados como datos iniciales en la versión anterior del HTML no se deben considerar migrados automáticamente. Antes de producción, comprueba los valores de origen y cárgalos en Firestore si siguen siendo vigentes.
 
 ## 6. Aviso sobre el historial público
 
-Quitar datos de la versión actual de `index.html` no borra automáticamente los commits anteriores de un repositorio público. Antes de considerar estos recursos privados, revisa la visibilidad del repositorio y el historial. Si un enlace es una invitación a un grupo privado y no debería haber sido público, solicita que se regenere.
+La rama actual deja de incrustar nombres del equipo, métricas iniciales y URL operativas en el HTML. Sin embargo, el repositorio principal sigue siendo público y los commits anteriores pueden conservar información que ya se publicó. Fusionar este cambio no borra el historial.
+
+Antes de usar datos reales:
+- Revisa si corresponde hacer privado el repositorio o mover el despliegue a un alojamiento apropiado; comprueba cómo afectaría a la página actual.
+- Si una invitación a un grupo privado de WhatsApp estuvo expuesta y no debía ser pública, solicita que se regenere.
+- No incluyas datos reales de prospectos/alumnos hasta completar la revisión de privacidad y seguridad.
 
 ## 7. Verificaciones antes de producción
 
-- Probar con una cuenta supervisora y una cuenta asesora.
-- Confirmar que una cuenta no autorizada no puede consultar datos.
-- Confirmar que un asesor no puede consultar registros de otro asesor ni modificar métricas globales.
-- Confirmar la sincronización en dos navegadores/dispositivos.
-- Mantener el proyecto en Spark sin vincular facturación.
-
-## Nota de privacidad pendiente
-
-El repositorio actual es público y el HTML existente contiene nombres, métricas iniciales y enlaces a recursos internos. Una pantalla de inicio de sesión no vuelve privado el código estático. Antes de fusionar o usar con datos reales, se debe revisar y retirar del HTML público la información no autorizada para difusión o definir una estrategia de alojamiento/repositorio privado compatible con el despliegue actual.
-
-
-## 6. Recursos privados de la ruta
-
-Las URL operativas se leen desde el documento `appConfig/resources` de Firestore y no deben volver a pegarse en `index.html`, porque el repositorio es público.
-
-Crea el documento `appConfig/resources` desde la consola de Firestore con un campo de tipo mapa llamado `links`. Dentro del mapa, agrega estas claves de tipo string y asigna a cada una la URL aprobada del recurso:
-
-- `intranet`
-- `grupoRutasUbicaciones`
-- `grupoInformeActividades`
-- `crmZoho`
-- `taxiDirecto`
-- `cabify`
-- `formularioMaterial`
-- `matrizSolicitudes`
-- `registroFichasDatos`
-- `digitalizacionFichas`
-- `actualizacionFichas`
-- `statusCartera`
-
-Las URL no se incluyen en este archivo de instrucciones. Recupéralas desde la fuente autorizada y confirma que son correctas antes de cargarlas. Una vez creado el documento, los miembros autorizados podrán abrir los recursos y el HTML público solo contendrá claves genéricas.
-
-## 7. Aviso sobre el historial público
-
-Quitar datos de la versión actual de `index.html` no borra automáticamente los commits anteriores de un repositorio público. Antes de considerar estos recursos privados, revisa la visibilidad del repositorio y el historial. Si alguno de los enlaces es una invitación a un grupo privado y no debería haber sido público, solicita que se regenere ese enlace.
+- Probar con una cuenta supervisora y una de asesor.
+- Comprobar que un correo institucional no autorizado no accede a Firestore.
+- Confirmar que un asesor no puede consultar los registros de otro ni modificar métricas globales.
+- Probar la sincronización en dos navegadores o dispositivos.
+- Verificar recuperación de contraseña, confirmación del correo y cierre de sesión.
+- Mantener el proyecto en Spark sin vincular facturación y revisar el uso de cuotas.

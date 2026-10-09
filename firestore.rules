@@ -49,7 +49,32 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Team-wide advancement metrics are supervisor-only.
+    // Team-wide metrics are stored in one document per month (YYYY-MM).
+    // Only the supervisor can inspect or change the selected month's figures.
+    match /monthlyMetrics/{monthId} {
+      allow get: if isSupervisor();
+      allow list: if false;
+      allow create, update, delete: if isSupervisor()
+        && monthId.matches('^[0-9]{4}-(0[1-9]|1[0-2])
+
+    // Authorized team members can read operational links, but only the supervisor
+    // can maintain them. These URLs are not embedded in public index.html.
+    match /appConfig/{documentId} {
+      allow get: if hasAuthorizedProfile();
+      allow list: if false;
+      allow create, update, delete: if isSupervisor();
+    }
+
+    // Everything else is denied by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+);
+    }
+
+    // Legacy appData path is retained as supervisor-only; new monthly metrics do not use it.
     match /appData/{documentId} {
       allow read, write: if isSupervisor();
     }

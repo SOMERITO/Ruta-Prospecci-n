@@ -19,7 +19,8 @@ Las reglas:
 - Requieren inicio de sesión, correo institucional verificado y un perfil autorizado.
 - Impiden que un usuario cree o modifique su propio perfil o su rol.
 - Permiten que los asesores consulten y modifiquen solo los registros diarios que les pertenecen.
-- Permiten a la supervisora consultar los registros del equipo y editar las métricas globales.
+- Permiten a los asesores consultar sus indicadores y los de todo el equipo, sin editarlos.
+- Solo la supervisora puede crear, modificar o eliminar los documentos de métricas mensuales.
 - Permiten a personas autorizadas leer la configuración de recursos; solo la supervisora puede modificarla.
 - Deniegan cualquier otra ruta.
 
@@ -36,7 +37,7 @@ Campos del perfil:
 - `email`: string, correo institucional exacto de esa cuenta.
 - `role`: string, `supervisor` para la supervisora o `asesor` para el asesor.
 - `asesorNombre`: string obligatorio para perfiles con rol `asesor`; debe coincidir con el nombre que se usará en el equipo.
-- `meta`: number opcional para perfiles con rol `asesor`; se utiliza cuando hay que crear una fila de métricas nueva.
+Las metas no se guardan en el perfil permanente del asesor porque cambian por mes; se registran en el documento mensual correspondiente.
 
 No compartas contraseñas ni las guardes en GitHub. El correo debe verificarse antes de que Firestore permita consultar datos.
 
@@ -64,7 +65,6 @@ Para cada campo, copia la URL vigente desde la fuente autorizada y confirma que 
 ## 5. Migración y métricas iniciales
 
 - Los registros diarios se guardan en `trackerRecords`, con un documento por UID y fecha.
-- Las métricas globales se guardan en `appData/avanceMetrics`; solo la supervisora puede administrarlas.
 - Las métricas se guardan en `monthlyMetrics/{YYYY-MM}`, por ejemplo `monthlyMetrics/2026-10`. Cada mes queda separado; editar noviembre no modifica octubre.
 - Cada documento mensual contiene `month` (string), `rows` (array de mapas con `asesor`, `meta`, `avance`, `proyeccion`), `updatedBy` (UID) y `updatedAt` (timestamp).
 - Al abrir el mes actual, la aplicación intenta migrar métricas antiguas desde `avanceMetricsV6` del navegador de la supervisora si existe una copia local. Si no existe, los perfiles de asesores se muestran con valores iniciales en cero y la supervisora debe introducir las cifras del mes. No se copian valores a meses anteriores o futuros.
@@ -82,8 +82,9 @@ Antes de usar datos reales:
 
 ## 7. Verificaciones antes de producción
 
-- Probar con una cuenta supervisora y una de asesor.
-- Cambiar de mes en la sección Avance, editar una meta y confirmar que solo cambia el documento de ese mes.
+- Probar con una cuenta supervisora y una de asesor. Usar cuentas individuales; no compartir una cuenta con permisos de supervisora.
+- Abrir la sección Avance con una cuenta de asesor y confirmar que puede ver toda la tabla, pero no tiene botón para editar.
+- Cambiar de mes en la sección Avance como supervisora, editar una meta y confirmar que solo cambia el documento de ese mes.
 - Comprobar que un correo institucional no autorizado no accede a Firestore.
 - Confirmar que un asesor no puede consultar los registros de otro ni modificar métricas globales.
 - Probar la sincronización en dos navegadores o dispositivos.

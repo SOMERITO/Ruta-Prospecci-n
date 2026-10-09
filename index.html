@@ -973,13 +973,16 @@
         let advisorProfiles = [];
 
         async function loadAuthorizedAdvisors() {
-            const snapshot = await db.collection("authorizedUsers")
-                .where("role", "==", "asesor")
-                .get();
+            // Team roster is stored separately from login accounts: the team only needs
+            // one shared read-only account, not one Firebase Auth user per adviser.
+            const snapshot = await db.collection("appConfig").doc("roster").get();
+            const roster = snapshot.exists && Array.isArray(snapshot.data().advisors)
+                ? snapshot.data().advisors
+                : [];
 
-            advisorProfiles = snapshot.docs
-                .map(doc => ({ uid: doc.id, ...doc.data() }))
-                .filter(profile => typeof profile.asesorNombre === "string" && profile.asesorNombre.trim())
+            advisorProfiles = roster
+                .filter(name => typeof name === "string" && name.trim())
+                .map(name => ({ asesorNombre: name.trim() }))
                 .sort((a, b) => a.asesorNombre.localeCompare(b.asesorNombre, "es"));
 
             asesoresList = advisorProfiles.map(profile => profile.asesorNombre);

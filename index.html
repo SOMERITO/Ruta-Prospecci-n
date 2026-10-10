@@ -2048,7 +2048,7 @@
             descInput.value = item.description || "";
             descInput.dataset.resourceField = "description";
             const categoryId = "resourceCategory_" + item.key;
-            const categoryLabel = makeResourceFieldLabel("Sección donde aparecerá", categoryId);
+            const categoryLabel = makeResourceFieldLabel("Categoría de organización", categoryId);
             const categorySelect = document.createElement("select");
             categorySelect.id = categoryId;
             categorySelect.className = "resource-category-select";
@@ -2064,6 +2064,15 @@
             fields.className = "grid grid-cols-1 gap-x-3 sm:grid-cols-2";
             fields.append(urlLabel, urlInput, descLabel, descInput, categoryLabel, categorySelect);
             card.append(top, fields);
+            categorySelect.addEventListener("change", function() {
+                const editor = document.getElementById("resourceLinksEditor");
+                const destination = editor && editor.querySelector('[data-resource-grid="' + categorySelect.value + '"]');
+                if (destination) destination.appendChild(card);
+                if (editor) editor.querySelectorAll("[data-resource-category-section]").forEach(function(section) {
+                    const grid = section.querySelector("[data-resource-grid]");
+                    section.classList.toggle("hidden", !grid || !grid.children.length);
+                });
+            });
             if (item.custom) {
                 const actions = document.createElement("div");
                 actions.className = "mt-4 flex justify-end border-t border-gray-100 pt-3";

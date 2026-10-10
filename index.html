@@ -1751,6 +1751,54 @@
             }
         }
 
+        function loadRosterEditor() {
+            const editor = document.getElementById("rosterEditor");
+            if (editor) editor.value = advisorProfiles.map(profile => profile.asesorNombre).join("\n");
+        }
+
+        async function saveRoster() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const editor = document.getElementById("rosterEditor");
+            const status = document.getElementById("rosterStatus");
+            const names = editor.value.split("\n").map(name => name.trim()).filter(Boolean);
+            const nextMap = {};
+            for (const name of names) {
+                const key = normalizeAdvisorKey(name);
+                if (!key || nextMap[key]) {
+                    if (status) status.textContent = "Hay un nombre duplicado o no válido. Revisa la lista.";
+                    return;
+                }
+                nextMap[key] = name;
+            }
+            if (!Object.keys(nextMap).length) {
+                if (status) status.textContent = "Incluye al menos un asesor.";
+                return;
+            }
+            const button = document.getElementById("saveRosterBtn");
+            if (button) button.disabled = true;
+            if (status) status.textContent = "Guardando lista…";
+            try {
+                await db.collection("appConfig").doc("roster").set({
+                    advisorMap: nextMap,
+                    updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                await loadAuthorizedAdvisors();
+                asesorSelect.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
+                advisorProfiles.forEach(profile => asesorSelect.add(new Option(profile.asesorNombre, profile.asesorNombre)));
+                if (signedInProfile.role === "asesor_compartido") asesorSelect.disabled = false;
+                loadRosterEditor();
+                subscribeToMetricsMonth(currentMetricsMonth);
+                renderDashboard();
+                if (status) status.textContent = "Lista actualizada y guardada en Firestore.";
+            } catch (error) {
+                console.error("No se pudo guardar el listado de asesores:", error);
+                if (status) status.textContent = "No se pudo guardar. Revisa los permisos de Camila en Firestore.";
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+
         function toggleEditMovilidad() {
             if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
             isMovilidadEditMode = !isMovilidadEditMode;

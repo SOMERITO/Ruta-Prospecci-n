@@ -1780,6 +1780,70 @@
             }
         }
 
+        function populateResourceLinksEditor() {
+            const editor = document.getElementById("resourceLinksEditor");
+            if (!editor) return;
+            const links = { ...protectedResourceLinks };
+            delete links.taxiDirecto;
+            delete links.cabify;
+            delete links.formularioMaterial;
+            ["avanza", "plantillaVan", "driveMovilidades", "statusCartera", "grupoRutasUbicaciones", "grupoInformeActividades"].forEach(key => {
+                if (!(key in links)) links[key] = "";
+            });
+            editor.value = Object.keys(links).sort().map(key => key + "=" + String(links[key] || "")).join("\n");
+        }
+
+        async function saveResourceLinks() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const editor = document.getElementById("resourceLinksEditor");
+            const status = document.getElementById("resourceLinksStatus");
+            const button = document.getElementById("saveResourceLinksBtn");
+            const nextLinks = {};
+            const lines = editor.value.split("\n").map(line => line.trim()).filter(line => line && !line.startsWith("#"));
+            for (const line of lines) {
+                const equals = line.indexOf("=");
+                if (equals < 1) {
+                    if (status) status.textContent = "Formato inválido. Usa clave=URL, una por línea.";
+                    return;
+                }
+                const key = line.slice(0, equals).trim();
+                const value = line.slice(equals + 1).trim();
+                if (!/^[A-Za-z][A-Za-z0-9]*$/.test(key) || key in nextLinks) {
+                    if (status) status.textContent = "Hay una clave inválida o repetida: " + key;
+                    return;
+                }
+                if (!value) continue;
+                try {
+                    const parsed = new URL(value);
+                    if (parsed.protocol !== "https:") throw new Error("Se requiere HTTPS");
+                    nextLinks[key] = parsed.href;
+                } catch (error) {
+                    if (status) status.textContent = "La URL de " + key + " no es válida o no usa HTTPS.";
+                    return;
+                }
+            }
+            delete nextLinks.taxiDirecto;
+            delete nextLinks.cabify;
+            delete nextLinks.formularioMaterial;
+            if (button) button.disabled = true;
+            if (status) status.textContent = "Guardando enlaces protegidos…";
+            try {
+                await db.collection("appConfig").doc("resources").set({
+                    links: nextLinks,
+                    updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                protectedResourceLinks = nextLinks;
+                await loadProtectedResources();
+                if (status) status.textContent = "Enlaces guardados. Los accesos activos ya se actualizaron.";
+            } catch (error) {
+                console.error("No se pudieron guardar los enlaces operativos:", error);
+                if (status) status.textContent = "No se pudo guardar. Verifica que la cuenta tenga permisos de supervisora.";
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+
         function loadRosterEditor() {
             const editor = document.getElementById("rosterEditor");
             if (editor) editor.value = advisorProfiles.map(profile => profile.asesorNombre).join("\n");

@@ -1522,7 +1522,7 @@
         let isAvanceEditMode = false;
 
         function loadAvanceData() {
-            if (signedInUser && signedInProfile && signedInProfile.role === "supervisor" && sharedAvanceRows) {
+            if (signedInUser && signedInProfile && Array.isArray(sharedAvanceRows)) {
                 return sharedAvanceRows;
             }
             return buildDefaultAvanceData();

@@ -958,6 +958,10 @@
             }
 
             currentMetricsMonth = monthKey;
+            const metricsMonthInput = document.getElementById("avanceMonth");
+            const mobilityMonthInput = document.getElementById("movilidadMonth");
+            if (metricsMonthInput && metricsMonthInput.value !== monthKey) metricsMonthInput.value = monthKey;
+            if (mobilityMonthInput && mobilityMonthInput.value !== monthKey) mobilityMonthInput.value = monthKey;
             const token = ++metricsSubscriptionToken;
             if (typeof metricsUnsubscribe === "function") metricsUnsubscribe();
             metricsUnsubscribe = null;
@@ -1013,7 +1017,9 @@
                     }
 
                     sharedAvanceRows = buildDefaultAvanceData();
+                    sharedMobilityRows = buildDefaultMobilityData(monthKey);
                     renderAvance();
+                    renderMovilidades();
                     updateMetricsMonthStatus(
                         formatMetricsMonth(monthKey) + " todavía no tiene un registro guardado. La supervisora puede introducir sus valores y se crearán al guardar el primer cambio."
                     );
@@ -1022,6 +1028,12 @@
 
                 const record = snapshot.data() || {};
                 currentMetricsDocumentExists = true;
+                const savedMobilityRows = Array.isArray(record.mobilityRows) ? record.mobilityRows : [];
+                sharedMobilityRows = savedMobilityRows
+                    .filter(row => row && typeof row.asesor === "string" && row.asesor.trim())
+                    .map(row => ({ asesor: row.asesor, asignado: Math.max(0, Number(row.asignado) || 0), gasto: Math.max(0, Number(row.gasto) || 0) }));
+                if (!sharedMobilityRows.length) sharedMobilityRows = buildDefaultMobilityData(monthKey);
+                renderMovilidades();
                 const savedRows = Array.isArray(record.rows) ? record.rows : [];
                 const normalizedSavedRows = savedRows
                     .filter(row => row && typeof row.asesor === "string" && row.asesor.trim())
@@ -1642,6 +1654,108 @@
                 }
             }
         });
+
+
+        function buildDefaultMobilityData(monthKey = currentMetricsMonth) {
+            // Historical periods are never populated with today's roster or made-up values.
+            if (monthKey !== getCurrentMonthKey()) return [];
+            return advisorProfiles.map(profile => ({ asesor: profile.asesorNombre, asignado: 2500, gasto: 0 }));
+        }
+
+        function loadMovilidadData() {
+            return Array.isArray(sharedMobilityRows) ? sharedMobilityRows : [];
+        }
+
+        function formatMoney(value) {
+            return Number(value || 0).toLocaleString("es-PE", { maximumFractionDigits: 0 });
+        }
+
+        function renderMovilidades() {
+            const data = loadMovilidadData();
+            const body = document.getElementById("movilidadTableBody");
+            const foot = document.getElementById("movilidadTableFoot");
+            if (!body || !foot) return;
+            body.innerHTML = "";
+            let assignedTotal = 0, spentTotal = 0;
+            if (!data.length) {
+                body.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">Este mes aún no tiene un registro de movilidades. La supervisora puede cargar el reporte sin alterar el historial.</td></tr>';
+            }
+            data.forEach((row, index) => {
+                const assigned = Math.max(0, Number(row.asignado) || 0);
+                const spent = Math.max(0, Number(row.gasto) || 0);
+                const balance = assigned - spent;
+                const execution = assigned ? Math.round((spent / assigned) * 100) : 0;
+                assignedTotal += assigned;
+                spentTotal += spent;
+                const assignedCell = isMovilidadEditMode
+                    ? '<input type="number" min="0" step="1" class="w-24 rounded-md border border-gray-300 px-2 py-2 text-right text-sm" value="' + assigned + '" onchange="updateMovilidad(' + index + ', \'asignado\', this.value)" aria-label="Monto asignado">'
+                    : 'S/ ' + formatMoney(assigned);
+                const spentCell = isMovilidadEditMode
+                    ? '<input type="number" min="0" step="1" class="w-24 rounded-md border border-gray-300 px-2 py-2 text-right text-sm" value="' + spent + '" onchange="updateMovilidad(' + index + ', \'gasto\', this.value)" aria-label="Gasto total">'
+                    : 'S/ ' + formatMoney(spent);
+                const balanceText = balance < 0 ? '−S/ ' + formatMoney(Math.abs(balance)) : 'S/ ' + formatMoney(balance);
+                const rowName = String(row.asesor || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-gray-50";
+                tr.innerHTML = '<td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-gray-900">' + rowName + '</td>' +
+                    '<td class="whitespace-nowrap px-4 py-3 text-right text-sm">' + assignedCell + '</td>' +
+                    '<td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">' + spentCell + '</td>' +
+                    '<td class="whitespace-nowrap px-4 py-3 text-right text-sm ' + (balance < 0 ? 'font-bold text-rose-700' : 'text-emerald-700') + '">' + balanceText + '</td>' +
+                    '<td class="whitespace-nowrap px-4 py-3 text-right"><span class="rounded-full px-2.5 py-1 text-xs font-bold ' + (execution > 100 ? 'bg-rose-50 text-rose-700' : 'bg-brand-50 text-brand-800') + '">' + execution + '%</span></td>';
+                body.appendChild(tr);
+            });
+            const balanceTotal = assignedTotal - spentTotal;
+            const executionTotal = assignedTotal ? Math.round((spentTotal / assignedTotal) * 100) : 0;
+            document.getElementById("movilidadAssignedTotal").textContent = "S/ " + formatMoney(assignedTotal);
+            document.getElementById("movilidadSpentTotal").textContent = "S/ " + formatMoney(spentTotal);
+            document.getElementById("movilidadBalanceTotal").textContent = balanceTotal < 0 ? "−S/ " + formatMoney(Math.abs(balanceTotal)) : "S/ " + formatMoney(balanceTotal);
+            foot.innerHTML = '<tr><td class="px-4 py-3 text-sm font-extrabold uppercase">Total general</td>' +
+                '<td class="px-4 py-3 text-right text-sm font-extrabold">S/ ' + formatMoney(assignedTotal) + '</td>' +
+                '<td class="px-4 py-3 text-right text-sm font-extrabold">S/ ' + formatMoney(spentTotal) + '</td>' +
+                '<td class="px-4 py-3 text-right text-sm font-extrabold">' + (balanceTotal < 0 ? '−S/ ' + formatMoney(Math.abs(balanceTotal)) : 'S/ ' + formatMoney(balanceTotal)) + '</td>' +
+                '<td class="px-4 py-3 text-right text-sm font-extrabold">' + executionTotal + '%</td></tr>';
+            const button = document.getElementById("btnEditMovilidad");
+            if (button) button.innerHTML = isMovilidadEditMode ? '<i class="fa-solid fa-check mr-2"></i>Finalizar edición' : '<i class="fa-solid fa-pen mr-2"></i>Editar registro';
+            const status = document.getElementById("movilidadStatus");
+            if (status && data.length) status.textContent = "Mes consultado: " + formatMetricsMonth(currentMetricsMonth) + ". Los cambios autorizados se sincronizan en tiempo real.";
+        }
+
+        async function updateMovilidad(index, field, value) {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            if (!["asignado", "gasto"].includes(field)) return;
+            const numericValue = Number(value);
+            if (!Number.isFinite(numericValue) || numericValue < 0) {
+                alert("Introduce un monto igual o mayor que cero.");
+                renderMovilidades();
+                return;
+            }
+            const data = loadMovilidadData().map(row => ({ ...row }));
+            if (!data[index]) return;
+            data[index][field] = numericValue;
+            sharedMobilityRows = data;
+            renderMovilidades();
+            try {
+                await db.collection("monthlyMetrics").doc(currentMetricsMonth).set({
+                    month: currentMetricsMonth,
+                    mobilityRows: data,
+                    updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                const status = document.getElementById("movilidadStatus");
+                if (status) status.textContent = "Movilidades guardadas para " + formatMetricsMonth(currentMetricsMonth) + ".";
+            } catch (error) {
+                console.error("No se pudo guardar el avance de movilidades:", error);
+                alert("No se pudo guardar el gasto en Firestore. Revisa tu conexión y las reglas.");
+                const status = document.getElementById("movilidadStatus");
+                if (status) status.textContent = "Error al guardar las movilidades.";
+            }
+        }
+
+        function toggleEditMovilidad() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            isMovilidadEditMode = !isMovilidadEditMode;
+            renderMovilidades();
+        }
 
         async function copyAvanceScreenshot() {
             let wasEditing = isAvanceEditMode;

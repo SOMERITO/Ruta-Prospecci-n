@@ -1,0 +1,2091 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruta Prospección</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Firebase compat SDK: this repository is a single-file HTML app (no npm build step). -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#e4f9fa',
+                            100: '#ccf4f6',
+                            200: '#99eaf0',
+                            300: '#66dfe9',
+                            400: '#33d5e3',
+                            500: '#2fcbd1',
+                            600: '#26a2a7',
+                            700: '#1c7a7d',
+                            800: '#135154',
+                            900: '#09292a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active { border-bottom: 2px solid #2fcbd1; color: #09292a; font-weight: bold; }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #99eaf0; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2fcbd1; }
+        
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .accordion-content { transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out; overflow: hidden; }
+        .accordion-content.hidden-section { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border-top-width: 0;}
+        .accordion-content.open-section { max-height: 1200px; opacity: 1; }
+        
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; margin: 0; 
+        }
+        #appContent { display: none; }
+        body.authenticated #appContent { display: flex; flex-direction: column; flex-grow: 1; }
+        body.authenticated #authGate { display: none !important; }
+        #authMessage:empty { display: none; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
+
+    <section id="authGate" class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-10">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 p-6 sm:p-8">
+            <div class="flex items-center justify-center mb-5">
+                <div class="h-14 w-14 rounded-2xl bg-brand-900 flex items-center justify-center">
+                    <i class="fa-solid fa-route text-2xl text-brand-400"></i>
+                </div>
+            </div>
+            <h1 class="text-2xl font-extrabold text-center text-gray-900">Ruta Prospección</h1>
+            <p class="text-sm text-gray-500 text-center mt-2 mb-6">Acceso privado para el equipo autorizado</p>
+            <form id="loginForm" class="space-y-4">
+                <div>
+                    <label for="loginEmail" class="block text-sm font-semibold text-gray-700 mb-1">Correo autorizado</label>
+                    <input id="loginEmail" name="email" type="email" autocomplete="username" required
+                        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-brand-400 focus:border-brand-500"
+                        placeholder="correo institucional o cuenta del equipo">
+                </div>
+                <div>
+                    <label for="loginPassword" class="block text-sm font-semibold text-gray-700 mb-1">Contraseña de Ruta Prospección</label>
+                    <input id="loginPassword" name="password" type="password" autocomplete="current-password" required
+                        class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-brand-400 focus:border-brand-500"
+                        placeholder="Tu contraseña de la aplicación">
+                </div>
+                <button id="loginSubmit" type="submit"
+                    class="w-full bg-brand-700 hover:bg-brand-800 text-white font-bold rounded-lg p-3 transition-colors">
+                    Iniciar sesión
+                </button>
+            </form>
+            <div class="text-center mt-4">
+                <button id="resetPasswordBtn" type="button" class="text-sm font-semibold text-brand-700 hover:text-brand-900 underline">
+                    Olvidé mi contraseña
+                </button>
+            </div>
+            <p id="authMessage" role="status" aria-live="polite" class="mt-4 rounded-lg p-3 text-sm text-center bg-blue-50 text-blue-800"></p>
+            <p class="text-xs text-gray-400 text-center mt-5">Solo pueden ingresar las cuentas autorizadas por la supervisora. El acceso compartido usa una contraseña propia de la aplicación.</p>
+        </div>
+    </section>
+
+    <div id="appContent">
+    <nav class="bg-brand-900 text-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <i class="fa-solid fa-route text-2xl text-brand-500"></i>
+                    <span class="font-bold text-xl tracking-wide">Ruta Prospección</span>
+                </div>
+                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <span id="signedInEmail" class="text-xs sm:text-sm text-brand-100 truncate max-w-[42vw]"></span>
+                    <button id="signOutBtn" type="button" class="hidden bg-brand-800 hover:bg-brand-700 border border-brand-700 rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold whitespace-nowrap">
+                        <i class="fa-solid fa-right-from-bracket mr-1"></i><span class="hidden sm:inline">Cerrar sesión</span><span class="sm:hidden">Salir</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="bg-white shadow relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex space-x-6 sm:space-x-8 overflow-x-auto whitespace-nowrap scrollbar-hide" id="tabs">
+                <button onclick="switchTab('asesor')" class="tab-btn active py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
+                    <i class="fa-solid fa-user-check mr-2"></i>Asesor
+                </button>
+                <button onclick="switchTab('jefatura')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
+                    <i class="fa-solid fa-chart-line mr-2"></i>Dashboard Jefatura
+                </button>
+                <button onclick="switchTab('avance')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
+                    <i class="fa-solid fa-chart-pie mr-2"></i>Avance
+                </button>
+                <button onclick="switchTab('movilidades')" class="tab-btn py-4 px-1 text-gray-500 hover:text-brand-600 focus:outline-none transition-colors duration-200">
+                    <i class="fa-solid fa-car-side mr-2"></i>Movilidades
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full">
+        
+        <div id="asesor" class="tab-content active">
+            
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-500 sticky top-0 z-20">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-800 mb-2">1. Identifícate para ver tu ruta:</label>
+                        <select id="asesorName" class="w-full border-2 border-brand-200 rounded-lg shadow-sm focus:border-brand-500 focus:ring-brand-500 p-3 bg-brand-50 font-medium text-gray-800 transition-colors">
+                            <option value="">-- Selecciona tu nombre --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Actual (Solo Lectura)</label>
+                        <input type="date" id="trackerDate" class="w-full border-gray-300 rounded-lg shadow-sm bg-gray-100 text-gray-500 p-3" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div id="trackerWorkspace" class="transition-opacity duration-500 opacity-0 pointer-events-none">
+                
+                <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border border-gray-100">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Progreso de <span id="displayName" class="text-brand-600 break-words"></span></h2>
+                    
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-2 space-y-2 sm:space-y-0">
+                            <div>
+                                <span class="block text-sm font-semibold text-brand-900">Avance del día: <span id="progressText" class="font-bold text-brand-600">0 pasos (0%)</span></span>
+                                <span class="block text-xs text-brand-700 mt-1">Fase actual: <span id="currentPhaseText" class="font-bold bg-brand-100 px-2 py-1 rounded">1. Marcación</span></span>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3 mb-1 mt-2 shadow-inner">
+                            <div id="progressBar" class="bg-brand-400 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                        <p id="completionMessage" class="text-xs text-brand-600 font-bold hidden mt-2"><i class="fa-solid fa-circle-check mr-1"></i>¡Ruta completada al 100%!</p>
+                    </div>
+
+                    <div class="text-sm text-gray-500 mb-4 bg-yellow-50 p-3 rounded border border-yellow-200 flex items-start">
+                        <i class="fa-solid fa-circle-info text-yellow-500 mr-2 mt-0.5 shrink-0"></i>
+                        <div>
+                            <strong>Nota:</strong> Debes completar la micrometa anterior para poder continuar con la siguiente.
+                        </div>
+                    </div>
+
+                    <form id="trackerForm" class="space-y-4">
+                        
+                        <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                            <button type="button" onclick="toggleSection('sec1')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
+                                <h3 class="text-base sm:text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-regular fa-clock mr-2 text-brand-500"></i>1. Marcación</h3>
+                                <i class="fa-solid fa-chevron-up transform transition-transform duration-300 text-gray-400 shrink-0 ml-2" id="icon-sec1"></i>
+                            </button>
+                            <div id="sec1" class="accordion-content open-section bg-white px-2 sm:px-4 pb-4 border-t border-gray-200 mt-2">
+                                
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step1_1" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">1.1 Marcación Intranet</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">L-V: 8:00am y 6:00pm | Sáb: 9:00am y 12:00pm</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="intranet" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-brand-50 hover:border-brand-300 transition-colors text-brand-600" title="Intranet Wiener">
+                                            <i class="fa-solid fa-desktop"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step1_2" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">1.2 Ubicación en Grupo WhatsApp</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Enviar al grupo "RUTAS Y UBICACIONES"</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="grupoRutasUbicaciones" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Rutas y Ubicaciones">
+                                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step1_3" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">1.3 Foto de Informe de Salida</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">En taxi/van de 7:50 am a 8:00 am máximo</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="grupoInformeActividades" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Informe de Salida">
+                                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                            <button type="button" onclick="toggleSection('sec2')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
+                                <h3 class="text-base sm:text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-map-location-dot mr-2 text-brand-500"></i>2. Prospección en Campo</h3>
+                                <i class="fa-solid fa-chevron-down transform transition-transform duration-300 text-gray-400 shrink-0 ml-2 rotate-180" id="icon-sec2"></i>
+                            </button>
+                            <div id="sec2" class="accordion-content hidden-section bg-white px-2 sm:px-4 pb-4 border-t border-gray-200 mt-2">
+                                
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step2_1" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">2.1 Foto de Actividades en Campo</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Reportar actividades mediante fotos y en descripción, el status del colegio</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="grupoInformeActividades" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-500" title="WP Actividades">
+                                            <i class="fa-brands fa-whatsapp text-lg"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step2_2" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0">
+                                            <span class="block font-medium text-gray-800 break-words">2.2 Ficha de Actualización</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Actualizar ficha el día de visita y volver a actualizar el día de la actividad</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                
+
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                            <button type="button" onclick="toggleSection('sec3')" class="w-full flex justify-between items-center bg-gray-50 p-4 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none group">
+                                <h3 class="text-base sm:text-lg font-bold text-brand-700 group-hover:text-brand-800"><i class="fa-solid fa-folder-open mr-2 text-brand-500"></i>3. Gestión Administrativa</h3>
+                                <i class="fa-solid fa-chevron-down transform transition-transform duration-300 text-gray-400 shrink-0 ml-2 rotate-180" id="icon-sec3"></i>
+                            </button>
+                            <div id="sec3" class="accordion-content hidden-section bg-white px-2 sm:px-4 pb-4 border-t border-gray-200 mt-2">
+                                
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_1" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.1 Registro de Actividades en CRM</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Registrar las actividades del día siguiente.</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="crmZoho" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors text-blue-500" title="CRM Zoho">
+                                            <i class="fa-solid fa-chart-pie"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_2" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0">
+                                            <span class="block font-medium text-gray-800 break-words">3.2 Actualizar estado de actividad en CRM</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Marcar como "Completada" o "Cancelada"</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_3" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.3 Programación de movilidad (Avanza y VAN)</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Programar la movilidad y revisar el formato VAN cuando corresponda.</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-1 sm:space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="avanza" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-brand-50 hover:border-brand-300 transition-colors text-brand-700" title="Abrir Avanza">
+                                            <i class="fa-solid fa-taxi"></i>
+                                        </a>
+                                        <a href="#" data-resource-key="plantillaVan" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors text-blue-600" title="Plantilla VAN Promotor">
+                                            <i class="fa-solid fa-file-excel"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_5" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.5 Solicitud de Charlas OV (Charlas con psicólogos)</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Charla para alumnos, padres, docentes, solicitud nueva. Se debe programar taxi ida y vuelta para los psicólogos.</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="matrizSolicitudes" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-green-50 hover:border-green-300 transition-colors text-green-600" title="Matriz de Solicitudes">
+                                            <i class="fa-solid fa-table-list"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_6" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.6 Registrar fichas de datos</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Antes de subir las fichas, es importante subir la cantidad de fichas y colegios al drive.</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="registroFichasDatos" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-orange-50 hover:border-orange-300 transition-colors text-orange-500" title="Registro Drive">
+                                            <i class="fa-brands fa-microsoft"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_7" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.7 Digitalización de fichas de datos</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Se deberá subir las fichas mediante el aplicativo verificando que todos los datos estén bien subidos sin espacios ni guiones en el número del celular de lo contrario se edita.</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="digitalizacionFichas" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-brand-50 hover:border-brand-300 transition-colors text-brand-500" title="EasyPanel">
+                                            <i class="fa-solid fa-file-arrow-up"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_8" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.8 Registro de Fichas de Actualización</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Es importante subir todas las fichas de actualización diariamente.</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="actualizacionFichas" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-orange-50 hover:border-orange-300 transition-colors text-orange-500" title="Registro Fichas Actualización">
+                                            <i class="fa-brands fa-microsoft"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg border border-transparent hover:border-brand-200 transition-all">
+                                    <label class="flex items-start space-x-3 cursor-pointer flex-grow p-1 min-w-0">
+                                        <input type="checkbox" id="step3_9" class="step-checkbox mt-1 h-5 w-5 shrink-0 text-brand-500 rounded border-gray-300 focus:ring-brand-500">
+                                        <div class="min-w-0 pr-2">
+                                            <span class="block font-medium text-gray-800 break-words">3.9 Cartera de colegios</span>
+                                            <span class="block text-xs sm:text-sm text-gray-500">Actualizar las actividades y el estado de cada colegio.</span>
+                                        </div>
+                                    </label>
+                                    <div class="flex space-x-2 ml-1 shrink-0">
+                                        <a href="#" data-resource-key="statusCartera" target="_blank" class="flex items-center justify-center h-10 w-10 bg-white rounded-full shadow-sm border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors text-blue-600" title="Status Cartera">
+                                            <i class="fa-solid fa-folder-tree"></i>
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div class="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded mt-6 shadow-sm">
+                            <h4 class="font-bold text-red-700 mb-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i> No Negociables</h4>
+                            <ul class="text-xs sm:text-sm text-red-800 list-disc list-inside space-y-1">
+                                <li>Salida de casa de promotores máximo 6:30 am si la actividad empieza a las 7:30 am.</li>
+                            </ul>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="jefatura" class="tab-content relative">
+            <details id="resourceAdminPanel" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border border-brand-100">
+                <summary class="cursor-pointer font-bold text-gray-900"><i class="fa-solid fa-link mr-2 text-brand-600"></i>Administrar enlaces de trabajo</summary>
+                <p class="mt-2 text-sm text-gray-600">Una fila por enlace con el formato clave=URL. Los enlaces se guardan en Firestore y solo Camila puede modificarlos. Al guardar, se retiran las claves obsoletas de Taxi Directo, Cabify y Solicitud de Material.</p>
+                <textarea id="resourceLinksEditor" rows="10" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm font-mono" aria-label="Enlaces operativos" spellcheck="false"></textarea>
+                <button id="saveResourceLinksBtn" type="button" onclick="saveResourceLinks()" class="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar enlaces</button>
+                <p id="resourceLinksStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+            </details>
+            <details id="rosterAdminPanel" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border border-brand-100">
+                <summary class="cursor-pointer font-bold text-gray-900"><i class="fa-solid fa-users-gear mr-2 text-brand-600"></i>Administrar lista de asesores</summary>
+                <p class="mt-2 text-sm text-gray-600">Una persona por línea. Esta lista se guarda en Firestore y se actualizará para el equipo.</p>
+                <textarea id="rosterEditor" rows="8" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm" aria-label="Lista de asesores"></textarea>
+                <button id="saveRosterBtn" type="button" onclick="saveRoster()" class="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar lista</button>
+                <p id="rosterStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+            </details>
+            
+            <div id="dashboardSyncOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-[1px] z-50 hidden flex-col items-center justify-center rounded-xl transition-all h-full w-full">
+                <i class="fa-solid fa-satellite-dish fa-spin text-4xl text-brand-500 mb-3"></i>
+                <h3 class="text-lg font-bold text-brand-900 tracking-wide">Actualización en camino...</h3>
+                <p class="text-brand-600 text-sm font-medium mt-1 animate-pulse">Sincronizando datos</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-2 sm:space-y-0">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i>Dashboard de Seguimiento</h2>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-4 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asesor</th>
+                                <th class="px-4 py-3 sm:px-6 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Progreso</th>
+                                <th class="px-4 py-3 sm:px-6 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Fase Actual</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardTableBody" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="avance" class="tab-content">
+            <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600 relative" id="avanceCaptureContainer">
+                
+                <div id="avanceSyncOverlay" class="absolute inset-0 bg-white/90 backdrop-blur-[2px] z-50 hidden flex-col items-center justify-center rounded-xl transition-all">
+                    <i class="fa-solid fa-satellite-dish fa-spin text-5xl text-brand-500 mb-4"></i>
+                    <h3 class="text-xl font-extrabold text-brand-900 tracking-wide">Actualización en camino...</h3>
+                    <p class="text-brand-600 font-medium mt-2 animate-pulse">Sincronizando datos en tiempo real</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800"><i class="fa-solid fa-chart-pie text-brand-500 mr-2"></i>Métricas de Avance</h2>
+                    </div>
+                    
+                    <div class="flex space-x-3 items-center">
+                        <button onclick="toggleEditAvance()" id="btnToggleEdit" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center">
+                            <i class="fa-solid fa-pen mr-2"></i>Editar
+                        </button>
+                        <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white h-10 w-10 rounded-full text-lg shadow-md transition-all flex items-center justify-center shrink-0" title="Copiar Imagen">
+                            <i class="fa-solid fa-camera"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4 rounded-lg border border-brand-100 bg-brand-50 p-3">
+                    <label for="avanceMonth" class="text-sm font-bold text-brand-900 whitespace-nowrap">Mes de las métricas</label>
+                    <input id="avanceMonth" type="month" class="border border-brand-200 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-800 focus:ring-brand-500 focus:border-brand-500">
+                    <p id="avanceMonthStatus" class="text-xs sm:text-sm text-gray-600" role="status" aria-live="polite">Selecciona el mes que deseas consultar.</p>
+                </div>
+                
+                <details id="metricImportPanel" class="hidden mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <summary class="cursor-pointer font-bold text-gray-800">Importar historial de Avance</summary>
+                    <p class="mt-2 text-sm text-gray-600">Una fila por asesor, separada por punto y coma: nombre;meta;avance;referidos;proyección. También se acepta nombre;meta;avance;proyección (referidos se tomará como 0). Las filas se combinan por nombre y no reemplazan las demás.</p>
+                    <textarea id="metricImportText" rows="6" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm font-mono" placeholder="NOMBRE DEL ASESOR;META;AVANCE;REFERIDOS;PROYECCIÓN"></textarea>
+                    <button id="metricImportBtn" type="button" onclick="importMetricRows()" class="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">Importar al mes seleccionado</button>
+                    <p id="metricImportStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+                </details>
+                <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg bg-white">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asesor</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Meta 4.º secundaria</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Avance</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">%</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Referidos postulantes</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Proyección</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Logro Final</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">% Final</th>
+                            </tr>
+                        </thead>
+                        <tbody id="avanceTableBody" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="movilidades" class="tab-content">
+            <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
+                <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wide text-brand-700">Control mensual</p>
+                        <h2 class="mt-1 text-xl sm:text-2xl font-bold text-gray-900"><i class="fa-solid fa-car-side text-brand-500 mr-2"></i>Avance de movilidades</h2>
+                        <p class="mt-1 text-sm text-gray-500">Presupuesto, gastos y saldo por asesor.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <label for="movilidadMonth" class="text-sm font-bold text-brand-900">Mes</label>
+                        <input id="movilidadMonth" type="month" class="border border-brand-200 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-800">
+                        <button id="btnEditMovilidad" onclick="toggleEditMovilidad()" class="hidden rounded-lg bg-gray-100 px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-200">
+                            <i class="fa-solid fa-pen mr-2"></i>Editar registro
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                    <div class="rounded-xl bg-brand-50 border border-brand-100 p-4"><p class="text-xs font-bold uppercase tracking-wide text-brand-800">Total asignado</p><p id="movilidadAssignedTotal" class="mt-1 text-2xl font-extrabold text-brand-900">S/ 0</p></div>
+                    <div class="rounded-xl bg-gray-50 border border-gray-200 p-4"><p class="text-xs font-bold uppercase tracking-wide text-gray-600">Gasto total</p><p id="movilidadSpentTotal" class="mt-1 text-2xl font-extrabold text-gray-900">S/ 0</p></div>
+                    <div class="rounded-xl bg-rose-50 border border-rose-100 p-4"><p class="text-xs font-bold uppercase tracking-wide text-rose-700">Saldo total</p><p id="movilidadBalanceTotal" class="mt-1 text-2xl font-extrabold text-rose-800">S/ 0</p></div>
+                </div>
+                <div class="mb-5 overflow-x-auto rounded-xl border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50"><tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500">Asesor</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-gray-500">Asignado</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-gray-500">Gasto total</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-gray-500">Saldo</th>
+                            <th class="px-4 py-3 text-right text-xs font-bold uppercase tracking-wide text-gray-500">Ejecución</th>
+                        </tr></thead>
+                        <tbody id="movilidadTableBody" class="divide-y divide-gray-100 bg-white"></tbody>
+                        <tfoot id="movilidadTableFoot" class="bg-brand-900 text-white"></tfoot>
+                    </table>
+                </div>
+                <details id="mobilityImportPanel" class="hidden mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <summary class="cursor-pointer font-bold text-gray-800">Importar o reconstruir un mes desde una tabla</summary>
+                    <p class="mt-2 text-sm text-gray-600">Pega una fila por asesor con el formato: nombre;asignado;gasto. Sirve para cargar reportes históricos sin mezclarlos con el equipo actual.</p>
+                    <textarea id="mobilityImportText" rows="6" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm" placeholder="ASESOR A;2500;0&#10;ASESOR B;2500;0"></textarea>
+                    <button id="mobilityImportBtn" type="button" onclick="importMobilityRows()" class="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">Importar al mes seleccionado</button>
+                    <p id="mobilityImportStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+                </details>
+                <p id="movilidadStatus" class="mb-3 text-sm text-gray-600" role="status" aria-live="polite"></p>
+                <p class="text-xs text-gray-500"><i class="fa-solid fa-circle-info mr-1 text-brand-600"></i>La ejecución es gasto ÷ monto asignado. El saldo es presupuesto disponible; los valores negativos indican exceso.</p>
+            </section>
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-bold text-gray-900"><i class="fa-solid fa-taxi mr-2 text-brand-600"></i>Avanza</h3><p class="mt-2 text-sm text-gray-600">Portal de programación de movilidad.</p><a href="#" data-resource-key="avanza" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-arrow-up-right-from-square mr-2"></i>Abrir Avanza</a></div>
+                <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-bold text-gray-900"><i class="fa-solid fa-file-lines mr-2 text-brand-600"></i>Plantilla VAN Promotor</h3><p class="mt-2 text-sm text-gray-600">Abrir la plantilla para programar la movilidad en VAN.</p><a href="#" data-resource-key="plantillaVan" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-arrow-up-right-from-square mr-2"></i>Abrir plantilla</a></div>
+                <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-bold text-gray-900"><i class="fa-brands fa-google-drive mr-2 text-brand-600"></i>Drive de movilidades</h3><p class="mt-2 text-sm text-gray-600">Repositorio de formatos y seguimiento de taxis.</p><a href="#" data-resource-key="driveMovilidades" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-arrow-up-right-from-square mr-2"></i>Abrir Drive</a></div>
+            </section>
+        </div>
+    </main>
+    </div><!-- /#appContent -->
+
+    <script>
+        const SHARED_TEAM_EMAIL = "prospeccionwiener@gmail.com";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDQt1eHVwGiGp3j8M0F9NiuH8l0x8Yv80k",
+            authDomain: "ruta-prospeccion.firebaseapp.com",
+            projectId: "ruta-prospeccion",
+            storageBucket: "ruta-prospeccion.firebasestorage.app",
+            messagingSenderId: "663940859388",
+            appId: "1:663940859388:web:6b31d34135242f40ffde79"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let signedInUser = null;
+        let signedInProfile = null;
+        let sharedTrackerData = null;
+        let sharedAvanceRows = null;
+        let sharedMobilityRows = null;
+        let isMovilidadEditMode = false;
+        let protectedResourceLinks = {};
+        let trackerUnsubscribe = null;
+        let metricsUnsubscribe = null;
+        let currentMetricsMonth = getCurrentMonthKey();
+        let currentMetricsDocumentExists = false;
+        let metricsSubscriptionToken = 0;
+        const legacyMetricsMigrationAttempted = new Set();
+        let authStateGeneration = 0;
+        let legacyMigrationAttempted = false;
+
+        function parseLegacyTrackerData() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem("trackerData") || "[]");
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.warn("No se pudo leer el respaldo local de trackerData.", error);
+                return [];
+            }
+        }
+
+        function parseLegacyAvanceData() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem("avanceMetricsV6") || "null");
+                return Array.isArray(parsed) && parsed.length ? parsed : null;
+            } catch (error) {
+                console.warn("No se pudo leer el respaldo local de avance.", error);
+                return null;
+            }
+        }
+
+        function getTrackerData() {
+            // Mientras hay una sesión iniciada, los datos compartidos proceden de Firestore.
+            // El localStorage solo se conserva como respaldo de migración del sistema anterior.
+            if (signedInUser) return sharedTrackerData || [];
+            return parseLegacyTrackerData();
+        }
+
+        function setAuthMessage(message, kind = "info") {
+            const element = document.getElementById("authMessage");
+            if (!element) return;
+            element.textContent = message || "";
+            element.className = "mt-4 rounded-lg p-3 text-sm text-center";
+            if (kind === "error") element.classList.add("bg-red-50", "text-red-800");
+            else if (kind === "success") element.classList.add("bg-green-50", "text-green-800");
+            else element.classList.add("bg-blue-50", "text-blue-800");
+        }
+
+        function stopDataSubscriptions() {
+            if (typeof trackerUnsubscribe === "function") trackerUnsubscribe();
+            if (typeof metricsUnsubscribe === "function") metricsUnsubscribe();
+            trackerUnsubscribe = null;
+            metricsUnsubscribe = null;
+            metricsSubscriptionToken++;
+        }
+
+        function sameCheckboxStates(left, right) {
+            if (!left || !right) return false;
+            const keys = new Set([...Object.keys(left), ...Object.keys(right)]);
+            for (const key of keys) {
+                if (Boolean(left[key]) !== Boolean(right[key])) return false;
+            }
+            return true;
+        }
+
+        function configureAuthorizedInterface() {
+            const tabButtons = Array.from(document.querySelectorAll("#tabs .tab-btn"));
+            const asesorTab = tabButtons[0];
+            const dashboardTab = tabButtons[1];
+            const avanceTab = tabButtons[2];
+            const movilidadTab = tabButtons[3];
+            const role = signedInProfile.role;
+
+            document.getElementById("signedInEmail").textContent = signedInUser.email || "";
+            document.getElementById("signOutBtn").classList.remove("hidden");
+
+            document.getElementById("btnToggleEdit").classList.toggle("hidden", role !== "supervisor");
+            document.getElementById("btnEditMovilidad").classList.toggle("hidden", role !== "supervisor");
+            document.getElementById("rosterAdminPanel").classList.toggle("hidden", role !== "supervisor");
+            document.getElementById("resourceAdminPanel").classList.toggle("hidden", role !== "supervisor");
+            document.getElementById("mobilityImportPanel").classList.toggle("hidden", role !== "supervisor");
+            document.getElementById("metricImportPanel").classList.toggle("hidden", role !== "supervisor");
+
+            if (role === "supervisor") {
+                asesorTab.classList.add("hidden");
+                dashboardTab.classList.remove("hidden");
+                avanceTab.classList.remove("hidden");
+                movilidadTab.classList.remove("hidden");
+                loadRosterEditor();
+                switchTab("jefatura");
+            } else if (role === "asesor") {
+                dashboardTab.classList.add("hidden");
+                avanceTab.classList.remove("hidden");
+                movilidadTab.classList.remove("hidden");
+                asesorTab.classList.remove("hidden");
+                const advisorName = signedInProfile.asesorNombre;
+                if (!advisorName) {
+                    throw new Error("La cuenta no tiene un nombre de asesor válido asignado en authorizedUsers.");
+                }
+                const existingOption = Array.from(asesorSelect.options).some(option => option.value === advisorName);
+                if (!existingOption) asesorSelect.add(new Option(advisorName, advisorName));
+                asesorSelect.value = advisorName;
+                asesorSelect.disabled = true;
+                switchTab("asesor");
+                loadUserWorkspace();
+            } else if (role === "lector") {
+                asesorTab.classList.add("hidden");
+                dashboardTab.classList.add("hidden");
+                avanceTab.classList.remove("hidden");
+                movilidadTab.classList.remove("hidden");
+                switchTab("avance");
+            } else if (role === "asesor_compartido") {
+                dashboardTab.classList.add("hidden");
+                asesorTab.classList.remove("hidden");
+                avanceTab.classList.remove("hidden");
+                movilidadTab.classList.remove("hidden");
+                asesorSelect.disabled = false;
+                asesorSelect.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
+                advisorProfiles.forEach(profile => {
+                    asesorSelect.add(new Option(profile.asesorNombre, profile.asesorNombre));
+                });
+                switchTab("asesor");
+                loadUserWorkspace();
+            }
+        }
+
+        async function handleAuthState(user) {
+            const generation = ++authStateGeneration;
+            stopDataSubscriptions();
+            sharedTrackerData = null;
+            sharedAvanceRows = null;
+
+            if (!user) {
+                signedInUser = null;
+                signedInProfile = null;
+                document.body.classList.remove("authenticated");
+                document.getElementById("authGate").classList.remove("hidden");
+                document.getElementById("signOutBtn").classList.add("hidden");
+                document.getElementById("signedInEmail").textContent = "";
+                return;
+            }
+
+            try {
+                const email = (user.email || "").trim().toLowerCase();
+                const isInstitutionalEmail = email.endsWith("@uwiener.edu.pe");
+                const isSharedTeamEmail = email === SHARED_TEAM_EMAIL;
+                if (!isInstitutionalEmail && !isSharedTeamEmail) {
+                    setAuthMessage("Esta cuenta no está habilitada para Ruta Prospección.", "error");
+                    await auth.signOut();
+                    return;
+                }
+
+                if (!user.emailVerified) {
+                    try {
+                        await user.sendEmailVerification();
+                        setAuthMessage(isSharedTeamEmail ? "Antes del primer ingreso, Camila debe abrir el enlace de verificación enviado al correo del equipo. Luego podrán volver a iniciar sesión." : "Antes de ingresar, verifica tu correo institucional. Te enviamos un enlace; después de confirmarlo, vuelve a iniciar sesión.", "info");
+                    } catch (verificationError) {
+                        setAuthMessage("Tu correo todavía no está verificado. Revisa tu bandeja y solicita un nuevo enlace más tarde si fuera necesario.", "error");
+                    }
+                    await auth.signOut();
+                    return;
+                }
+
+                const profileSnapshot = await db.collection("authorizedUsers").doc(user.uid).get();
+                if (generation !== authStateGeneration) return;
+
+                if (!profileSnapshot.exists) {
+                    setAuthMessage("Tu cuenta existe, pero todavía no está autorizada para Ruta Prospección. Solicita acceso a la supervisora.", "error");
+                    await auth.signOut();
+                    return;
+                }
+
+                const profile = profileSnapshot.data() || {};
+                const roleMatchesEmailType = isSharedTeamEmail
+                    ? profile.role === "asesor_compartido"
+                    : profile.role !== "asesor_compartido";
+                if ((profile.email || "").toLowerCase() !== email ||
+                    !["supervisor", "asesor", "lector", "asesor_compartido"].includes(profile.role) ||
+                    !roleMatchesEmailType) {
+                    setAuthMessage("El perfil autorizado no coincide con esta cuenta. La cuenta general solo puede tener el rol asesor_compartido.", "error");
+                    await auth.signOut();
+                    return;
+                }
+
+                signedInUser = user;
+                signedInProfile = profile;
+                if (["supervisor", "asesor_compartido"].includes(profile.role)) {
+                    await loadAuthorizedAdvisors();
+                }
+                try {
+                    await loadProtectedResources();
+                } catch (resourceError) {
+                    console.error("Los recursos protegidos aún no están configurados en Firestore:", resourceError);
+                    document.querySelectorAll("a[data-resource-key]").forEach(anchor => {
+                        anchor.removeAttribute("href");
+                        anchor.classList.add("opacity-50", "pointer-events-none");
+                        anchor.setAttribute("aria-disabled", "true");
+                        anchor.title = "Recurso pendiente de configuración";
+                    });
+                }
+                document.getElementById("authGate").classList.add("hidden");
+                document.body.classList.add("authenticated");
+                configureAuthorizedInterface();
+                startDataSubscriptions();
+                setAuthMessage("", "info");
+            } catch (error) {
+                console.error("No se pudo validar el acceso a Ruta Prospección:", error);
+                setAuthMessage(
+                    error && error.code === "permission-denied"
+                        ? "No se pudo comprobar la autorización en Firestore. Verifica que estén publicadas las reglas de seguridad y que tu perfil esté configurado."
+                        : "No se pudo validar tu acceso. Comprueba la conexión e inténtalo nuevamente.",
+                    "error"
+                );
+                await auth.signOut();
+            }
+        }
+
+        document.getElementById("loginForm").addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+            const password = document.getElementById("loginPassword").value;
+            const button = document.getElementById("loginSubmit");
+
+            if (!email.endsWith("@uwiener.edu.pe") && email !== SHARED_TEAM_EMAIL) {
+                setAuthMessage("Utiliza un correo institucional autorizado o la cuenta general del equipo.", "error");
+                return;
+            }
+            button.disabled = true;
+            button.textContent = "Validando...";
+            setAuthMessage("");
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                console.error("Error de inicio de sesión:", error);
+                const messages = {
+                    "auth/invalid-credential": "El correo o la contraseña no son correctos.",
+                    "auth/user-not-found": "No encontramos una cuenta creada para este correo.",
+                    "auth/wrong-password": "El correo o la contraseña no son correctos.",
+                    "auth/too-many-requests": "Hubo demasiados intentos. Espera un momento e inténtalo nuevamente.",
+                    "auth/invalid-email": "Escribe un correo electrónico válido.",
+                    "auth/unauthorized-domain": "El dominio de esta página debe autorizarse en la configuración de Firebase Authentication."
+                };
+                setAuthMessage(messages[error.code] || "No se pudo iniciar sesión. Revisa los datos e inténtalo nuevamente.", "error");
+            } finally {
+                button.disabled = false;
+                button.textContent = "Iniciar sesión";
+            }
+        });
+
+        document.getElementById("resetPasswordBtn").addEventListener("click", async () => {
+            const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+            if (!email.endsWith("@uwiener.edu.pe") && email !== SHARED_TEAM_EMAIL) {
+                setAuthMessage("Escribe el correo institucional autorizado o el correo de la cuenta general.", "error");
+                return;
+            }
+            try {
+                await auth.sendPasswordResetEmail(email);
+                setAuthMessage("Si existe una cuenta para ese correo, recibirás un mensaje para restablecer la contraseña.", "success");
+            } catch (error) {
+                console.error("Error al solicitar el restablecimiento:", error);
+                setAuthMessage("No se pudo enviar el correo de restablecimiento. Comprueba la dirección e inténtalo más tarde.", "error");
+            }
+        });
+
+        document.getElementById("signOutBtn").addEventListener("click", async () => {
+            await auth.signOut();
+            document.getElementById("loginPassword").value = "";
+            setAuthMessage("Has cerrado sesión.", "success");
+        });
+
+        function startDataSubscriptions() {
+            stopDataSubscriptions();
+            legacyMigrationAttempted = false;
+
+            if (signedInProfile.role !== "lector") {
+            let trackerQuery = db.collection("trackerRecords");
+            if (signedInProfile.role === "asesor") {
+                trackerQuery = trackerQuery.where("ownerUid", "==", signedInUser.uid);
+            }
+
+            trackerUnsubscribe = trackerQuery.onSnapshot(async (snapshot) => {
+                const remoteRecords = snapshot.docs.map(doc => doc.data());
+
+                // Migración conservadora: solo transfiere registros locales del asesor autenticado
+                // y únicamente las fechas que todavía no existen en Firestore.
+                if (["asesor", "asesor_compartido"].includes(signedInProfile.role) && !legacyMigrationAttempted) {
+                    legacyMigrationAttempted = true;
+                    const localRecords = parseLegacyTrackerData();
+                    const remoteKeys = new Set(remoteRecords.map(record => record.asesor + "::" + record.date));
+                    const allowedNames = signedInProfile.role === "asesor"
+                        ? [signedInProfile.asesorNombre]
+                        : asesoresList;
+                    const migratedKeys = new Set();
+                    const missingRecords = localRecords.filter(record => {
+                        const key = record.asesor + "::" + record.date;
+                        if (!record.date || !allowedNames.includes(record.asesor) ||
+                            remoteKeys.has(key) || migratedKeys.has(key)) return false;
+                        if (signedInProfile.role === "asesor_compartido" &&
+                            !advisorProfiles.some(profile => profile.asesorNombre === record.asesor)) return false;
+                        migratedKeys.add(key);
+                        return true;
+                    });
+
+                    if (missingRecords.length) {
+                        try {
+                            await Promise.all(missingRecords.map(record => {
+                                const shared = signedInProfile.role === "asesor_compartido";
+                                const advisor = shared
+                                    ? advisorProfiles.find(profile => profile.asesorNombre === record.asesor)
+                                    : null;
+                                const migratedRecord = {
+                                    ...record,
+                                    ownerUid: signedInUser.uid,
+                                    ownerEmail: signedInUser.email
+                                };
+                                const documentId = shared
+                                    ? "shared_" + advisor.advisorKey + "_" + record.date
+                                    : signedInUser.uid + "_" + record.date;
+                                if (shared) migratedRecord.advisorKey = advisor.advisorKey;
+
+                                return db.collection("trackerRecords")
+                                    .doc(documentId)
+                                    .set(migratedRecord, { merge: true });
+                            }));
+                        } catch (migrationError) {
+                            console.error("La migración local de registros no se completó:", migrationError);
+                        }
+                    }
+                }
+
+                const activeAdvisorName = signedInProfile.role === "asesor"
+                    ? signedInProfile.asesorNombre
+                    : asesorSelect.value;
+                const previousActiveRecord = (sharedTrackerData || []).find(record =>
+                    record.date === dateInput.value &&
+                    (signedInProfile.role === "supervisor" || record.asesor === activeAdvisorName)
+                );
+                const nextActiveRecord = remoteRecords.find(record =>
+                    record.date === dateInput.value &&
+                    (signedInProfile.role === "supervisor" || record.asesor === activeAdvisorName)
+                );
+                sharedTrackerData = remoteRecords;
+
+                if (["asesor", "asesor_compartido"].includes(signedInProfile.role)) {
+                    if (activeAdvisorName && (!previousActiveRecord ||
+                        !nextActiveRecord ||
+                        !sameCheckboxStates(previousActiveRecord.checkboxStates, nextActiveRecord.checkboxStates))) {
+                        loadUserWorkspace();
+                    }
+                } else if (document.getElementById("jefatura").classList.contains("active")) {
+                    renderDashboard();
+                }
+            }, (error) => {
+                console.error("No se pudieron sincronizar los registros:", error);
+            });
+            }
+
+            const monthInput = document.getElementById("avanceMonth");
+            if (!monthInput.value) monthInput.value = getCurrentMonthKey();
+            subscribeToMetricsMonth(monthInput.value);
+        }
+
+        function getCurrentMonthKey() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        }
+
+        function formatMetricsMonth(monthKey) {
+            if (!/^\d{4}-\d{2}$/.test(monthKey || "")) return monthKey || "";
+            const [year, month] = monthKey.split("-").map(Number);
+            return new Date(year, month - 1, 1).toLocaleDateString("es-PE", { month: "long", year: "numeric" });
+        }
+
+        function updateMetricsMonthStatus(message, kind = "info") {
+            const status = document.getElementById("avanceMonthStatus");
+            if (!status) return;
+            status.textContent = message;
+            status.className = "text-xs sm:text-sm";
+            if (kind === "error") status.classList.add("text-red-700", "font-semibold");
+            else if (kind === "success") status.classList.add("text-emerald-700", "font-semibold");
+            else status.classList.add("text-gray-600");
+        }
+
+        function subscribeToMetricsMonth(monthKey) {
+            if (!/^\d{4}-\d{2}$/.test(monthKey || "")) {
+                updateMetricsMonthStatus("Selecciona un mes válido.", "error");
+                return;
+            }
+
+            currentMetricsMonth = monthKey;
+            const metricsMonthInput = document.getElementById("avanceMonth");
+            const mobilityMonthInput = document.getElementById("movilidadMonth");
+            if (metricsMonthInput && metricsMonthInput.value !== monthKey) metricsMonthInput.value = monthKey;
+            if (mobilityMonthInput && mobilityMonthInput.value !== monthKey) mobilityMonthInput.value = monthKey;
+            const token = ++metricsSubscriptionToken;
+            if (typeof metricsUnsubscribe === "function") metricsUnsubscribe();
+            metricsUnsubscribe = null;
+            currentMetricsDocumentExists = false;
+            sharedAvanceRows = monthKey === getCurrentMonthKey() ? buildDefaultAvanceData() : [];
+            sharedMobilityRows = buildDefaultMobilityData(monthKey);
+            isAvanceEditMode = false;
+            const editButton = document.getElementById("btnToggleEdit");
+            if (editButton) {
+                editButton.innerHTML = '<i class="fa-solid fa-pen mr-2"></i>Editar';
+                editButton.className = "bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center";
+            }
+            updateMetricsMonthStatus("Consultando " + formatMetricsMonth(monthKey) + "…");
+            renderAvance();
+            renderMovilidades();
+
+            const metricsRef = db.collection("monthlyMetrics").doc(monthKey);
+            metricsUnsubscribe = metricsRef.onSnapshot(async (snapshot) => {
+                if (token !== metricsSubscriptionToken) return;
+
+                if (!snapshot.exists) {
+                    currentMetricsDocumentExists = false;
+                    // Only migrate the old browser-local metrics into the actual current month,
+                    // never copy today's values into a historical or future month.
+                    if (signedInProfile.role === "supervisor" && monthKey === getCurrentMonthKey() && !legacyMetricsMigrationAttempted.has(monthKey)) {
+                        legacyMetricsMigrationAttempted.add(monthKey);
+                        const legacyRows = parseLegacyAvanceData();
+                        if (legacyRows) {
+                            const migratedRows = buildDefaultAvanceData().map(baseRow => {
+                                const oldRow = legacyRows.find(row => row.asesor === baseRow.asesor);
+                                if (!oldRow) return baseRow;
+                                return {
+                                    ...baseRow,
+                                    meta: Math.max(0, Number(oldRow.meta) || 0),
+                                    avance: Math.max(0, Number(oldRow.avance) || 0),
+                                    referidos: Math.max(0, Number(oldRow.referidos) || 0),
+                                    proyeccion: Math.max(0, Number(oldRow.proyeccion) || 0)
+                                };
+                            });
+                            sharedAvanceRows = migratedRows;
+                            renderAvance();
+                            try {
+                                await metricsRef.set({
+                                    month: monthKey,
+                                    rows: migratedRows,
+                                    updatedBy: signedInUser.uid,
+                                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                                return;
+                            } catch (migrationError) {
+                                console.error("No se pudo migrar el respaldo local de métricas:", migrationError);
+                                updateMetricsMonthStatus("No se pudo migrar el respaldo local. No se guardaron cambios.", "error");
+                            }
+                        }
+                    }
+
+                    sharedAvanceRows = monthKey === getCurrentMonthKey() ? buildDefaultAvanceData() : [];
+                    sharedMobilityRows = buildDefaultMobilityData(monthKey);
+                    renderAvance();
+                    renderMovilidades();
+                    updateMetricsMonthStatus(
+                        formatMetricsMonth(monthKey) + " todavía no tiene un registro guardado. La supervisora puede introducir sus valores y se crearán al guardar el primer cambio."
+                    );
+                    return;
+                }
+
+                const record = snapshot.data() || {};
+                currentMetricsDocumentExists = true;
+                const savedMobilityRows = Array.isArray(record.mobilityRows) ? record.mobilityRows : [];
+                sharedMobilityRows = savedMobilityRows
+                    .filter(row => row && typeof row.asesor === "string" && row.asesor.trim())
+                    .map(row => ({ asesor: row.asesor, asignado: Math.max(0, Number(row.asignado) || 0), gasto: Math.max(0, Number(row.gasto) || 0) }));
+                if (!sharedMobilityRows.length) sharedMobilityRows = buildDefaultMobilityData(monthKey);
+                renderMovilidades();
+                const savedRows = Array.isArray(record.rows) ? record.rows : [];
+                const normalizedSavedRows = savedRows
+                    .filter(row => row && typeof row.asesor === "string" && row.asesor.trim())
+                    .map(row => ({
+                        asesor: row.asesor,
+                        meta: Math.max(0, Number(row.meta) || 0),
+                        avance: Math.max(0, Number(row.avance) || 0),
+                        referidos: Math.max(0, Number(row.referidos) || 0),
+                        proyeccion: Math.max(0, Number(row.proyeccion) || 0)
+                    }));
+
+                if (signedInProfile.role === "supervisor" && monthKey === getCurrentMonthKey()) {
+                    const savedByName = new Map(normalizedSavedRows.map(row => [row.asesor, row]));
+                    const currentAdvisorRows = buildDefaultAvanceData().map(baseRow => {
+                        const saved = savedByName.get(baseRow.asesor);
+                        return saved ? { ...baseRow, ...saved } : baseRow;
+                    });
+                    const currentNames = new Set(currentAdvisorRows.map(row => row.asesor));
+                    sharedAvanceRows = [
+                        ...currentAdvisorRows,
+                        ...normalizedSavedRows.filter(row => !currentNames.has(row.asesor))
+                    ];
+                } else {
+                    // Historical months use only rows saved for that month; never add today's roster retrospectively.
+                    sharedAvanceRows = normalizedSavedRows.length
+                        ? normalizedSavedRows
+                        : (monthKey === getCurrentMonthKey() ? buildDefaultAvanceData() : []);
+                }
+                renderAvance();
+                updateMetricsMonthStatus("Datos guardados para " + formatMetricsMonth(monthKey) + ".", "success");
+            }, (error) => {
+                console.error("No se pudieron sincronizar las métricas mensuales:", error);
+                updateMetricsMonthStatus("No se pudieron cargar las métricas. Comprueba las reglas de Firestore.", "error");
+            });
+        }
+
+        let asesoresList = [];
+        let advisorProfiles = [];
+
+        function normalizeAdvisorKey(name) {
+            return String(name || "")
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "_")
+                .replace(/^_+|_+$/g, "");
+        }
+
+        async function loadAuthorizedAdvisors() {
+            // The roster is stored as a private map: normalized advisor key -> display name.
+            // This avoids embedding staff names or creating an Auth user for every adviser.
+            const snapshot = await db.collection("appConfig").doc("roster").get();
+            const advisorMap = snapshot.exists && snapshot.data().advisorMap &&
+                typeof snapshot.data().advisorMap === "object"
+                ? snapshot.data().advisorMap
+                : {};
+
+            advisorProfiles = Object.entries(advisorMap)
+                .filter(([key, name]) => /^[a-z0-9_]+$/.test(key) &&
+                    typeof name === "string" && name.trim() &&
+                    key === normalizeAdvisorKey(name))
+                .map(([advisorKey, name]) => ({ asesorNombre: name.trim(), advisorKey }))
+                .sort((a, b) => a.asesorNombre.localeCompare(b.asesorNombre, "es"));
+
+            asesoresList = advisorProfiles.map(profile => profile.asesorNombre);
+        }
+
+        function buildDefaultAvanceData() {
+            // Every month starts with empty numeric values. The supervisor records that month's meta;
+            // profile-level meta is deliberately ignored because it can change from month to month.
+            return advisorProfiles.map(profile => ({
+                asesor: profile.asesorNombre,
+                meta: 0,
+                avance: 0,
+                referidos: 0,
+                proyeccion: 0
+            }));
+        }
+
+        async function loadProtectedResources() {
+            const anchors = Array.from(document.querySelectorAll("a[data-resource-key]"));
+            const resourcesDoc = await db.collection("appConfig").doc("resources").get();
+            const links = resourcesDoc.exists && resourcesDoc.data().links
+                ? resourcesDoc.data().links
+                : {};
+            protectedResourceLinks = { ...links };
+            populateResourceLinksEditor();
+
+            anchors.forEach(anchor => {
+                const key = anchor.dataset.resourceKey;
+                const value = links[key];
+                let safeUrl = null;
+                try {
+                    const parsed = new URL(typeof value === "string" ? value : "");
+                    if (parsed.protocol === "https:" || parsed.protocol === "http:") safeUrl = parsed.href;
+                } catch (_) {
+                    safeUrl = null;
+                }
+
+                if (safeUrl) {
+                    anchor.href = safeUrl;
+                    anchor.target = "_blank";
+                    anchor.rel = "noopener noreferrer";
+                    anchor.classList.remove("opacity-50", "pointer-events-none");
+                    anchor.removeAttribute("aria-disabled");
+                    anchor.title = anchor.title || "Abrir recurso del equipo";
+                } else {
+                    anchor.removeAttribute("href");
+                    anchor.classList.add("opacity-50", "pointer-events-none");
+                    anchor.setAttribute("aria-disabled", "true");
+                    anchor.title = "Recurso pendiente de configuración";
+                }
+            });
+        }
+
+        const dateInput = document.getElementById('trackerDate');
+        
+        function getLocalDateString() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        function formatDateToDMY(dateString) {
+            if(!dateString) return "";
+            const parts = dateString.split('-');
+            if(parts.length !== 3) return dateString;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        
+        dateInput.value = getLocalDateString();
+        const avanceMonthInput = document.getElementById("avanceMonth");
+        avanceMonthInput.value = getCurrentMonthKey();
+        avanceMonthInput.addEventListener("change", () => {
+            if (!signedInUser || !signedInProfile) return;
+            subscribeToMetricsMonth(avanceMonthInput.value);
+        });
+        const movilidadMonthInput = document.getElementById("movilidadMonth");
+        if (movilidadMonthInput) {
+            movilidadMonthInput.value = avanceMonthInput.value;
+            movilidadMonthInput.addEventListener("change", () => {
+                if (!signedInUser || !signedInProfile) return;
+                subscribeToMetricsMonth(movilidadMonthInput.value);
+            });
+        }
+        
+        window.addEventListener('focus', () => { 
+            const newDate = getLocalDateString();
+            if (dateInput.value !== newDate) {
+                dateInput.value = newDate;
+                if(document.getElementById('asesorName').value !== "") {
+                    loadUserWorkspace();
+                }
+            }
+        });
+
+        function switchTab(tabId) {
+            if (signedInProfile?.role === "lector" && !["avance", "movilidades"].includes(tabId)) return;
+            if (["asesor", "asesor_compartido"].includes(signedInProfile?.role) && tabId === "jefatura") return;
+            if (signedInProfile?.role === "supervisor" && tabId === "asesor") return;
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            
+            const btnMap = { 'asesor': 0, 'jefatura': 1, 'avance': 2, 'movilidades': 3 };
+            document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
+
+            if(tabId === 'jefatura') { 
+                renderDashboard(); 
+            } else if(tabId === 'avance') {
+                renderAvance();
+            } else if(tabId === 'movilidades') {
+                renderMovilidades();
+            }
+        }
+
+        const asesorSelect = document.getElementById('asesorName');
+        const trackerWorkspace = document.getElementById('trackerWorkspace');
+        const displayName = document.getElementById('displayName');
+        let stateMemory = { sec1: false, sec2: false, sec3: false };
+        const checkboxes = Array.from(document.querySelectorAll('.step-checkbox'));
+        const totalSteps = checkboxes.length;
+
+        asesorSelect.addEventListener('change', loadUserWorkspace);
+
+        checkboxes.forEach(cb => { 
+            cb.addEventListener('change', () => {
+                updateProgress(true);
+            }); 
+        });
+
+        function loadUserWorkspace() {
+            const asesor = asesorSelect.value;
+            const date = dateInput.value;
+            
+            if (!asesor) {
+                trackerWorkspace.classList.add('opacity-0', 'pointer-events-none');
+                return;
+            }
+
+            displayName.innerText = asesor;
+            trackerWorkspace.classList.remove('opacity-0', 'pointer-events-none');
+
+            const data = getTrackerData();
+            const userRecord = data.find(r => r.asesor === asesor && r.date === date);
+
+            checkboxes.forEach(cb => { cb.checked = false; });
+            stateMemory = { sec1: false, sec2: false, sec3: false };
+            
+            toggleSection('sec1', true);
+            toggleSection('sec2', false);
+            toggleSection('sec3', false);
+
+            if (userRecord && userRecord.checkboxStates) {
+                for (const [id, isChecked] of Object.entries(userRecord.checkboxStates)) {
+                    const cb = document.getElementById(id);
+                    if (cb) cb.checked = isChecked;
+                }
+            }
+
+            updateProgress(false); 
+        }
+
+        function toggleSection(id, forceOpen = null) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+            const isHidden = content.classList.contains('hidden-section');
+            
+            if (forceOpen === true || (forceOpen === null && isHidden)) {
+                content.classList.remove('hidden-section');
+                content.classList.add('open-section');
+                icon.classList.remove('rotate-180', 'text-gray-400');
+                icon.classList.add('text-brand-500'); 
+            } else if (forceOpen === false || (forceOpen === null && !isHidden)) {
+                content.classList.add('hidden-section');
+                content.classList.remove('open-section');
+                icon.classList.add('rotate-180', 'text-gray-400');
+                icon.classList.remove('text-brand-500');
+            }
+        }
+
+        function getActiveSubphaseLabel() {
+            let lastCheckedLabel = "";
+            let nextUncheckedLabel = "";
+            
+            for(let i=0; i<checkboxes.length; i++) {
+                if(checkboxes[i].checked) {
+                    lastCheckedLabel = checkboxes[i].nextElementSibling.querySelector('span').innerText;
+                } else {
+                    nextUncheckedLabel = checkboxes[i].nextElementSibling.querySelector('span').innerText;
+                    break;
+                }
+            }
+            if(!nextUncheckedLabel && lastCheckedLabel) return "Todas completadas";
+            return nextUncheckedLabel || "Esperando inicio";
+        }
+
+        function updateProgress(triggerAutoSave = false) {
+            for (let i = 1; i < totalSteps; i++) {
+                const previousChecked = checkboxes[i-1].checked;
+                checkboxes[i].disabled = !previousChecked;
+                const parentLabel = checkboxes[i].closest('label');
+                parentLabel.classList.toggle('opacity-50', !previousChecked);
+                parentLabel.classList.toggle('cursor-not-allowed', !previousChecked);
+                if (!previousChecked) checkboxes[i].checked = false;
+            }
+            
+            if(totalSteps > 0) {
+                checkboxes[0].disabled = false;
+                checkboxes[0].closest('label').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            const sec1Cbs = Array.from(document.querySelectorAll('#sec1 .step-checkbox'));
+            const sec2Cbs = Array.from(document.querySelectorAll('#sec2 .step-checkbox'));
+            const sec3Cbs = Array.from(document.querySelectorAll('#sec3 .step-checkbox'));
+
+            const sec1Done = sec1Cbs.every(cb => cb.checked);
+            const sec2Done = sec2Cbs.every(cb => cb.checked);
+            const sec3Done = sec3Cbs.every(cb => cb.checked);
+
+            if (sec1Done && !stateMemory.sec1) {
+                stateMemory.sec1 = true;
+                setTimeout(() => { toggleSection('sec1', false); toggleSection('sec2', true); }, 200);
+            } else if (!sec1Done) { stateMemory.sec1 = false; }
+
+            if (sec2Done && !stateMemory.sec2) {
+                stateMemory.sec2 = true;
+                setTimeout(() => { toggleSection('sec2', false); toggleSection('sec3', true); }, 200);
+            } else if (!sec2Done) { stateMemory.sec2 = false; }
+            
+            if (sec3Done && !stateMemory.sec3) {
+                stateMemory.sec3 = true;
+                setTimeout(() => { toggleSection('sec3', false); }, 200);
+            } else if (!sec3Done) { stateMemory.sec3 = false; }
+
+            const checkedSteps = document.querySelectorAll('.step-checkbox:checked').length;
+            const percentage = Math.round((checkedSteps / totalSteps) * 100);
+            
+            document.getElementById('progressText').innerText = `${checkedSteps}/${totalSteps} Pasos (${percentage}%)`;
+            document.getElementById('progressBar').style.width = `${percentage}%`;
+
+            let phaseName = "1. Marcación";
+            if (sec3Done) {
+                phaseName = "Ruta Completada";
+                document.getElementById('completionMessage').classList.remove('hidden');
+                document.getElementById('progressBar').classList.replace('bg-brand-400', 'bg-brand-500');
+            } else {
+                if (sec2Done) phaseName = "3. Gestión Administrativa";
+                else if (sec1Done) phaseName = "2. Prospección en Campo";
+                
+                document.getElementById('completionMessage').classList.add('hidden');
+                document.getElementById('progressBar').classList.replace('bg-brand-500', 'bg-brand-400');
+            }
+            document.getElementById('currentPhaseText').innerText = phaseName;
+            
+            const subphaseName = getActiveSubphaseLabel();
+            
+            if(triggerAutoSave) autoSaveRecord(checkedSteps, percentage, phaseName, subphaseName);
+
+            return {phase: phaseName, subphase: subphaseName};
+        }
+
+        function autoSaveRecord(completedCount, percentage, phaseName, subphaseName) {
+            const asesor = asesorSelect.value;
+            const date = dateInput.value;
+            if (!asesor || !signedInUser || !signedInProfile) return;
+
+            const role = signedInProfile.role;
+            const sharedAccount = role === "asesor_compartido";
+            if (role !== "asesor" && !sharedAccount) return;
+            if (role === "asesor" && asesor !== signedInProfile.asesorNombre) return;
+
+            const advisorProfile = advisorProfiles.find(profile => profile.asesorNombre === asesor);
+            if (sharedAccount && (!advisorProfile || !asesoresList.includes(asesor))) {
+                alert("Selecciona un asesor válido del listado del equipo.");
+                return;
+            }
+
+            const checkboxStates = {};
+            checkboxes.forEach(cb => { checkboxStates[cb.id] = cb.checked; });
+
+            const newRecord = {
+                id: Date.now(),
+                asesor,
+                date,
+                completed: completedCount,
+                total: totalSteps,
+                percentage,
+                phase: phaseName,
+                subphase: subphaseName,
+                checkboxStates,
+                ownerUid: signedInUser.uid,
+                ownerEmail: signedInUser.email
+            };
+
+            let documentId;
+            if (sharedAccount) {
+                newRecord.advisorKey = advisorProfile.advisorKey;
+                documentId = "shared_" + advisorProfile.advisorKey + "_" + date;
+            } else {
+                documentId = signedInUser.uid + "_" + date;
+            }
+
+            const data = getTrackerData().slice();
+            const existingIndex = data.findIndex(record => record.asesor === asesor && record.date === date);
+            if (existingIndex >= 0) data[existingIndex] = newRecord;
+            else data.push(newRecord);
+            sharedTrackerData = data;
+
+            db.collection("trackerRecords")
+                .doc(documentId)
+                .set(newRecord, { merge: true })
+                .catch(error => {
+                    console.error("No se pudo guardar el avance en Firestore:", error);
+                    alert("No se pudo sincronizar este cambio con la nube. Revisa tu conexión antes de cerrar la página.");
+                });
+
+            if (document.getElementById("jefatura").classList.contains("active")) {
+                renderDashboard();
+            }
+        }
+
+        function renderDashboard() {
+            const data = getTrackerData();
+            const tbody = document.getElementById('dashboardTableBody');
+            
+            const today = dateInput.value;
+            const todayData = data.filter(r => r.date === today);
+
+            tbody.innerHTML = '';
+
+            const fullDashboardData = asesoresList.map(asesorName => {
+                const existing = todayData.find(r => r.asesor === asesorName);
+                if (existing) return existing;
+                return {
+                    asesor: asesorName,
+                    date: today,
+                    percentage: 0,
+                    phase: "Sin Iniciar",
+                    subphase: "Esperando inicio"
+                };
+            });
+
+            fullDashboardData.sort((a, b) => b.percentage - a.percentage);
+
+            const getPhaseColorClass = (phaseName) => {
+                switch(phaseName) {
+                    case "1. Marcación": return "bg-blue-100 text-blue-800 border-blue-200";
+                    case "2. Prospección en Campo": return "bg-purple-100 text-purple-800 border-purple-200";
+                    case "3. Gestión Administrativa": return "bg-orange-100 text-orange-800 border-orange-200";
+                    case "Ruta Completada": return "bg-green-100 text-green-800 border-green-200";
+                    default: return "bg-gray-100 text-gray-500 border-gray-200";
+                }
+            };
+            
+            const getSubphaseColorClass = (phaseName) => {
+                switch(phaseName) {
+                    case "1. Marcación": return "text-blue-600";
+                    case "2. Prospección en Campo": return "text-purple-600";
+                    case "3. Gestión Administrativa": return "text-orange-600";
+                    case "Ruta Completada": return "text-green-600";
+                    default: return "text-gray-500";
+                }
+            };
+
+            fullDashboardData.forEach(record => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+                
+                const phaseColor = getPhaseColorClass(record.phase);
+                const subphaseColorText = getSubphaseColorClass(record.phase);
+                
+                let phaseHtml = `<span class="px-3 sm:px-4 py-1 sm:py-2 inline-flex text-xs sm:text-sm font-bold rounded-full shadow-sm border ${phaseColor} whitespace-nowrap">${record.phase}</span>`;
+                if(record.subphase && record.phase !== "Ruta Completada" && record.phase !== "Sin Iniciar") {
+                    phaseHtml += `<div class="mt-2 text-[10px] sm:text-xs font-semibold ${subphaseColorText} tracking-wide text-center"><i class="fa-solid fa-chevron-right text-[8px] sm:text-[10px] mr-1 opacity-70"></i>${record.subphase}</div>`;
+                }
+
+                const progressHtml = `
+                    <div class="flex items-center justify-center">
+                        <span class="mr-2 text-xs sm:text-sm text-gray-700 font-semibold w-8 sm:w-12 text-right">${record.percentage}%</span>
+                        <div class="w-16 sm:w-24 bg-gray-200 rounded-full h-2">
+                            <div class="bg-brand-500 h-2 rounded-full shadow-inner" style="width: ${record.percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+
+                const formattedDate = formatDateToDMY(record.date);
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500">${formattedDate}</td>
+                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-bold text-gray-900">${record.asesor}</td>
+                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-center">${progressHtml}</td>
+                    <td class="px-4 py-3 sm:px-6 sm:py-4 whitespace-nowrap text-center flex flex-col items-center justify-center min-h-[4rem]">${phaseHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        let isAvanceEditMode = false;
+
+        async function importMetricRows() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const input = document.getElementById("metricImportText");
+            const status = document.getElementById("metricImportStatus");
+            const button = document.getElementById("metricImportBtn");
+            const imported = [];
+            const seen = new Set();
+            const lines = input.value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+
+            for (const line of lines) {
+                const parts = line.split(";").map(part => part.trim());
+                if (parts.length !== 4 && parts.length !== 5) {
+                    if (status) status.textContent = "Formato inválido. Usa nombre;meta;avance;proyección o nombre;meta;avance;referidos;proyección.";
+                    return;
+                }
+                const name = parts[0];
+                const meta = Number(parts[1]);
+                const avance = Number(parts[2]);
+                const referidos = parts.length === 5 ? Number(parts[3]) : 0;
+                const proyeccion = parts.length === 5 ? Number(parts[4]) : Number(parts[3]);
+                const key = normalizeAdvisorKey(name);
+                if (!key || seen.has(key)) {
+                    if (status) status.textContent = "Hay un nombre vacío o repetido en las filas importadas.";
+                    return;
+                }
+                if ([meta, avance, referidos, proyeccion].some(value => !Number.isFinite(value) || value < 0)) {
+                    if (status) status.textContent = "Los valores numéricos deben ser iguales o mayores que cero.";
+                    return;
+                }
+                seen.add(key);
+                imported.push({ asesor: name, meta, avance, referidos, proyeccion });
+            }
+            if (!imported.length) {
+                if (status) status.textContent = "Pega por lo menos una fila antes de importar.";
+                return;
+            }
+
+            const mergedByKey = new Map();
+            loadAvanceData().forEach(row => mergedByKey.set(normalizeAdvisorKey(row.asesor), { ...row }));
+            imported.forEach(row => {
+                const key = normalizeAdvisorKey(row.asesor);
+                const previous = mergedByKey.get(key);
+                mergedByKey.set(key, { ...previous, ...row, asesor: previous ? previous.asesor : row.asesor });
+            });
+            const mergedRows = Array.from(mergedByKey.values());
+            if (button) button.disabled = true;
+            if (status) status.textContent = "Guardando " + imported.length + " filas en " + formatMetricsMonth(currentMetricsMonth) + "…";
+            try {
+                await db.collection("monthlyMetrics").doc(currentMetricsMonth).set({
+                    month: currentMetricsMonth,
+                    rows: mergedRows,
+                    updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                sharedAvanceRows = mergedRows;
+                renderAvance();
+                if (status) status.textContent = "Historial importado. Se actualizaron " + imported.length + " filas y se conservaron las demás.";
+            } catch (error) {
+                console.error("No se pudo importar el historial de avance:", error);
+                if (status) status.textContent = "No se pudo guardar el historial. Verifica la conexión y las reglas de Firestore.";
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+
+        function loadAvanceData() {
+            if (signedInUser && signedInProfile && Array.isArray(sharedAvanceRows)) {
+                return sharedAvanceRows;
+            }
+            return buildDefaultAvanceData();
+        }
+
+        function getAvanceBadgeColor(pct) {
+            if (pct <= 79) return "bg-red-100 text-red-800 border-red-200"; 
+            if (pct <= 99) return "bg-amber-100 text-amber-800 border-amber-200";
+            return "bg-emerald-100 text-emerald-800 border-emerald-200"; 
+        }
+
+        function toggleEditAvance() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            isAvanceEditMode = !isAvanceEditMode;
+            const btn = document.getElementById('btnToggleEdit');
+            
+            if(isAvanceEditMode) {
+                btn.innerHTML = '<i class="fa-solid fa-check mr-2"></i>Guardar';
+                btn.classList.replace('bg-gray-100', 'bg-emerald-100');
+                btn.classList.replace('hover:bg-gray-200', 'hover:bg-emerald-200');
+                btn.classList.replace('text-gray-700', 'text-emerald-800');
+            } else {
+                btn.innerHTML = '<i class="fa-solid fa-pen mr-2"></i>Editar';
+                btn.classList.replace('bg-emerald-100', 'bg-gray-100');
+                btn.classList.replace('hover:bg-emerald-200', 'hover:bg-gray-200');
+                btn.classList.replace('text-emerald-800', 'text-gray-700');
+            }
+            renderAvance();
+        }
+
+        function renderAvance() {
+            const data = loadAvanceData();
+            const tbody = document.getElementById('avanceTableBody');
+            tbody.innerHTML = '';
+            if (!data.length) {
+                const emptyRow = document.createElement("tr");
+                emptyRow.innerHTML = '<td colspan="8" class="px-4 py-8 text-center text-sm text-gray-500">Primero registra los perfiles de los asesores autorizados.</td>';
+                tbody.appendChild(emptyRow);
+            }
+            
+            let totalMeta = 0;
+            let totalAvance = 0;
+            let totalReferidos = 0;
+            let totalProyeccion = 0;
+            
+            data.forEach((row, idx) => {
+                totalMeta += row.meta;
+                totalAvance += row.avance;
+                totalReferidos += Number(row.referidos || 0);
+                totalProyeccion += row.proyeccion;
+                
+                let pct1 = row.meta > 0 ? Math.round((row.avance / row.meta) * 100) : 0;
+                let logroFinal = row.avance + row.proyeccion;
+                let pct2 = row.meta > 0 ? Math.round((logroFinal / row.meta) * 100) : 0;
+                
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition-colors";
+                
+                let metaCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.meta}" onchange="updateAvance(${idx}, 'meta', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.meta}</span>`;
+                let avanceCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.avance}" onchange="updateAvance(${idx}, 'avance', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.avance}</span>`;
+                let referidosCell = isAvanceEditMode ? `<input type="number" min="0" class="w-20 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${Number(row.referidos || 0)}" onchange="updateAvance(${idx}, 'referidos', this.value)" aria-label="Referidos postulantes de ${row.asesor}">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${Number(row.referidos || 0)}</span>`;
+                let proyeccionCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.proyeccion}" onchange="updateAvance(${idx}, 'proyeccion', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.proyeccion}</span>`;
+
+                tr.innerHTML = `
+                    <td class="px-4 py-4 text-xs sm:text-sm font-bold text-gray-900 whitespace-nowrap">${row.asesor}</td>
+                    <td class="px-2 py-4 text-center">${metaCell}</td>
+                    <td class="px-2 py-4 text-center">${avanceCell}</td>
+                    <td class="px-2 sm:px-4 py-4 text-center"><span class="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full border ${getAvanceBadgeColor(pct1)}">${pct1}%</span></td>
+                    <td class="px-2 py-4 text-center">${referidosCell}</td>
+                    <td class="px-2 py-4 text-center">${proyeccionCell}</td>
+                    <td class="px-2 sm:px-4 py-4 text-center text-xs sm:text-sm font-bold text-gray-900">${logroFinal}</td>
+                    <td class="px-2 sm:px-4 py-4 text-center"><span class="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full border ${getAvanceBadgeColor(pct2)}">${pct2}%</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            if (data.length) {
+                let totalLogroFinal = totalAvance + totalProyeccion;
+                let totalPct1 = totalMeta > 0 ? Math.round((totalAvance / totalMeta) * 100) : 0;
+                let totalPct2 = totalMeta > 0 ? Math.round((totalLogroFinal / totalMeta) * 100) : 0;
+
+                let trTotal = document.createElement('tr');
+                trTotal.className = "bg-brand-50 border-t-2 border-brand-200";
+                trTotal.innerHTML = `
+                    <td class="px-4 py-5 text-sm font-bold text-brand-900 whitespace-nowrap uppercase">Logro Equipo</td>
+                    <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalMeta}</td>
+                    <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalAvance}</td>
+                    <td class="px-2 sm:px-4 py-5 text-center"><span class="px-3 py-1 text-xs font-bold rounded-full border ${getAvanceBadgeColor(totalPct1)}">${totalPct1}%</span></td>
+                    <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalReferidos}</td>
+                    <td class="px-2 py-5 text-center text-sm font-bold text-gray-900">${totalProyeccion}</td>
+                    <td class="px-2 sm:px-4 py-5 text-center text-sm font-bold text-brand-700">${totalLogroFinal}</td>
+                    <td class="px-2 sm:px-4 py-5 text-center"><span class="px-3 py-1 text-xs font-bold rounded-full border ${getAvanceBadgeColor(totalPct2)}">${totalPct2}%</span></td>
+                `;
+                tbody.appendChild(trTotal);
+            }
+        }
+
+        function updateAvance(idx, field, val) {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            if (!["meta", "avance", "referidos", "proyeccion"].includes(field)) return;
+
+            const numericValue = Number(val);
+            if (!Number.isFinite(numericValue) || numericValue < 0) {
+                alert("Introduce un número igual o mayor que cero.");
+                renderAvance();
+                return;
+            }
+
+            const overlay = document.getElementById("avanceSyncOverlay");
+            overlay.classList.remove("hidden");
+            overlay.classList.add("flex");
+
+            setTimeout(async () => {
+                const data = loadAvanceData().map(row => ({ ...row }));
+                if (!data[idx]) {
+                    overlay.classList.add("hidden");
+                    overlay.classList.remove("flex");
+                    return;
+                }
+
+                data[idx][field] = numericValue;
+                sharedAvanceRows = data;
+                renderAvance();
+
+                try {
+                    await db.collection("monthlyMetrics").doc(currentMetricsMonth).set({
+                        month: currentMetricsMonth,
+                        rows: data,
+                        updatedBy: signedInUser.uid,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    currentMetricsDocumentExists = true;
+                    updateMetricsMonthStatus("Cambios guardados para " + formatMetricsMonth(currentMetricsMonth) + ".", "success");
+                } catch (error) {
+                    console.error("No se pudo guardar la métrica mensual:", error);
+                    alert("No se pudo guardar esta métrica en Firestore. Comprueba las reglas y tu conexión.");
+                    updateMetricsMonthStatus("Error al guardar. Revisa las reglas de Firestore.", "error");
+                } finally {
+                    overlay.classList.add("hidden");
+                    overlay.classList.remove("flex");
+                }
+            }, 150);
+        }
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'avanceMetricsV6') {
+                if(document.getElementById('avance').classList.contains('active')) {
+                    const overlay = document.getElementById('avanceSyncOverlay');
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                    setTimeout(() => {
+                        renderAvance();
+                        overlay.classList.add('hidden');
+                        overlay.classList.remove('flex');
+                    }, 600);
+                }
+            } else if (e.key === 'trackerData') {
+                if (document.getElementById('jefatura').classList.contains('active')) {
+                    const overlay = document.getElementById('dashboardSyncOverlay');
+                    overlay.classList.remove('hidden');
+                    overlay.classList.add('flex');
+                    setTimeout(() => {
+                        renderDashboard();
+                        overlay.classList.add('hidden');
+                        overlay.classList.remove('flex');
+                    }, 600);
+                }
+            }
+        });
+
+
+        function buildDefaultMobilityData(monthKey = currentMetricsMonth) {
+            // Historical periods are never populated with today's roster or made-up values.
+            if (monthKey !== getCurrentMonthKey()) return [];
+            return advisorProfiles.map(profile => ({ asesor: profile.asesorNombre, asignado: 2500, gasto: 0 }));
+        }
+
+        function loadMovilidadData() {
+            return Array.isArray(sharedMobilityRows) ? sharedMobilityRows : [];
+        }
+
+        function formatMoney(value) {
+            return Number(value || 0).toLocaleString("es-PE", { maximumFractionDigits: 0 });
+        }
+
+        function renderMovilidades() {
+            const data = loadMovilidadData();
+            const body = document.getElementById("movilidadTableBody");
+            const foot = document.getElementById("movilidadTableFoot");
+            if (!body || !foot) return;
+            body.innerHTML = "";
+            let assignedTotal = 0, spentTotal = 0;
+            if (!data.length) {
+                body.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500">Este mes aún no tiene un registro de movilidades. La supervisora puede cargar el reporte sin alterar el historial.</td></tr>';
+            }
+            data.forEach((row, index) => {
+                const assigned = Math.max(0, Number(row.asignado) || 0);
+                const spent = Math.max(0, Number(row.gasto) || 0);
+                const balance = assigned - spent;
+                const execution = assigned ? Math.round((spent / assigned) * 100) : 0;
+                assignedTotal += assigned;
+                spentTotal += spent;
+                const assignedCell = isMovilidadEditMode
+                    ? '<input type="number" min="0" step="1" class="w-24 rounded-md border border-gray-300 px-2 py-2 text-right text-sm" value="' + assigned + '" onchange="updateMovilidad(' + index + ', \'asignado\', this.value)" aria-label="Monto asignado">'
+                    : 'S/ ' + formatMoney(assigned);
+                const spentCell = isMovilidadEditMode
+                    ? '<input type="number" min="0" step="1" class="w-24 rounded-md border border-gray-300 px-2 py-2 text-right text-sm" value="' + spent + '" onchange="updateMovilidad(' + index + ', \'gasto\', this.value)" aria-label="Gasto total">'
+                    : 'S/ ' + formatMoney(spent);
+                const balanceText = balance < 0 ? '−S/ ' + formatMoney(Math.abs(balance)) : 'S/ ' + formatMoney(balance);
+                const rowName = String(row.asesor || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-gray-50";
+                tr.innerHTML = '<td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-gray-900">' + rowName + '</td>' +
+                    '<td class="whitespace-nowrap px-4 py-3 text-right text-sm">' + assignedCell + '</td>' +
+                    '<td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">' + spentCell + '</td>' +
+                    '<td class="whitespace-nowrap px-4 py-3 text-right text-sm ' + (balance < 0 ? 'font-bold text-rose-700' : 'text-emerald-700') + '">' + balanceText + '</td>' +
+                    '<td class="whitespace-nowrap px-4 py-3 text-right"><span class="rounded-full px-2.5 py-1 text-xs font-bold ' + (execution > 100 ? 'bg-rose-50 text-rose-700' : 'bg-brand-50 text-brand-800') + '">' + execution + '%</span></td>';
+                body.appendChild(tr);
+            });
+            const balanceTotal = assignedTotal - spentTotal;
+            const executionTotal = assignedTotal ? Math.round((spentTotal / assignedTotal) * 100) : 0;
+            document.getElementById("movilidadAssignedTotal").textContent = "S/ " + formatMoney(assignedTotal);
+            document.getElementById("movilidadSpentTotal").textContent = "S/ " + formatMoney(spentTotal);
+            document.getElementById("movilidadBalanceTotal").textContent = balanceTotal < 0 ? "−S/ " + formatMoney(Math.abs(balanceTotal)) : "S/ " + formatMoney(balanceTotal);
+            foot.innerHTML = '<tr><td class="px-4 py-3 text-sm font-extrabold uppercase">Total general</td>' +
+                '<td class="px-4 py-3 text-right text-sm font-extrabold">S/ ' + formatMoney(assignedTotal) + '</td>' +
+                '<td class="px-4 py-3 text-right text-sm font-extrabold">S/ ' + formatMoney(spentTotal) + '</td>' +
+                '<td class="px-4 py-3 text-right text-sm font-extrabold">' + (balanceTotal < 0 ? '−S/ ' + formatMoney(Math.abs(balanceTotal)) : 'S/ ' + formatMoney(balanceTotal)) + '</td>' +
+                '<td class="px-4 py-3 text-right text-sm font-extrabold">' + executionTotal + '%</td></tr>';
+            const button = document.getElementById("btnEditMovilidad");
+            if (button) button.innerHTML = isMovilidadEditMode ? '<i class="fa-solid fa-check mr-2"></i>Finalizar edición' : '<i class="fa-solid fa-pen mr-2"></i>Editar registro';
+            const status = document.getElementById("movilidadStatus");
+            if (status && data.length) status.textContent = "Mes consultado: " + formatMetricsMonth(currentMetricsMonth) + ". Los cambios autorizados se sincronizan en tiempo real.";
+        }
+
+        async function updateMovilidad(index, field, value) {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            if (!["asignado", "gasto"].includes(field)) return;
+            const numericValue = Number(value);
+            if (!Number.isFinite(numericValue) || numericValue < 0) {
+                alert("Introduce un monto igual o mayor que cero.");
+                renderMovilidades();
+                return;
+            }
+            const data = loadMovilidadData().map(row => ({ ...row }));
+            if (!data[index]) return;
+            data[index][field] = numericValue;
+            sharedMobilityRows = data;
+            renderMovilidades();
+            try {
+                await db.collection("monthlyMetrics").doc(currentMetricsMonth).set({
+                    month: currentMetricsMonth,
+                    mobilityRows: data,
+                    updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                const status = document.getElementById("movilidadStatus");
+                if (status) status.textContent = "Movilidades guardadas para " + formatMetricsMonth(currentMetricsMonth) + ".";
+            } catch (error) {
+                console.error("No se pudo guardar el avance de movilidades:", error);
+                alert("No se pudo guardar el gasto en Firestore. Revisa tu conexión y las reglas.");
+                const status = document.getElementById("movilidadStatus");
+                if (status) status.textContent = "Error al guardar las movilidades.";
+            }
+        }
+
+        function populateResourceLinksEditor() {
+            const editor = document.getElementById("resourceLinksEditor");
+            if (!editor) return;
+            const links = { ...protectedResourceLinks };
+            delete links.taxiDirecto;
+            delete links.cabify;
+            delete links.formularioMaterial;
+            ["avanza", "plantillaVan", "driveMovilidades", "statusCartera", "grupoRutasUbicaciones", "grupoInformeActividades"].forEach(key => {
+                if (!(key in links)) links[key] = "";
+            });
+            editor.value = Object.keys(links).sort().map(key => key + "=" + String(links[key] || "")).join("\n");
+        }
+
+        async function saveResourceLinks() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const editor = document.getElementById("resourceLinksEditor");
+            const status = document.getElementById("resourceLinksStatus");
+            const button = document.getElementById("saveResourceLinksBtn");
+            const nextLinks = {};
+            const lines = editor.value.split("\n").map(line => line.trim()).filter(line => line && !line.startsWith("#"));
+            for (const line of lines) {
+                const equals = line.indexOf("=");
+                if (equals < 1) {
+                    if (status) status.textContent = "Formato inválido. Usa clave=URL, una por línea.";
+                    return;
+                }
+                const key = line.slice(0, equals).trim();
+                const value = line.slice(equals + 1).trim();
+                if (!/^[A-Za-z][A-Za-z0-9]*$/.test(key) || key in nextLinks) {
+                    if (status) status.textContent = "Hay una clave inválida o repetida: " + key;
+                    return;
+                }
+                if (!value) continue;
+                try {
+                    const parsed = new URL(value);
+                    if (parsed.protocol !== "https:") throw new Error("Se requiere HTTPS");
+                    nextLinks[key] = parsed.href;
+                } catch (error) {
+                    if (status) status.textContent = "La URL de " + key + " no es válida o no usa HTTPS.";
+                    return;
+                }
+            }
+            delete nextLinks.taxiDirecto;
+            delete nextLinks.cabify;
+            delete nextLinks.formularioMaterial;
+            if (button) button.disabled = true;
+            if (status) status.textContent = "Guardando enlaces protegidos…";
+            try {
+                await db.collection("appConfig").doc("resources").set({
+                    links: nextLinks,
+                    updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                protectedResourceLinks = nextLinks;
+                await loadProtectedResources();
+                if (status) status.textContent = "Enlaces guardados. Los accesos activos ya se actualizaron.";
+            } catch (error) {
+                console.error("No se pudieron guardar los enlaces operativos:", error);
+                if (status) status.textContent = "No se pudo guardar. Verifica que la cuenta tenga permisos de supervisora.";
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+
+        function loadRosterEditor() {
+            const editor = document.getElementById("rosterEditor");
+            if (editor) editor.value = advisorProfiles.map(profile => profile.asesorNombre).join("\n");
+        }
+
+        async function saveRoster() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const editor = document.getElementById("rosterEditor");
+            const status = document.getElementById("rosterStatus");
+            const names = editor.value.split("\n").map(name => name.trim()).filter(Boolean);
+            const nextMap = {};
+            for (const name of names) {
+                const key = normalizeAdvisorKey(name);
+                if (!key || nextMap[key]) {
+                    if (status) status.textContent = "Hay un nombre duplicado o no válido. Revisa la lista.";
+                    return;
+                }
+                nextMap[key] = name;
+            }
+            if (!Object.keys(nextMap).length) {
+                if (status) status.textContent = "Incluye al menos un asesor.";
+                return;
+            }
+            const button = document.getElementById("saveRosterBtn");
+            if (button) button.disabled = true;
+            if (status) status.textContent = "Guardando lista…";
+            try {
+                await db.collection("appConfig").doc("roster").set({
+                    advisorMap: nextMap,
+                    updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await loadAuthorizedAdvisors();
+                asesorSelect.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
+                advisorProfiles.forEach(profile => asesorSelect.add(new Option(profile.asesorNombre, profile.asesorNombre)));
+                if (signedInProfile.role === "asesor_compartido") asesorSelect.disabled = false;
+                loadRosterEditor();
+                subscribeToMetricsMonth(currentMetricsMonth);
+                renderDashboard();
+                if (status) status.textContent = "Lista actualizada y guardada en Firestore.";
+            } catch (error) {
+                console.error("No se pudo guardar el listado de asesores:", error);
+                if (status) status.textContent = "No se pudo guardar. Revisa los permisos de Camila en Firestore.";
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+
+        async function importMobilityRows() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const input = document.getElementById("mobilityImportText");
+            const status = document.getElementById("mobilityImportStatus");
+            const button = document.getElementById("mobilityImportBtn");
+            const lines = input.value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+            const rows = [];
+            for (const line of lines) {
+                const parts = line.split(";").map(part => part.trim());
+                if (parts.length !== 3 || !parts[0]) {
+                    if (status) status.textContent = "Formato inválido. Usa una línea por asesor: nombre;asignado;gasto.";
+                    return;
+                }
+                const assigned = Number(parts[1]);
+                const spent = Number(parts[2]);
+                if (!Number.isFinite(assigned) || !Number.isFinite(spent) || assigned < 0 || spent < 0) {
+                    if (status) status.textContent = "Los montos deben ser números iguales o mayores que cero.";
+                    return;
+                }
+                rows.push({ asesor: parts[0], asignado: assigned, gasto: spent });
+            }
+            if (!rows.length) {
+                if (status) status.textContent = "Pega al menos una fila antes de importar.";
+                return;
+            }
+            if (button) button.disabled = true;
+            if (status) status.textContent = "Importando " + rows.length + " filas a " + formatMetricsMonth(currentMetricsMonth) + "…";
+            try {
+                await db.collection("monthlyMetrics").doc(currentMetricsMonth).set({
+                    month: currentMetricsMonth,
+                    mobilityRows: rows,
+                    updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                sharedMobilityRows = rows;
+                isMovilidadEditMode = false;
+                renderMovilidades();
+                if (status) status.textContent = "Importación completada. Se guardaron " + rows.length + " filas.";
+            } catch (error) {
+                console.error("No se pudo importar el reporte de movilidades:", error);
+                if (status) status.textContent = "No se pudo importar. Verifica la conexión y las reglas de Firestore.";
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+
+        function toggleEditMovilidad() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            isMovilidadEditMode = !isMovilidadEditMode;
+            renderMovilidades();
+        }
+
+        async function copyAvanceScreenshot() {
+            let wasEditing = isAvanceEditMode;
+            if(wasEditing) {
+                toggleEditAvance(); // Esto lo pasa a texto fijo y re-renderiza
+            }
+
+            const btn = document.getElementById('btnCopyAvance');
+            const btnEdit = document.getElementById('btnToggleEdit');
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+            if(btnEdit) btnEdit.style.display = 'none';
+
+            const container = document.getElementById('avanceCaptureContainer');
+            btn.style.opacity = '0'; 
+            
+            try {
+                const canvas = await html2canvas(container, {
+                    scale: 2, 
+                    backgroundColor: "#ffffff",
+                    logging: false
+                });
+                
+                btn.style.opacity = '1';
+                if(btnEdit) btnEdit.style.display = 'flex';
+                
+                canvas.toBlob(async function(blob) {
+                    try {
+                        const item = new ClipboardItem({ "image/png": blob });
+                        await navigator.clipboard.write([item]);
+                        
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                        btn.classList.replace('bg-brand-500', 'bg-emerald-500');
+                        btn.classList.replace('hover:bg-brand-600', 'hover:bg-emerald-600');
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
+                            btn.classList.replace('bg-emerald-500', 'bg-brand-500');
+                            btn.classList.replace('hover:bg-emerald-600', 'hover:bg-brand-600');
+                            btn.disabled = false;
+                            
+                            // Restaurar estado de edición si estaba activo
+                            if(wasEditing) toggleEditAvance();
+                        }, 2000);
+                        
+                    } catch (err) {
+                        console.error("Error al copiar: ", err);
+                        alert("Tu navegador no soporta el copiado directo. Intenta usar Chrome o Edge.");
+                        btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
+                        btn.disabled = false;
+                        if(wasEditing) toggleEditAvance();
+                    }
+                }, "image/png");
+            } catch (err) {
+                console.error("Error al generar imagen: ", err);
+                btn.style.opacity = '1';
+                if(btnEdit) btnEdit.style.display = 'flex';
+                btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
+                btn.disabled = false;
+                if(wasEditing) toggleEditAvance();
+            }
+        }
+
+        updateProgress();
+        auth.onAuthStateChanged(handleAuthState);
+    </script>
+</body>
+</html>

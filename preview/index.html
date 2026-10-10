@@ -58,6 +58,28 @@
         body.authenticated #appContent { display: flex; flex-direction: column; flex-grow: 1; }
         body.authenticated #authGate { display: none !important; }
         #authMessage:empty { display: none; }
+    
+.tab-content.active{animation:rp-enter 240ms ease both}.resource-admin-panel{overflow:hidden;border-color:#d7eef0}
+.resource-admin-panel>summary{display:flex;align-items:center;justify-content:space-between;gap:1rem;list-style:none;padding:.25rem 0;outline:none}
+.resource-admin-panel>summary::-webkit-details-marker{display:none}.resource-summary-arrow{transition:transform 220ms ease}.resource-admin-panel[open] .resource-summary-arrow{transform:rotate(180deg)}
+.resource-admin-panel[open] .resource-admin-content{animation:rp-enter 300ms ease both}.resource-link-section{animation:rp-enter 320ms ease both}
+.resource-link-card{min-width:0;border:1px solid #e2e8f0;border-radius:1rem;background:#fff;padding:1rem;box-shadow:0 1px 2px rgba(15,23,42,.035);animation:rp-card 360ms cubic-bezier(.2,.75,.25,1) both;animation-delay:var(--resource-delay,0ms);transition:border-color 180ms ease,box-shadow 180ms ease,transform 180ms ease}
+.resource-link-card:hover{border-color:#9bdfe3;box-shadow:0 10px 24px rgba(9,41,42,.07);transform:translateY(-2px)}.resource-link-card:focus-within{border-color:#26a2a7;box-shadow:0 0 0 3px rgba(47,203,209,.15)}
+.resource-link-card.resource-card-invalid{border-color:#fda4af;background:#fffafa}
+.resource-card-icon{display:inline-flex;flex:0 0 auto;height:2.65rem;width:2.65rem;align-items:center;justify-content:center;border-radius:.85rem;background:#e4f9fa;color:#1c7a7d;transition:transform 200ms ease,background-color 200ms ease}
+.resource-link-card:hover .resource-card-icon{transform:scale(1.05) rotate(-3deg);background:#ccf4f6}
+.resource-link-input{display:block;width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:.75rem;padding:.75rem .85rem;color:#0f172a;background:#f8fafc;font-size:.875rem;line-height:1.35rem;transition:border-color 160ms ease,background-color 160ms ease,box-shadow 160ms ease}
+.resource-link-input:hover{border-color:#94a3b8}.resource-link-input:focus{outline:none;border-color:#26a2a7;background:#fff;box-shadow:0 0 0 3px rgba(47,203,209,.16)}
+.resource-state{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.3rem .55rem;font-size:.68rem;line-height:1;font-weight:800;white-space:nowrap}
+.resource-state.is-configured{color:#166534;background:#dcfce7}.resource-state.is-pending{color:#64748b;background:#f1f5f9}.resource-state.is-invalid{color:#b91c1c;background:#fee2e2}
+.resource-save-button{transition:transform 160ms ease,box-shadow 160ms ease}.resource-save-button:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(9,41,42,.18)}
+.resource-save-button:active{transform:translateY(0) scale(.99)}.resource-save-button:disabled{cursor:wait;opacity:.72}
+.resource-save-status{display:flex;align-items:flex-start;gap:.5rem;border-radius:.75rem;padding:0;opacity:0;max-height:0;overflow:hidden;transition:opacity 180ms ease,max-height 220ms ease,padding 180ms ease,margin 180ms ease}
+.resource-save-status.is-visible{opacity:1;max-height:5rem;padding:.75rem .9rem;margin-top:.75rem}
+.resource-save-status.is-success{color:#166534;background:#f0fdf4}.resource-save-status.is-info{color:#155e75;background:#ecfeff}.resource-save-status.is-error{color:#b91c1c;background:#fef2f2}
+@keyframes rp-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes rp-card{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
@@ -416,12 +438,23 @@
         </div>
 
         <div id="jefatura" class="tab-content relative">
-            <details id="resourceAdminPanel" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border border-brand-100">
-                <summary class="cursor-pointer font-bold text-gray-900"><i class="fa-solid fa-link mr-2 text-brand-600"></i>Administrar enlaces de trabajo</summary>
-                <p class="mt-2 text-sm text-gray-600">Una fila por enlace con el formato clave=URL. Los enlaces se guardan en Firestore y solo Camila puede modificarlos. Al guardar, se retiran las claves obsoletas de Taxi Directo, Cabify y Solicitud de Material.</p>
-                <textarea id="resourceLinksEditor" rows="10" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm font-mono" aria-label="Enlaces operativos" spellcheck="false"></textarea>
-                <button id="saveResourceLinksBtn" type="button" onclick="saveResourceLinks()" class="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar enlaces</button>
-                <p id="resourceLinksStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+            <details id="resourceAdminPanel" class="resource-admin-panel hidden bg-white rounded-2xl shadow-sm p-4 sm:p-6 lg:p-7 mb-6 border">
+                <summary class="cursor-pointer font-bold text-gray-900">
+                    <span class="flex min-w-0 items-center gap-3"><span class="resource-card-icon"><i class="fa-solid fa-link text-lg"></i></span><span class="min-w-0"><span class="block text-base sm:text-lg font-extrabold">Administrar enlaces de trabajo</span><span class="mt-1 block text-xs sm:text-sm font-normal text-gray-500">Edita los accesos del equipo desde un solo lugar.</span></span></span>
+                    <span class="flex flex-shrink-0 items-center gap-3"><span class="hidden sm:inline-flex rounded-full bg-brand-50 text-brand-800 px-3 py-1 text-xs font-extrabold"><i class="fa-solid fa-shield-halved mr-1"></i>Solo supervisora</span><i class="resource-summary-arrow fa-solid fa-chevron-down text-sm text-gray-500"></i></span>
+                </summary>
+                <div class="resource-admin-content pt-5">
+                    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50 to-white p-4">
+                        <div class="max-w-2xl"><p class="font-bold text-gray-900"><i class="fa-solid fa-wand-magic-sparkles mr-2 text-brand-700"></i>Centro de enlaces</p><p class="mt-1 text-sm leading-6 text-gray-600">Actualiza las direcciones web de cada herramienta. Los cambios se guardan en la nube y se reflejan en los accesos del equipo.</p></div>
+                        <div id="resourceLinksSummary" class="inline-flex w-fit flex-shrink-0 items-center gap-2 rounded-xl bg-white border border-brand-100 px-3 py-2 text-sm font-bold text-brand-900" aria-live="polite"><i class="fa-solid fa-circle-check text-brand-600"></i><span>Comprobando enlaces…</span></div>
+                    </div>
+                    <div id="resourceLinksEditor" class="mt-6 space-y-6" aria-label="Editor visual de enlaces operativos"></div>
+                    <div class="mt-6 flex flex-col sm:flex-row sm:items-center gap-3 border-t border-gray-100 pt-5">
+                        <button id="saveResourceLinksBtn" type="button" onclick="saveResourceLinks()" class="resource-save-button inline-flex min-h-12 items-center justify-center rounded-xl bg-brand-900 px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:bg-brand-800 focus:outline-none focus:ring-4 focus:ring-brand-200"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar cambios</button>
+                        <p class="text-xs leading-5 text-gray-500"><i class="fa-solid fa-lock mr-1 text-brand-700"></i>Los cambios solo pueden guardarse con el perfil de supervisora.</p>
+                    </div>
+                    <p id="resourceLinksStatus" class="resource-save-status text-sm" role="status" aria-live="polite"><i class="fa-solid fa-circle-info mt-0.5"></i><span></span></p>
+                </div>
             </details>
             <details id="rosterAdminPanel" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border border-brand-100">
                 <summary class="cursor-pointer font-bold text-gray-900"><i class="fa-solid fa-users-gear mr-2 text-brand-600"></i>Administrar lista de asesores</summary>
@@ -1857,69 +1890,62 @@
             }
         }
 
-        function populateResourceLinksEditor() {
-            const editor = document.getElementById("resourceLinksEditor");
-            if (!editor) return;
-            const links = { ...protectedResourceLinks };
-            delete links.taxiDirecto;
-            delete links.cabify;
-            delete links.formularioMaterial;
-            delete links.driveMovilidades;
-            ["avanza", "plantillaVan", "statusCartera", "grupoRutasUbicaciones", "grupoInformeActividades"].forEach(key => {
-                if (!(key in links)) links[key] = "";
-            });
-            editor.value = Object.keys(links).sort().map(key => key + "=" + String(links[key] || "")).join("\n");
-        }
 
-        async function saveResourceLinks() {
-            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
-            const editor = document.getElementById("resourceLinksEditor");
-            const status = document.getElementById("resourceLinksStatus");
-            const button = document.getElementById("saveResourceLinksBtn");
-            const nextLinks = {};
-            const lines = editor.value.split("\n").map(line => line.trim()).filter(line => line && !line.startsWith("#"));
-            for (const line of lines) {
-                const equals = line.indexOf("=");
-                if (equals < 1) {
-                    if (status) status.textContent = "Formato inválido. Usa clave=URL, una por línea.";
-                    return;
-                }
-                const key = line.slice(0, equals).trim();
-                const value = line.slice(equals + 1).trim();
-                if (!/^[A-Za-z][A-Za-z0-9]*$/.test(key) || key in nextLinks) {
-                    if (status) status.textContent = "Hay una clave inválida o repetida: " + key;
-                    return;
-                }
-                if (!value) continue;
-                try {
-                    const parsed = new URL(value);
-                    if (parsed.protocol !== "https:") throw new Error("Se requiere HTTPS");
-                    nextLinks[key] = parsed.href;
-                } catch (error) {
-                    if (status) status.textContent = "La URL de " + key + " no es válida o no usa HTTPS.";
-                    return;
-                }
-            }
-            delete nextLinks.taxiDirecto;
-            delete nextLinks.cabify;
-            delete nextLinks.formularioMaterial;
-            if (button) button.disabled = true;
-            if (status) status.textContent = "Guardando enlaces protegidos…";
-            try {
-                await db.collection("appConfig").doc("resources").set({
-                    links: nextLinks,
-                    updatedBy: signedInUser.uid,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                protectedResourceLinks = nextLinks;
-                await loadProtectedResources();
-                if (status) status.textContent = "Enlaces guardados. Los accesos activos ya se actualizaron.";
-            } catch (error) {
-                console.error("No se pudieron guardar los enlaces operativos:", error);
-                if (status) status.textContent = "No se pudo guardar. Verifica que la cuenta tenga permisos de supervisora.";
-            } finally {
-                if (button) button.disabled = false;
-            }
+        const RESOURCE_LINK_SECTIONS=[
+          {title:"Accesos principales",description:"Herramientas para ingresar y organizar la operación.",icon:"fa-solid fa-compass",items:[
+            {key:"intranet",label:"Intranet Wiener",description:"Portal interno institucional.",icon:"fa-solid fa-building"},
+            {key:"crmZoho",label:"CRM Zoho",description:"Panel de seguimiento en el CRM.",icon:"fa-solid fa-chart-line"},
+            {key:"avanza",label:"Avanza",description:"Portal de programación de movilidad.",icon:"fa-solid fa-car-side"},
+            {key:"plantillaVan",label:"Plantilla VAN Promotor",description:"Formato para programar movilidad en VAN.",icon:"fa-solid fa-file-excel"}]},
+          {title:"Registros y seguimiento",description:"Formularios y herramientas para mantener actualizada la información.",icon:"fa-solid fa-clipboard-check",items:[
+            {key:"matrizSolicitudes",label:"Matriz de solicitudes",description:"Registro y control de solicitudes de trabajo.",icon:"fa-solid fa-table-cells-large"},
+            {key:"registroFichasDatos",label:"Registro de fichas de datos",description:"Formulario de registro de fichas.",icon:"fa-solid fa-file-circle-plus"},
+            {key:"digitalizacionFichas",label:"Digitalización de fichas",description:"Acceso al sistema de digitalización.",icon:"fa-solid fa-file-arrow-up"},
+            {key:"actualizacionFichas",label:"Actualización de fichas",description:"Formulario para actualizar datos.",icon:"fa-solid fa-pen-to-square"},
+            {key:"statusCartera",label:"Cartera de colegios",description:"Seguimiento y estatus de la cartera.",icon:"fa-solid fa-folder-open"}]},
+          {title:"Coordinación del equipo",description:"Enlaces para organizar rutas y reportes.",icon:"fa-solid fa-people-group",items:[
+            {key:"grupoRutasUbicaciones",label:"Grupo de rutas y ubicaciones",description:"Acceso al grupo operativo de rutas.",icon:"fa-solid fa-map-location-dot"},
+            {key:"grupoInformeActividades",label:"Grupo de informe de actividades",description:"Acceso al grupo para informes de actividades.",icon:"fa-solid fa-clipboard-list"}]}
+        ];
+        const OBSOLETE_RESOURCE_KEYS=new Set(["taxiDirecto","cabify","formularioMaterial","driveMovilidades"]);
+        function getResourceLinkState(value){const url=String(value||"").trim();if(!url)return{state:"pending",label:"Pendiente",icon:"fa-regular fa-circle"};try{const parsed=new URL(url);if(parsed.protocol==="https:")return{state:"configured",label:"Configurado",icon:"fa-solid fa-circle-check"};}catch(_){}return{state:"invalid",label:"Revisar URL",icon:"fa-solid fa-triangle-exclamation"};}
+        function makeResourceStateBadge(){const b=document.createElement("span");b.dataset.resourceState="true";b.className="resource-state is-pending";return b;}
+        function updateResourceCardStatus(card,input){const b=card.querySelector("[data-resource-state]");if(!b)return;const s=getResourceLinkState(input.value);b.className="resource-state is-"+s.state;b.innerHTML='<i class="'+s.icon+'"></i><span>'+s.label+'</span>';card.classList.toggle("resource-card-invalid",s.state==="invalid");}
+        function updateResourceLinksSummary(){const summary=document.getElementById("resourceLinksSummary"),editor=document.getElementById("resourceLinksEditor");if(!summary||!editor)return;const inputs=Array.from(editor.querySelectorAll("[data-resource-link-input]"));const n=inputs.filter(function(i){return getResourceLinkState(i.value).state==="configured";}).length;const span=summary.querySelector("span");if(span)span.textContent=n+" de "+inputs.length+" enlaces configurados";const icon=summary.querySelector("i");if(icon)icon.className=n===inputs.length?"fa-solid fa-circle-check text-brand-600":"fa-solid fa-link text-brand-600";}
+        function createResourceLinkCard(item,value,index){
+          const card=document.createElement("article");card.className="resource-link-card";card.style.setProperty("--resource-delay",(index*36)+"ms");card.dataset.resourceCard=item.key;
+          const top=document.createElement("div");top.className="flex items-start gap-3";const ico=document.createElement("span");ico.className="resource-card-icon";const glyph=document.createElement("i");glyph.className=item.icon||"fa-solid fa-link";ico.appendChild(glyph);
+          const heading=document.createElement("div");heading.className="min-w-0 flex-1";const row=document.createElement("div");row.className="flex flex-wrap items-center justify-between gap-2";
+          const title=document.createElement("h4");title.className="font-extrabold text-gray-900 leading-5";title.textContent=item.label;const badge=makeResourceStateBadge();row.append(title,badge);
+          const desc=document.createElement("p");desc.className="mt-1.5 text-sm leading-5 text-gray-500";desc.textContent=item.description||"Dirección web de un recurso del equipo.";heading.append(row,desc);top.append(ico,heading);
+          const label=document.createElement("label");label.className="mt-4 mb-1.5 block text-xs font-extrabold uppercase tracking-wide text-gray-500";label.htmlFor="resourceUrl_"+item.key;label.textContent="Dirección web";
+          const input=document.createElement("input");input.id="resourceUrl_"+item.key;input.type="url";input.inputMode="url";input.autocomplete="off";input.spellcheck=false;input.placeholder="Pega aquí el enlace https://…";input.className="resource-link-input";input.value=String(value||"");input.dataset.resourceLinkInput="true";input.dataset.resourceKey=item.key;input.setAttribute("aria-label","URL de "+item.label);input.addEventListener("input",function(){updateResourceCardStatus(card,input);updateResourceLinksSummary();});
+          card.append(top,label,input);updateResourceCardStatus(card,input);return card;
+        }
+        function humanizeResourceKey(key){return String(key).replace(/([a-z0-9])([A-Z])/g,"$1 $2").replace(/^./,function(c){return c.toUpperCase();});}
+        function populateResourceLinksEditor(){
+          const editor=document.getElementById("resourceLinksEditor");if(!editor)return;const links={...protectedResourceLinks};OBSOLETE_RESOURCE_KEYS.forEach(function(k){delete links[k];});editor.innerHTML="";
+          const known=new Set();let index=0;
+          RESOURCE_LINK_SECTIONS.forEach(function(data){const section=document.createElement("section");section.className="resource-link-section";const header=document.createElement("div");header.className="mb-3 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1.5";
+            const group=document.createElement("div");group.className="flex items-center gap-2";const ico=document.createElement("i");ico.className=data.icon+" text-brand-700";const h=document.createElement("h3");h.className="text-sm sm:text-base font-extrabold text-gray-900";h.textContent=data.title;group.append(ico,h);
+            const desc=document.createElement("p");desc.className="text-xs sm:text-sm text-gray-500";desc.textContent=data.description;header.append(group,desc);const grid=document.createElement("div");grid.className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4";
+            data.items.forEach(function(item){known.add(item.key);grid.appendChild(createResourceLinkCard(item,links[item.key]||"",index++));});section.append(header,grid);editor.appendChild(section);});
+          const extra=Object.keys(links).filter(function(k){return!known.has(k)&&!OBSOLETE_RESOURCE_KEYS.has(k)&&/^[A-Za-z][A-Za-z0-9]*$/.test(k);}).sort();
+          if(extra.length){const section=document.createElement("section");section.className="resource-link-section";const h=document.createElement("h3");h.className="mb-3 text-sm sm:text-base font-extrabold text-gray-900";h.innerHTML='<i class="fa-solid fa-link mr-2 text-brand-700"></i>Otros enlaces';
+            const desc=document.createElement("p");desc.className="mb-3 text-xs sm:text-sm text-gray-500";desc.textContent="Se conservarán también los enlaces adicionales que ya están configurados.";const grid=document.createElement("div");grid.className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4";
+            extra.forEach(function(k){grid.appendChild(createResourceLinkCard({key:k,label:humanizeResourceKey(k),description:"Enlace adicional del equipo.",icon:"fa-solid fa-link"},links[k],index++));});section.append(h,desc,grid);editor.appendChild(section);}
+          updateResourceLinksSummary();
+        }
+        function setResourceLinksStatus(message,type){const status=document.getElementById("resourceLinksStatus");if(!status)return;const icon=status.querySelector("i"),span=status.querySelector("span");status.className="resource-save-status"+(message?" is-visible":"")+(type?" is-"+type:"");if(icon)icon.className=type==="success"?"fa-solid fa-circle-check mt-0.5":type==="error"?"fa-solid fa-circle-exclamation mt-0.5":"fa-solid fa-circle-info mt-0.5";if(span)span.textContent=message||"";}
+        async function saveResourceLinks(){
+          if(!signedInUser||!signedInProfile||signedInProfile.role!=="supervisor"){setResourceLinksStatus("Solo el perfil de supervisora puede guardar estos cambios.","error");return;}
+          const editor=document.getElementById("resourceLinksEditor"),button=document.getElementById("saveResourceLinksBtn");if(!editor||!button)return;const next={},inputs=Array.from(editor.querySelectorAll("[data-resource-link-input]")),seen=new Set();
+          for(const input of inputs){const key=String(input.dataset.resourceKey||"").trim(),value=input.value.trim();if(!/^[A-Za-z][A-Za-z0-9]*$/.test(key)||seen.has(key)){setResourceLinksStatus("Hay una clave inválida o repetida. Recarga el panel y vuelve a intentarlo.","error");input.focus();return;}seen.add(key);if(!value)continue;
+            try{const url=new URL(value);if(url.protocol!=="https:")throw Error("https required");next[key]=url.href;}catch(_){setResourceLinksStatus("Revisa el enlace de «"+key+"». Debe ser una URL completa y comenzar con https://.","error");input.focus();const card=input.closest("[data-resource-card]");if(card)card.classList.add("resource-card-invalid");return;}}
+          OBSOLETE_RESOURCE_KEYS.forEach(function(k){delete next[k];});button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Guardando cambios…';setResourceLinksStatus("Guardando los enlaces en tiempo real…","info");
+          try{await db.collection("appConfig").doc("resources").set({links:next,updatedBy:signedInUser.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});protectedResourceLinks=next;await loadProtectedResources();setResourceLinksStatus("Cambios guardados. Los accesos del equipo ya están actualizados.","success");}
+          catch(error){console.error("No se pudieron guardar los enlaces operativos:",error);setResourceLinksStatus("No se pudo guardar. Verifica la conexión y los permisos de la cuenta supervisora.","error");}
+          finally{button.disabled=false;button.innerHTML='<i class="fa-solid fa-floppy-disk mr-2"></i>Guardar cambios';}
         }
 
         function loadRosterEditor() {

@@ -139,6 +139,93 @@
         }
         @media(min-width:761px) and (max-width:1024px) { .resource-card-fields { grid-template-columns:minmax(0,1fr); } .resource-field-wide { grid-column:auto; } }
 
+
+        .roster-admin-panel{overflow:hidden;border:1px solid #dbe6ec;background:#fff;box-shadow:0 8px 28px rgba(15,23,42,.055)}
+        .roster-admin-summary{display:flex;align-items:center;justify-content:space-between;gap:1rem;min-height:66px;padding:.35rem .1rem;list-style:none;outline:none}
+        .roster-admin-summary::-webkit-details-marker{display:none}
+        .roster-admin-summary:focus-visible{outline:3px solid rgba(47,203,209,.4);outline-offset:4px;border-radius:.8rem}
+        .roster-heading-group{display:flex;align-items:center;gap:.9rem;min-width:0}
+        .roster-heading-icon{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:3rem;height:3rem;border:1px solid #c7eef0;border-radius:1rem;background:linear-gradient(135deg,#e4f9fa,#f7ffff);color:#1c7a7d;font-size:1.15rem;transition:transform 200ms ease,box-shadow 200ms ease}
+        .roster-admin-panel>summary:hover .roster-heading-icon{transform:translateY(-1px);box-shadow:0 5px 14px rgba(38,162,167,.15)}
+        .roster-heading-title{display:block;color:#102b3a;font-size:1.05rem;font-weight:850;line-height:1.5rem;letter-spacing:-.015em}
+        .roster-heading-subtitle{display:block;margin-top:.25rem;color:#64748b;font-size:.86rem;font-weight:450;line-height:1.4rem}
+        .roster-summary-actions{display:flex;align-items:center;gap:.9rem;flex:0 0 auto}
+        .roster-supervisor-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.42rem .68rem;border:1px solid #dbeafe;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:.72rem;font-weight:800;white-space:nowrap}
+        .roster-summary-arrow{color:#64748b;font-size:.8rem;transition:transform 200ms ease}
+        .roster-admin-panel[open] .roster-summary-arrow{transform:rotate(180deg)}
+        .roster-admin-content{padding-top:1.2rem;animation:rp-enter 260ms ease both}
+        .roster-intro{display:flex;align-items:flex-start;justify-content:space-between;gap:1.4rem;padding:1.3rem;border:1px solid #d4eff0;border-radius:1.15rem;background:linear-gradient(115deg,#effbfc 0%,#f8fcfd 52%,#fff 100%)}
+        .roster-intro-copy{max-width:66ch;min-width:0}
+        .roster-section-eyebrow{display:inline-flex;align-items:center;color:#176f74;font-size:.72rem;font-weight:850;letter-spacing:.075em;text-transform:uppercase}
+        .roster-intro h3{margin-top:.38rem;color:#102b3a;font-size:1.18rem;font-weight:850;line-height:1.65rem;letter-spacing:-.02em}
+        .roster-intro p{margin-top:.45rem;color:#526578;font-size:.9rem;line-height:1.55rem}
+        .roster-intro-side{display:flex;flex-direction:column;align-items:stretch;gap:.7rem;flex:0 0 auto;min-width:155px}
+        .roster-count{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:42px;padding:.55rem .8rem;border:1px solid #dbe4eb;border-radius:.8rem;background:#fff;color:#1e293b;font-size:.86rem;font-weight:800;white-space:nowrap}
+        .roster-count>i{color:#269ba2}
+        .roster-add-button,.roster-save-button{display:inline-flex;align-items:center;justify-content:center;gap:.55rem;min-height:46px;padding:.75rem 1rem;border:1px solid transparent;border-radius:.78rem;background:#09292a;color:#fff;font-size:.88rem;font-weight:850;box-shadow:0 2px 4px rgba(9,41,42,.08);transition:transform 160ms ease,box-shadow 160ms ease,background-color 160ms ease,border-color 160ms ease}
+        .roster-add-button{border-color:#b9e7e9;background:#fff;color:#155e63}
+        .roster-add-button:hover{background:#f0fcfc;border-color:#78d4d9;box-shadow:0 7px 16px rgba(38,162,167,.12);transform:translateY(-1px)}
+        .roster-save-button:hover{background:#135154;box-shadow:0 8px 18px rgba(9,41,42,.17);transform:translateY(-1px)}
+        .roster-save-button:active,.roster-add-button:active{transform:translateY(0) scale(.99)}
+        .roster-add-button:disabled,.roster-save-button:disabled{cursor:wait;opacity:.65;transform:none;box-shadow:none}
+        .roster-toolbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin:1.25rem 0 .85rem}
+        .roster-search-wrap{display:flex;align-items:center;gap:.65rem;width:min(100%,400px);min-height:44px;padding:0 .85rem;border:1px solid #cbd5e1;border-radius:.78rem;background:#fff;color:#64748b;transition:border-color 160ms ease,box-shadow 160ms ease}
+        .roster-search-wrap:focus-within{border-color:#26a2a7;box-shadow:0 0 0 3px rgba(47,203,209,.15)}
+        .roster-search-wrap>i{color:#94a3b8}
+        .roster-search-wrap input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#0f172a;font-size:.9rem;line-height:1.4rem}
+        .roster-search-wrap input::placeholder{color:#94a3b8}
+        .roster-helper{display:flex;align-items:flex-start;gap:.45rem;max-width:46ch;color:#64748b;font-size:.77rem;line-height:1.4rem}
+        .roster-helper>i{margin-top:.2rem;flex:0 0 auto;color:#269ba2}
+        .roster-list{display:flex;flex-direction:column;gap:.55rem}
+        .roster-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:.8rem;padding:.72rem .85rem;border:1px solid #e2e8f0;border-radius:.9rem;background:#fff;animation:roster-row-enter 240ms ease both;transition:border-color 160ms ease,box-shadow 160ms ease,transform 160ms ease}
+        .roster-row:hover{border-color:#b8dfe2;box-shadow:0 4px 12px rgba(15,23,42,.04)}
+        .roster-row:focus-within{border-color:#80d4d9;box-shadow:0 0 0 3px rgba(47,203,209,.12)}
+        .roster-row.is-filtered-out{display:none}
+        .roster-index{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid #d5eff0;border-radius:.75rem;background:#f0fbfc;color:#317b80;font-size:.77rem;font-weight:850;font-variant-numeric:tabular-nums}
+        .roster-name-wrap{display:block;min-width:0}
+        .roster-name-label{display:block;margin-bottom:.22rem;color:#64748b;font-size:.68rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+        .roster-name-input{display:block;width:100%;min-width:0;min-height:39px;padding:.45rem .62rem;border:1px solid transparent;border-radius:.6rem;background:#f8fafc;color:#0f172a;font-size:.92rem;font-weight:650;line-height:1.4rem;transition:border-color 160ms ease,background-color 160ms ease,box-shadow 160ms ease}
+        .roster-name-input:hover{border-color:#dbe4eb;background:#fff}
+        .roster-name-input:focus{outline:none;border-color:#26a2a7;background:#fff;box-shadow:0 0 0 3px rgba(47,203,209,.14)}
+        .roster-row-actions{display:flex;align-items:center;justify-content:flex-end}
+        .roster-remove-button{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:38px;padding:.5rem .7rem;border:1px solid #fecaca;border-radius:.65rem;background:#fff;color:#b91c1c;font-size:.77rem;font-weight:800;transition:background-color 160ms ease,border-color 160ms ease,transform 160ms ease}
+        .roster-remove-button:hover{border-color:#fca5a5;background:#fff5f5;transform:translateY(-1px)}
+        .roster-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;padding:2rem 1rem;border:1px dashed #cbd5e1;border-radius:1rem;background:#f8fafc;text-align:center}
+        .roster-empty.hidden{display:none}
+        .roster-empty-icon{display:flex;align-items:center;justify-content:center;width:46px;height:46px;margin-bottom:.3rem;border-radius:1rem;background:#e4f9fa;color:#1c7a7d;font-size:1.1rem}
+        .roster-empty p{color:#334155;font-size:.92rem;font-weight:800}
+        .roster-empty>span:last-child{color:#64748b;font-size:.82rem;line-height:1.45rem}
+        .roster-footer{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1.25rem;padding-top:1.15rem;border-top:1px solid #e8eef2}
+        .roster-save-copy{display:flex;align-items:flex-start;gap:.55rem;max-width:58ch;color:#64748b;font-size:.8rem;line-height:1.45rem}
+        .roster-save-copy>i{margin-top:.18rem;flex:0 0 auto;color:#269ba2}
+        .roster-status{display:flex;align-items:flex-start;gap:.55rem;margin-top:0;padding:0;max-height:0;overflow:hidden;border-radius:.78rem;font-size:.86rem;line-height:1.45rem;opacity:0;transition:opacity 180ms ease,max-height 220ms ease,padding 180ms ease,margin 180ms ease}
+        .roster-status.is-visible{max-height:5rem;margin-top:.75rem;padding:.75rem .9rem;opacity:1}
+        .roster-status.is-success{background:#f0fdf4;color:#166534}
+        .roster-status.is-info{background:#ecfeff;color:#155e75}
+        .roster-status.is-error{background:#fef2f2;color:#b91c1c}
+        @keyframes roster-row-enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+        @media(max-width:760px){
+            .roster-admin-panel{padding:1rem!important}
+            .roster-admin-summary{align-items:flex-start}
+            .roster-heading-icon{width:2.65rem;height:2.65rem}
+            .roster-heading-title{font-size:.98rem;line-height:1.35rem}
+            .roster-heading-subtitle{font-size:.8rem}
+            .roster-summary-actions{gap:.5rem}
+            .roster-supervisor-badge{display:none}
+            .roster-intro{flex-direction:column;padding:1rem}
+            .roster-intro-side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);width:100%;align-items:stretch}
+            .roster-toolbar{align-items:stretch;flex-direction:column;gap:.65rem}
+            .roster-search-wrap{width:100%}
+            .roster-row{grid-template-columns:36px minmax(0,1fr);gap:.65rem;padding:.65rem}
+            .roster-index{width:36px;height:36px}
+            .roster-name-input{font-size:.92rem;padding:.42rem .48rem}
+            .roster-row-actions{grid-column:2;justify-content:flex-end}
+            .roster-remove-button{min-height:34px;padding:.4rem .6rem}
+            .roster-footer{align-items:stretch;flex-direction:column}
+            .roster-save-button,.roster-add-button{width:100%}
+        }
+        @media(prefers-reduced-motion:reduce){.roster-row,.roster-admin-content,.roster-heading-icon,.roster-add-button,.roster-save-button,.roster-remove-button{animation:none!important;transition:none!important}}
+
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
@@ -526,12 +613,55 @@
                     <p id="resourceLinksStatus" class="resource-save-status text-sm" role="status" aria-live="polite"><i class="fa-solid fa-circle-info mt-0.5"></i><span></span></p>
                 </div>
             </details>
-            <details id="rosterAdminPanel" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border border-brand-100">
-                <summary class="cursor-pointer font-bold text-gray-900"><i class="fa-solid fa-users-gear mr-2 text-brand-600"></i>Administrar lista de asesores</summary>
-                <p class="mt-2 text-sm text-gray-600">Una persona por línea. Esta lista se guarda en Firestore y se actualizará para el equipo.</p>
-                <textarea id="rosterEditor" rows="8" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm" aria-label="Lista de asesores"></textarea>
-                <button id="saveRosterBtn" type="button" onclick="saveRoster()" class="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar lista</button>
-                <p id="rosterStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+            <details id="rosterAdminPanel" class="roster-admin-panel hidden bg-white rounded-2xl p-4 sm:p-6 lg:p-7 mb-6 border">
+                <summary class="roster-admin-summary cursor-pointer">
+                    <span class="roster-heading-group">
+                        <span class="roster-heading-icon"><i class="fa-solid fa-users-gear"></i></span>
+                        <span class="min-w-0">
+                            <span class="roster-heading-title">Administrar lista de asesores</span>
+                            <span class="roster-heading-subtitle">Gestiona el equipo desde un panel ordenado y fácil de usar.</span>
+                        </span>
+                    </span>
+                    <span class="roster-summary-actions">
+                        <span class="roster-supervisor-badge"><i class="fa-solid fa-shield-halved"></i> Solo supervisora</span>
+                        <i class="roster-summary-arrow fa-solid fa-chevron-down"></i>
+                    </span>
+                </summary>
+                <div class="roster-admin-content">
+                    <div class="roster-intro">
+                        <div class="roster-intro-copy">
+                            <span class="roster-section-eyebrow"><i class="fa-solid fa-users mr-1.5"></i> Equipo de prospección</span>
+                            <h3>Integrantes del equipo</h3>
+                            <p>Actualiza los nombres, agrega nuevas personas o retira integrantes que ya no correspondan. Los cambios se comparten con el equipo al guardarlos.</p>
+                        </div>
+                        <div class="roster-intro-side">
+                            <span id="rosterCount" class="roster-count"><i class="fa-solid fa-user-group"></i><span>0 asesores</span></span>
+                            <button id="addRosterBtn" type="button" onclick="addRosterAdvisor()" class="roster-add-button">
+                                <i class="fa-solid fa-plus"></i><span>Agregar asesor</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="roster-toolbar">
+                        <label class="roster-search-wrap" for="rosterSearch">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input id="rosterSearch" type="search" placeholder="Buscar por nombre…" autocomplete="off" oninput="filterRosterRows()" aria-label="Buscar asesor por nombre">
+                        </label>
+                        <p class="roster-helper"><i class="fa-solid fa-circle-info"></i><span>Los reportes históricos no se eliminan al retirar un nombre de esta lista.</span></p>
+                    </div>
+                    <div id="rosterEditor" class="roster-list" aria-label="Integrantes del equipo"></div>
+                    <div id="rosterEmptyState" class="roster-empty hidden">
+                        <span class="roster-empty-icon"><i class="fa-solid fa-users"></i></span>
+                        <p id="rosterEmptyMessage">Todavía no hay asesores registrados.</p>
+                        <span>Agrega un integrante para empezar.</span>
+                    </div>
+                    <div class="roster-footer">
+                        <div class="roster-save-copy"><i class="fa-solid fa-cloud-arrow-up"></i><span>Los cambios se guardan en Firestore y se sincronizan con el equipo.</span></div>
+                        <button id="saveRosterBtn" type="button" onclick="saveRoster()" class="roster-save-button">
+                            <i class="fa-solid fa-floppy-disk"></i><span>Guardar cambios</span>
+                        </button>
+                    </div>
+                    <p id="rosterStatus" class="roster-status" role="status" aria-live="polite"><i class="fa-solid fa-circle-info"></i><span></span></p>
+                </div>
             </details>
             
             <div id="dashboardSyncOverlay" class="absolute inset-0 bg-white/80 backdrop-blur-[1px] z-50 hidden flex-col items-center justify-center rounded-xl transition-all h-full w-full">
@@ -2392,32 +2522,172 @@
             }
         }
 
+        let rosterDraftSequence = 0;
+
+        function setRosterStatus(message, type) {
+            const status = document.getElementById("rosterStatus");
+            if (!status) return;
+            const icon = status.querySelector("i");
+            const text = status.querySelector("span");
+            status.className = "roster-status" + (message ? " is-visible" : "") + (type ? " is-" + type : "");
+            if (icon) icon.className = type === "success"
+                ? "fa-solid fa-circle-check"
+                : type === "error" ? "fa-solid fa-circle-exclamation" : "fa-solid fa-circle-info";
+            if (text) text.textContent = message || "";
+        }
+
+        function createRosterRow(name, index) {
+            const row = document.createElement("article");
+            row.className = "roster-row";
+            row.dataset.rosterRow = "true";
+            row.style.animationDelay = Math.min(index * 18, 180) + "ms";
+
+            const number = document.createElement("span");
+            number.className = "roster-index";
+            number.dataset.rosterIndex = "true";
+            number.textContent = String(index + 1).padStart(2, "0");
+
+            const nameWrap = document.createElement("div");
+            nameWrap.className = "roster-name-wrap";
+            const label = document.createElement("label");
+            label.className = "roster-name-label";
+            label.textContent = "Nombre completo";
+            const input = document.createElement("input");
+            input.type = "text";
+            input.maxLength = 100;
+            input.required = true;
+            input.autocomplete = "off";
+            input.spellcheck = false;
+            input.className = "roster-name-input";
+            input.placeholder = "Escribe el nombre completo del asesor";
+            input.value = name || "";
+            input.dataset.rosterName = "true";
+            input.setAttribute("aria-label", "Nombre completo del asesor " + (index + 1));
+            label.htmlFor = "rosterNameInput_" + (++rosterDraftSequence);
+            input.id = label.htmlFor;
+            input.addEventListener("input", function() {
+                updateRosterListUI();
+                setRosterStatus("Hay cambios pendientes de guardar.", "info");
+            });
+            nameWrap.append(label, input);
+
+            const actions = document.createElement("div");
+            actions.className = "roster-row-actions";
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.className = "roster-remove-button";
+            remove.title = "Retirar de la lista";
+            remove.setAttribute("aria-label", "Retirar asesor de la lista");
+            remove.innerHTML = '<i class="fa-regular fa-trash-can"></i><span>Retirar</span>';
+            remove.addEventListener("click", function() {
+                const currentName = input.value.trim();
+                row.remove();
+                updateRosterListUI();
+                setRosterStatus(
+                    (currentName ? "«" + currentName + "» se retiró del borrador. " : "La fila se retiró del borrador. ") +
+                    "Pulsa Guardar cambios para confirmar.",
+                    "info"
+                );
+            });
+            actions.appendChild(remove);
+            row.append(number, nameWrap, actions);
+            return row;
+        }
+
+        function updateRosterListUI() {
+            const editor = document.getElementById("rosterEditor");
+            if (!editor) return;
+            const rows = Array.from(editor.querySelectorAll("[data-roster-row]"));
+            const search = document.getElementById("rosterSearch");
+            const query = search ? search.value.trim().toLocaleLowerCase("es") : "";
+            let visible = 0;
+            rows.forEach(function(row, index) {
+                const badge = row.querySelector("[data-roster-index]");
+                const input = row.querySelector("[data-roster-name]");
+                if (badge) badge.textContent = String(index + 1).padStart(2, "0");
+                if (input) input.setAttribute("aria-label", "Nombre completo del asesor " + (index + 1));
+                const matches = !query || (input && input.value.toLocaleLowerCase("es").includes(query));
+                row.classList.toggle("is-filtered-out", !matches);
+                if (matches) visible += 1;
+            });
+            const count = document.querySelector("#rosterCount span");
+            if (count) count.textContent = rows.length + (rows.length === 1 ? " asesor" : " asesores");
+            const emptyState = document.getElementById("rosterEmptyState");
+            const emptyMessage = document.getElementById("rosterEmptyMessage");
+            if (emptyState) emptyState.classList.toggle("hidden", visible > 0);
+            if (emptyMessage) {
+                emptyMessage.textContent = rows.length === 0
+                    ? "Todavía no hay asesores en la lista."
+                    : "No encontramos asesores con ese nombre.";
+            }
+        }
+
+        function filterRosterRows() {
+            updateRosterListUI();
+        }
+
+        function addRosterAdvisor() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const editor = document.getElementById("rosterEditor");
+            if (!editor) return;
+            const search = document.getElementById("rosterSearch");
+            if (search) search.value = "";
+            const row = createRosterRow("", editor.querySelectorAll("[data-roster-row]").length);
+            editor.appendChild(row);
+            updateRosterListUI();
+            setRosterStatus("Completa el nombre del nuevo asesor y luego guarda los cambios.", "info");
+            const input = row.querySelector("[data-roster-name]");
+            if (input) { input.focus(); input.select(); }
+        }
+
         function loadRosterEditor() {
             const editor = document.getElementById("rosterEditor");
-            if (editor) editor.value = advisorProfiles.map(profile => profile.asesorNombre).join("\n");
+            if (!editor) return;
+            editor.innerHTML = "";
+            const search = document.getElementById("rosterSearch");
+            if (search) search.value = "";
+            advisorProfiles.forEach(function(profile, index) {
+                editor.appendChild(createRosterRow(profile.asesorNombre, index));
+            });
+            updateRosterListUI();
         }
 
         async function saveRoster() {
-            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") {
+                setRosterStatus("Solo el perfil de supervisora puede guardar los cambios.", "error");
+                return;
+            }
             const editor = document.getElementById("rosterEditor");
-            const status = document.getElementById("rosterStatus");
-            const names = editor.value.split("\n").map(name => name.trim()).filter(Boolean);
+            const button = document.getElementById("saveRosterBtn");
+            const addButton = document.getElementById("addRosterBtn");
+            if (!editor || !button) return;
+            const rows = Array.from(editor.querySelectorAll("[data-roster-row]"));
             const nextMap = {};
-            for (const name of names) {
+            for (const row of rows) {
+                const input = row.querySelector("[data-roster-name]");
+                const name = input ? input.value.trim().replace(/\s+/g, " ") : "";
+                if (!name) {
+                    setRosterStatus("Completa todos los nombres antes de guardar o retira las filas vacías.", "error");
+                    if (input) input.focus();
+                    return;
+                }
                 const key = normalizeAdvisorKey(name);
                 if (!key || nextMap[key]) {
-                    if (status) status.textContent = "Hay un nombre duplicado o no válido. Revisa la lista.";
+                    setRosterStatus("Hay un nombre duplicado o no válido: «" + name + "». Revísalo antes de guardar.", "error");
+                    if (input) input.focus();
                     return;
                 }
                 nextMap[key] = name;
             }
             if (!Object.keys(nextMap).length) {
-                if (status) status.textContent = "Incluye al menos un asesor.";
+                setRosterStatus("La lista no puede quedar vacía. Agrega al menos un asesor.", "error");
                 return;
             }
-            const button = document.getElementById("saveRosterBtn");
-            if (button) button.disabled = true;
-            if (status) status.textContent = "Guardando lista…";
+
+            button.disabled = true;
+            if (addButton) addButton.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i><span>Guardando cambios…</span>';
+            setRosterStatus("Guardando la lista en Firestore…", "info");
             try {
                 await db.collection("appConfig").doc("roster").set({
                     advisorMap: nextMap,
@@ -2431,12 +2701,14 @@
                 loadRosterEditor();
                 subscribeToMetricsMonth(currentMetricsMonth);
                 renderDashboard();
-                if (status) status.textContent = "Lista actualizada y guardada en Firestore.";
+                setRosterStatus("Lista actualizada. Los cambios se guardaron y ya están disponibles para el equipo.", "success");
             } catch (error) {
                 console.error("No se pudo guardar el listado de asesores:", error);
-                if (status) status.textContent = "No se pudo guardar. Revisa los permisos de Camila en Firestore.";
+                setRosterStatus("No se pudo guardar. Revisa la conexión y los permisos de Camila en Firestore.", "error");
             } finally {
-                if (button) button.disabled = false;
+                button.disabled = false;
+                if (addButton) addButton.disabled = false;
+                button.innerHTML = '<i class="fa-solid fa-floppy-disk"></i><span>Guardar cambios</span>';
             }
         }
 

@@ -571,6 +571,8 @@
         let signedInProfile = null;
         let sharedTrackerData = null;
         let sharedAvanceRows = null;
+        let sharedMobilityRows = null;
+        let isMovilidadEditMode = false;
         let trackerUnsubscribe = null;
         let metricsUnsubscribe = null;
         let currentMetricsMonth = getCurrentMonthKey();
@@ -639,21 +641,27 @@
             const asesorTab = tabButtons[0];
             const dashboardTab = tabButtons[1];
             const avanceTab = tabButtons[2];
+            const movilidadTab = tabButtons[3];
             const role = signedInProfile.role;
 
             document.getElementById("signedInEmail").textContent = signedInUser.email || "";
             document.getElementById("signOutBtn").classList.remove("hidden");
 
             document.getElementById("btnToggleEdit").classList.toggle("hidden", role !== "supervisor");
+            document.getElementById("btnEditMovilidad").classList.toggle("hidden", role !== "supervisor");
+            document.getElementById("rosterAdminPanel").classList.toggle("hidden", role !== "supervisor");
 
             if (role === "supervisor") {
                 asesorTab.classList.add("hidden");
                 dashboardTab.classList.remove("hidden");
                 avanceTab.classList.remove("hidden");
+                movilidadTab.classList.remove("hidden");
+                loadRosterEditor();
                 switchTab("jefatura");
             } else if (role === "asesor") {
                 dashboardTab.classList.add("hidden");
                 avanceTab.classList.remove("hidden");
+                movilidadTab.classList.remove("hidden");
                 asesorTab.classList.remove("hidden");
                 const advisorName = signedInProfile.asesorNombre;
                 if (!advisorName) {
@@ -669,11 +677,13 @@
                 asesorTab.classList.add("hidden");
                 dashboardTab.classList.add("hidden");
                 avanceTab.classList.remove("hidden");
+                movilidadTab.classList.remove("hidden");
                 switchTab("avance");
             } else if (role === "asesor_compartido") {
                 dashboardTab.classList.add("hidden");
                 asesorTab.classList.remove("hidden");
                 avanceTab.classList.remove("hidden");
+                movilidadTab.classList.remove("hidden");
                 asesorSelect.disabled = false;
                 asesorSelect.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
                 advisorProfiles.forEach(profile => {
@@ -981,6 +991,7 @@
                                     ...baseRow,
                                     meta: Math.max(0, Number(oldRow.meta) || 0),
                                     avance: Math.max(0, Number(oldRow.avance) || 0),
+                                    referidos: Math.max(0, Number(oldRow.referidos) || 0),
                                     proyeccion: Math.max(0, Number(oldRow.proyeccion) || 0)
                                 };
                             });
@@ -1018,6 +1029,7 @@
                         asesor: row.asesor,
                         meta: Math.max(0, Number(row.meta) || 0),
                         avance: Math.max(0, Number(row.avance) || 0),
+                        referidos: Math.max(0, Number(row.referidos) || 0),
                         proyeccion: Math.max(0, Number(row.proyeccion) || 0)
                     }));
 
@@ -1083,6 +1095,7 @@
                 asesor: profile.asesorNombre,
                 meta: 0,
                 avance: 0,
+                referidos: 0,
                 proyeccion: 0
             }));
         }
@@ -1165,13 +1178,15 @@
             
             document.getElementById(tabId).classList.add('active');
             
-            const btnMap = { 'asesor': 0, 'jefatura': 1, 'avance': 2 };
+            const btnMap = { 'asesor': 0, 'jefatura': 1, 'avance': 2, 'movilidades': 3 };
             document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
 
             if(tabId === 'jefatura') { 
                 renderDashboard(); 
             } else if(tabId === 'avance') {
                 renderAvance();
+            } else if(tabId === 'movilidades') {
+                renderMovilidades();
             }
         }
 
@@ -1519,6 +1534,7 @@
                 
                 let metaCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.meta}" onchange="updateAvance(${idx}, 'meta', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.meta}</span>`;
                 let avanceCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.avance}" onchange="updateAvance(${idx}, 'avance', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.avance}</span>`;
+                let referidosCell = isAvanceEditMode ? `<input type="number" min="0" class="w-20 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${Number(row.referidos || 0)}" onchange="updateAvance(${idx}, 'referidos', this.value)" aria-label="Referidos postulantes de ${row.asesor}">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${Number(row.referidos || 0)}</span>`;
                 let proyeccionCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.proyeccion}" onchange="updateAvance(${idx}, 'proyeccion', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.proyeccion}</span>`;
 
                 tr.innerHTML = `
@@ -1526,6 +1542,7 @@
                     <td class="px-2 py-4 text-center">${metaCell}</td>
                     <td class="px-2 py-4 text-center">${avanceCell}</td>
                     <td class="px-2 sm:px-4 py-4 text-center"><span class="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full border ${getAvanceBadgeColor(pct1)}">${pct1}%</span></td>
+                    <td class="px-2 py-4 text-center">${referidosCell}</td>
                     <td class="px-2 py-4 text-center">${proyeccionCell}</td>
                     <td class="px-2 sm:px-4 py-4 text-center text-xs sm:text-sm font-bold text-gray-900">${logroFinal}</td>
                     <td class="px-2 sm:px-4 py-4 text-center"><span class="px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full border ${getAvanceBadgeColor(pct2)}">${pct2}%</span></td>
@@ -1555,7 +1572,7 @@
 
         function updateAvance(idx, field, val) {
             if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
-            if (!["meta", "avance", "proyeccion"].includes(field)) return;
+            if (!["meta", "avance", "referidos", "proyeccion"].includes(field)) return;
 
             const numericValue = Number(val);
             if (!Number.isFinite(numericValue) || numericValue < 0) {

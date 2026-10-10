@@ -587,6 +587,7 @@
         let sharedAvanceRows = null;
         let sharedMobilityRows = null;
         let isMovilidadEditMode = false;
+        let protectedResourceLinks = {};
         let trackerUnsubscribe = null;
         let metricsUnsubscribe = null;
         let currentMetricsMonth = getCurrentMonthKey();
@@ -664,6 +665,7 @@
             document.getElementById("btnToggleEdit").classList.toggle("hidden", role !== "supervisor");
             document.getElementById("btnEditMovilidad").classList.toggle("hidden", role !== "supervisor");
             document.getElementById("rosterAdminPanel").classList.toggle("hidden", role !== "supervisor");
+            document.getElementById("resourceAdminPanel").classList.toggle("hidden", role !== "supervisor");
 
             if (role === "supervisor") {
                 asesorTab.classList.add("hidden");
@@ -1132,6 +1134,8 @@
             const links = resourcesDoc.exists && resourcesDoc.data().links
                 ? resourcesDoc.data().links
                 : {};
+            protectedResourceLinks = { ...links };
+            populateResourceLinksEditor();
 
             anchors.forEach(anchor => {
                 const key = anchor.dataset.resourceKey;

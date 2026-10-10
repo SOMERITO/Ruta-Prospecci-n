@@ -80,6 +80,16 @@
 @keyframes rp-enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}@keyframes rp-card{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
+     
+        .resource-add-button,.resource-delete-button{transition:transform 160ms ease,box-shadow 160ms ease,background-color 160ms ease}
+        .resource-add-button:hover,.resource-delete-button:hover{transform:translateY(-1px);box-shadow:0 6px 14px rgba(9,41,42,.1)}
+        .resource-delete-button{color:#b91c1c;background:#fff;border:1px solid #fecaca;border-radius:.65rem;padding:.4rem .65rem;font-size:.75rem;font-weight:800}
+        .resource-name-input,.resource-description-input,.resource-link-input,.resource-category-select{display:block;width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:.75rem;padding:.7rem .8rem;color:#0f172a;background:#f8fafc;font-size:.875rem;line-height:1.35rem;transition:border-color 160ms ease,background-color 160ms ease,box-shadow 160ms ease}
+        .resource-name-input{font-weight:800;background:#fff}.resource-name-input:focus,.resource-description-input:focus,.resource-link-input:focus,.resource-category-select:focus{outline:none;border-color:#26a2a7;background:#fff;box-shadow:0 0 0 3px rgba(47,203,209,.16)}
+        .custom-team-link{min-width:0;border:1px solid #e2e8f0;border-radius:1rem;background:#fff;padding:1rem;box-shadow:0 1px 2px rgba(15,23,42,.035);animation:rp-card 320ms ease both;transition:transform 180ms ease,border-color 180ms ease,box-shadow 180ms ease}
+        .custom-team-link:hover{border-color:#9bdfe3;box-shadow:0 10px 24px rgba(9,41,42,.07);transform:translateY(-2px)}
+        .custom-team-link a{color:#fff;text-decoration:none}.custom-team-link a:focus-visible{outline:3px solid rgba(47,203,209,.5);outline-offset:3px;border-radius:.5rem}
+
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
@@ -176,6 +186,14 @@
                     </div>
                 </div>
             </div>
+
+            <section id="customTeamLinks" class="hidden bg-white rounded-2xl border border-brand-100 p-4 sm:p-5 mb-6 shadow-sm">
+                <div class="flex items-start gap-3 mb-4">
+                    <span class="resource-card-icon"><i class="fa-solid fa-bookmark"></i></span>
+                    <div><h2 class="text-base sm:text-lg font-extrabold text-gray-900">Enlaces del equipo</h2><p class="mt-1 text-sm text-gray-500">Recursos adicionales publicados por la supervisora.</p></div>
+                </div>
+                <div id="customTeamLinksGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+            </section>
 
             <div id="trackerWorkspace" class="transition-opacity duration-500 opacity-0 pointer-events-none">
                 
@@ -446,7 +464,10 @@
                 <div class="resource-admin-content pt-5">
                     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 rounded-2xl border border-brand-100 bg-gradient-to-r from-brand-50 to-white p-4">
                         <div class="max-w-2xl"><p class="font-bold text-gray-900"><i class="fa-solid fa-wand-magic-sparkles mr-2 text-brand-700"></i>Centro de enlaces</p><p class="mt-1 text-sm leading-6 text-gray-600">Actualiza las direcciones web de cada herramienta. Los cambios se guardan en la nube y se reflejan en los accesos del equipo.</p></div>
-                        <div id="resourceLinksSummary" class="inline-flex w-fit flex-shrink-0 items-center gap-2 rounded-xl bg-white border border-brand-100 px-3 py-2 text-sm font-bold text-brand-900" aria-live="polite"><i class="fa-solid fa-circle-check text-brand-600"></i><span>Comprobando enlaces…</span></div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div id="resourceLinksSummary" class="inline-flex w-fit flex-shrink-0 items-center gap-2 rounded-xl bg-white border border-brand-100 px-3 py-2 text-sm font-bold text-brand-900" aria-live="polite"><i class="fa-solid fa-circle-check text-brand-600"></i><span>Comprobando enlaces…</span></div>
+                            <button id="addResourceLinkBtn" type="button" onclick="addResourceLink()" class="resource-add-button inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-brand-200 bg-white px-4 py-2.5 text-sm font-extrabold text-brand-900 hover:bg-brand-50"><i class="fa-solid fa-plus"></i>Agregar enlace</button>
+                        </div>
                     </div>
                     <div id="resourceLinksEditor" class="mt-6 space-y-6" aria-label="Editor visual de enlaces operativos"></div>
                     <div class="mt-6 flex flex-col sm:flex-row sm:items-center gap-3 border-t border-gray-100 pt-5">
@@ -554,8 +575,8 @@
 
         <div id="movilidades" class="tab-content">
             <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-bold text-gray-900"><i class="fa-solid fa-taxi mr-2 text-brand-600"></i>Avanza</h3><p class="mt-2 text-sm text-gray-600">Portal de programación de movilidad.</p><a href="#" data-resource-key="avanza" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-arrow-up-right-from-square mr-2"></i>Abrir Avanza</a></div>
-                <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-bold text-gray-900"><i class="fa-solid fa-file-lines mr-2 text-brand-600"></i>Plantilla VAN Promotor</h3><p class="mt-2 text-sm text-gray-600">Abrir la plantilla para programar la movilidad en VAN.</p><a href="#" data-resource-key="plantillaVan" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-arrow-up-right-from-square mr-2"></i>Abrir plantilla</a></div>
+                <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-bold text-gray-900"><i class="fa-solid fa-taxi mr-2 text-brand-600"></i><span data-resource-label-for="avanza">Avanza</span></h3><p class="mt-2 text-sm text-gray-600">Portal de programación de movilidad.</p><a href="#" data-resource-key="avanza" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-arrow-up-right-from-square mr-2"></i><span data-resource-open-label="avanza">Abrir Avanza</span></a></div>
+                <div class="rounded-xl border border-gray-200 bg-white p-4 sm:p-5 shadow-sm"><h3 class="font-bold text-gray-900"><i class="fa-solid fa-file-lines mr-2 text-brand-600"></i><span data-resource-label-for="plantillaVan">Plantilla VAN Promotor</span></h3><p class="mt-2 text-sm text-gray-600">Abrir la plantilla para programar la movilidad en VAN.</p><a href="#" data-resource-key="plantillaVan" target="_blank" rel="noopener noreferrer" class="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-arrow-up-right-from-square mr-2"></i><span data-resource-open-label="plantillaVan">Abrir plantilla</span></a></div>
             </section>
             <section class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border-t-4 border-brand-600">
                 <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
@@ -628,6 +649,7 @@
         let sharedMobilityRows = null;
         let isMovilidadEditMode = false;
         let protectedResourceLinks = {};
+        let protectedResourceMeta = {};
         let trackerUnsubscribe = null;
         let metricsUnsubscribe = null;
         let currentMetricsMonth = getCurrentMonthKey();
@@ -1176,11 +1198,13 @@
         async function loadProtectedResources() {
             const anchors = Array.from(document.querySelectorAll("a[data-resource-key]"));
             const resourcesDoc = await db.collection("appConfig").doc("resources").get();
-            const links = resourcesDoc.exists && resourcesDoc.data().links
-                ? resourcesDoc.data().links
-                : {};
+            const data = resourcesDoc.exists ? (resourcesDoc.data() || {}) : {};
+            const links = data.links && typeof data.links === "object" ? data.links : {};
+            const linkMeta = data.linkMeta && typeof data.linkMeta === "object" ? data.linkMeta : {};
             protectedResourceLinks = { ...links };
+            protectedResourceMeta = { ...linkMeta };
             populateResourceLinksEditor();
+            renderCustomTeamLinks();
 
             anchors.forEach(anchor => {
                 const key = anchor.dataset.resourceKey;
@@ -1189,17 +1213,13 @@
                 try {
                     const parsed = new URL(typeof value === "string" ? value : "");
                     if (parsed.protocol === "https:" || parsed.protocol === "http:") safeUrl = parsed.href;
-                } catch (_) {
-                    safeUrl = null;
-                }
-
+                } catch (_) { safeUrl = null; }
                 if (safeUrl) {
                     anchor.href = safeUrl;
                     anchor.target = "_blank";
                     anchor.rel = "noopener noreferrer";
                     anchor.classList.remove("opacity-50", "pointer-events-none");
                     anchor.removeAttribute("aria-disabled");
-                    anchor.title = anchor.title || "Abrir recurso del equipo";
                 } else {
                     anchor.removeAttribute("href");
                     anchor.classList.add("opacity-50", "pointer-events-none");
@@ -1207,6 +1227,7 @@
                     anchor.title = "Recurso pendiente de configuración";
                 }
             });
+            applyResourceLabels();
         }
 
         const dateInput = document.getElementById('trackerDate');
@@ -1891,61 +1912,393 @@
         }
 
 
-        const RESOURCE_LINK_SECTIONS=[
-          {title:"Accesos principales",description:"Herramientas para ingresar y organizar la operación.",icon:"fa-solid fa-compass",items:[
-            {key:"intranet",label:"Intranet Wiener",description:"Portal interno institucional.",icon:"fa-solid fa-building"},
-            {key:"crmZoho",label:"CRM Zoho",description:"Panel de seguimiento en el CRM.",icon:"fa-solid fa-chart-line"},
-            {key:"avanza",label:"Avanza",description:"Portal de programación de movilidad.",icon:"fa-solid fa-car-side"},
-            {key:"plantillaVan",label:"Plantilla VAN Promotor",description:"Formato para programar movilidad en VAN.",icon:"fa-solid fa-file-excel"}]},
-          {title:"Registros y seguimiento",description:"Formularios y herramientas para mantener actualizada la información.",icon:"fa-solid fa-clipboard-check",items:[
-            {key:"matrizSolicitudes",label:"Matriz de solicitudes",description:"Registro y control de solicitudes de trabajo.",icon:"fa-solid fa-table-cells-large"},
-            {key:"registroFichasDatos",label:"Registro de fichas de datos",description:"Formulario de registro de fichas.",icon:"fa-solid fa-file-circle-plus"},
-            {key:"digitalizacionFichas",label:"Digitalización de fichas",description:"Acceso al sistema de digitalización.",icon:"fa-solid fa-file-arrow-up"},
-            {key:"actualizacionFichas",label:"Actualización de fichas",description:"Formulario para actualizar datos.",icon:"fa-solid fa-pen-to-square"},
-            {key:"statusCartera",label:"Cartera de colegios",description:"Seguimiento y estatus de la cartera.",icon:"fa-solid fa-folder-open"}]},
-          {title:"Coordinación del equipo",description:"Enlaces para organizar rutas y reportes.",icon:"fa-solid fa-people-group",items:[
-            {key:"grupoRutasUbicaciones",label:"Grupo de rutas y ubicaciones",description:"Acceso al grupo operativo de rutas.",icon:"fa-solid fa-map-location-dot"},
-            {key:"grupoInformeActividades",label:"Grupo de informe de actividades",description:"Acceso al grupo para informes de actividades.",icon:"fa-solid fa-clipboard-list"}]}
+        const RESOURCE_LINK_CATEGORIES = [
+            { key: "primary", label: "Accesos principales" },
+            { key: "tracking", label: "Registros y seguimiento" },
+            { key: "team", label: "Coordinación del equipo" },
+            { key: "extras", label: "Enlaces del equipo" }
         ];
-        const OBSOLETE_RESOURCE_KEYS=new Set(["taxiDirecto","cabify","formularioMaterial","driveMovilidades"]);
-        function getResourceLinkState(value){const url=String(value||"").trim();if(!url)return{state:"pending",label:"Pendiente",icon:"fa-regular fa-circle"};try{const parsed=new URL(url);if(parsed.protocol==="https:")return{state:"configured",label:"Configurado",icon:"fa-solid fa-circle-check"};}catch(_){}return{state:"invalid",label:"Revisar URL",icon:"fa-solid fa-triangle-exclamation"};}
-        function makeResourceStateBadge(){const b=document.createElement("span");b.dataset.resourceState="true";b.className="resource-state is-pending";return b;}
-        function updateResourceCardStatus(card,input){const b=card.querySelector("[data-resource-state]");if(!b)return;const s=getResourceLinkState(input.value);b.className="resource-state is-"+s.state;b.innerHTML='<i class="'+s.icon+'"></i><span>'+s.label+'</span>';card.classList.toggle("resource-card-invalid",s.state==="invalid");}
-        function updateResourceLinksSummary(){const summary=document.getElementById("resourceLinksSummary"),editor=document.getElementById("resourceLinksEditor");if(!summary||!editor)return;const inputs=Array.from(editor.querySelectorAll("[data-resource-link-input]"));const n=inputs.filter(function(i){return getResourceLinkState(i.value).state==="configured";}).length;const span=summary.querySelector("span");if(span)span.textContent=n+" de "+inputs.length+" enlaces configurados";const icon=summary.querySelector("i");if(icon)icon.className=n===inputs.length?"fa-solid fa-circle-check text-brand-600":"fa-solid fa-link text-brand-600";}
-        function createResourceLinkCard(item,value,index){
-          const card=document.createElement("article");card.className="resource-link-card";card.style.setProperty("--resource-delay",(index*36)+"ms");card.dataset.resourceCard=item.key;
-          const top=document.createElement("div");top.className="flex items-start gap-3";const ico=document.createElement("span");ico.className="resource-card-icon";const glyph=document.createElement("i");glyph.className=item.icon||"fa-solid fa-link";ico.appendChild(glyph);
-          const heading=document.createElement("div");heading.className="min-w-0 flex-1";const row=document.createElement("div");row.className="flex flex-wrap items-center justify-between gap-2";
-          const title=document.createElement("h4");title.className="font-extrabold text-gray-900 leading-5";title.textContent=item.label;const badge=makeResourceStateBadge();row.append(title,badge);
-          const desc=document.createElement("p");desc.className="mt-1.5 text-sm leading-5 text-gray-500";desc.textContent=item.description||"Dirección web de un recurso del equipo.";heading.append(row,desc);top.append(ico,heading);
-          const label=document.createElement("label");label.className="mt-4 mb-1.5 block text-xs font-extrabold uppercase tracking-wide text-gray-500";label.htmlFor="resourceUrl_"+item.key;label.textContent="Dirección web";
-          const input=document.createElement("input");input.id="resourceUrl_"+item.key;input.type="url";input.inputMode="url";input.autocomplete="off";input.spellcheck=false;input.placeholder="Pega aquí el enlace https://…";input.className="resource-link-input";input.value=String(value||"");input.dataset.resourceLinkInput="true";input.dataset.resourceKey=item.key;input.setAttribute("aria-label","URL de "+item.label);input.addEventListener("input",function(){updateResourceCardStatus(card,input);updateResourceLinksSummary();});
-          card.append(top,label,input);updateResourceCardStatus(card,input);return card;
+        const DEFAULT_RESOURCE_ITEMS = [
+            {key:"intranet",label:"Intranet Wiener",description:"Portal interno institucional.",icon:"fa-solid fa-building",category:"primary"},
+            {key:"crmZoho",label:"CRM Zoho",description:"Panel de seguimiento en el CRM.",icon:"fa-solid fa-chart-line",category:"primary"},
+            {key:"avanza",label:"Avanza",description:"Portal de programación de movilidad.",icon:"fa-solid fa-car-side",category:"primary"},
+            {key:"plantillaVan",label:"Plantilla VAN Promotor",description:"Formato para programar movilidad en VAN.",icon:"fa-solid fa-file-excel",category:"primary"},
+            {key:"matrizSolicitudes",label:"Matriz de solicitudes",description:"Registro y control de solicitudes de trabajo.",icon:"fa-solid fa-table-cells-large",category:"tracking"},
+            {key:"registroFichasDatos",label:"Registro de fichas de datos",description:"Formulario de registro de fichas.",icon:"fa-solid fa-file-circle-plus",category:"tracking"},
+            {key:"digitalizacionFichas",label:"Digitalización de fichas",description:"Acceso al sistema de digitalización.",icon:"fa-solid fa-file-arrow-up",category:"tracking"},
+            {key:"actualizacionFichas",label:"Actualización de fichas",description:"Formulario para actualizar datos.",icon:"fa-solid fa-pen-to-square",category:"tracking"},
+            {key:"statusCartera",label:"Cartera de colegios",description:"Seguimiento y estatus de la cartera.",icon:"fa-solid fa-folder-open",category:"tracking"},
+            {key:"grupoRutasUbicaciones",label:"Grupo de rutas y ubicaciones",description:"Acceso al grupo operativo de rutas.",icon:"fa-solid fa-map-location-dot",category:"team"},
+            {key:"grupoInformeActividades",label:"Grupo de informe de actividades",description:"Acceso al grupo para informes de actividades.",icon:"fa-solid fa-clipboard-list",category:"team"}
+        ];
+        const OBSOLETE_RESOURCE_KEYS = new Set(["taxiDirecto","cabify","formularioMaterial","driveMovilidades"]);
+        let pendingResourceLinkCounter = 0;
+
+        function humanizeResourceKey(key) {
+            return String(key).replace(/([a-z0-9])([A-Z])/g,"$1 $2").replace(/^./,function(c){return c.toUpperCase();});
         }
-        function humanizeResourceKey(key){return String(key).replace(/([a-z0-9])([A-Z])/g,"$1 $2").replace(/^./,function(c){return c.toUpperCase();});}
-        function populateResourceLinksEditor(){
-          const editor=document.getElementById("resourceLinksEditor");if(!editor)return;const links={...protectedResourceLinks};OBSOLETE_RESOURCE_KEYS.forEach(function(k){delete links[k];});editor.innerHTML="";
-          const known=new Set();let index=0;
-          RESOURCE_LINK_SECTIONS.forEach(function(data){const section=document.createElement("section");section.className="resource-link-section";const header=document.createElement("div");header.className="mb-3 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1.5";
-            const group=document.createElement("div");group.className="flex items-center gap-2";const ico=document.createElement("i");ico.className=data.icon+" text-brand-700";const h=document.createElement("h3");h.className="text-sm sm:text-base font-extrabold text-gray-900";h.textContent=data.title;group.append(ico,h);
-            const desc=document.createElement("p");desc.className="text-xs sm:text-sm text-gray-500";desc.textContent=data.description;header.append(group,desc);const grid=document.createElement("div");grid.className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4";
-            data.items.forEach(function(item){known.add(item.key);grid.appendChild(createResourceLinkCard(item,links[item.key]||"",index++));});section.append(header,grid);editor.appendChild(section);});
-          const extra=Object.keys(links).filter(function(k){return!known.has(k)&&!OBSOLETE_RESOURCE_KEYS.has(k)&&/^[A-Za-z][A-Za-z0-9]*$/.test(k);}).sort();
-          if(extra.length){const section=document.createElement("section");section.className="resource-link-section";const h=document.createElement("h3");h.className="mb-3 text-sm sm:text-base font-extrabold text-gray-900";h.innerHTML='<i class="fa-solid fa-link mr-2 text-brand-700"></i>Otros enlaces';
-            const desc=document.createElement("p");desc.className="mb-3 text-xs sm:text-sm text-gray-500";desc.textContent="Se conservarán también los enlaces adicionales que ya están configurados.";const grid=document.createElement("div");grid.className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4";
-            extra.forEach(function(k){grid.appendChild(createResourceLinkCard({key:k,label:humanizeResourceKey(k),description:"Enlace adicional del equipo.",icon:"fa-solid fa-link"},links[k],index++));});section.append(h,desc,grid);editor.appendChild(section);}
-          updateResourceLinksSummary();
+        function getDefaultResource(key) {
+            return DEFAULT_RESOURCE_ITEMS.find(function(item){return item.key === key;}) || null;
         }
-        function setResourceLinksStatus(message,type){const status=document.getElementById("resourceLinksStatus");if(!status)return;const icon=status.querySelector("i"),span=status.querySelector("span");status.className="resource-save-status"+(message?" is-visible":"")+(type?" is-"+type:"");if(icon)icon.className=type==="success"?"fa-solid fa-circle-check mt-0.5":type==="error"?"fa-solid fa-circle-exclamation mt-0.5":"fa-solid fa-circle-info mt-0.5";if(span)span.textContent=message||"";}
-        async function saveResourceLinks(){
-          if(!signedInUser||!signedInProfile||signedInProfile.role!=="supervisor"){setResourceLinksStatus("Solo el perfil de supervisora puede guardar estos cambios.","error");return;}
-          const editor=document.getElementById("resourceLinksEditor"),button=document.getElementById("saveResourceLinksBtn");if(!editor||!button)return;const next={},inputs=Array.from(editor.querySelectorAll("[data-resource-link-input]")),seen=new Set();
-          for(const input of inputs){const key=String(input.dataset.resourceKey||"").trim(),value=input.value.trim();if(!/^[A-Za-z][A-Za-z0-9]*$/.test(key)||seen.has(key)){setResourceLinksStatus("Hay una clave inválida o repetida. Recarga el panel y vuelve a intentarlo.","error");input.focus();return;}seen.add(key);if(!value)continue;
-            try{const url=new URL(value);if(url.protocol!=="https:")throw Error("https required");next[key]=url.href;}catch(_){setResourceLinksStatus("Revisa el enlace de «"+key+"». Debe ser una URL completa y comenzar con https://.","error");input.focus();const card=input.closest("[data-resource-card]");if(card)card.classList.add("resource-card-invalid");return;}}
-          OBSOLETE_RESOURCE_KEYS.forEach(function(k){delete next[k];});button.disabled=true;button.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Guardando cambios…';setResourceLinksStatus("Guardando los enlaces en tiempo real…","info");
-          try{await db.collection("appConfig").doc("resources").set({links:next,updatedBy:signedInUser.uid,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});protectedResourceLinks=next;await loadProtectedResources();setResourceLinksStatus("Cambios guardados. Los accesos del equipo ya están actualizados.","success");}
-          catch(error){console.error("No se pudieron guardar los enlaces operativos:",error);setResourceLinksStatus("No se pudo guardar. Verifica la conexión y los permisos de la cuenta supervisora.","error");}
-          finally{button.disabled=false;button.innerHTML='<i class="fa-solid fa-floppy-disk mr-2"></i>Guardar cambios';}
+        function getResourceMeta(key, fallbackCustom) {
+            const saved = protectedResourceMeta[key] && typeof protectedResourceMeta[key] === "object" ? protectedResourceMeta[key] : {};
+            const base = getDefaultResource(key);
+            const categories = new Set(RESOURCE_LINK_CATEGORIES.map(function(item){return item.key;}));
+            return {
+                key: key,
+                label: String(saved.label || (base && base.label) || humanizeResourceKey(key)),
+                description: String(saved.description !== undefined ? saved.description : ((base && base.description) || "Enlace adicional del equipo.")),
+                category: categories.has(saved.category) ? saved.category : ((base && base.category) || "extras"),
+                custom: typeof saved.custom === "boolean" ? saved.custom : Boolean(fallbackCustom && !base),
+                icon: String((base && base.icon) || saved.icon || "fa-solid fa-link")
+            };
+        }
+        function getResourceLinkState(value) {
+            const url = String(value || "").trim();
+            if (!url) return {state:"pending",label:"Pendiente",icon:"fa-regular fa-circle"};
+            try { const parsed = new URL(url); if (parsed.protocol === "https:") return {state:"configured",label:"Configurado",icon:"fa-solid fa-circle-check"}; } catch (_) {}
+            return {state:"invalid",label:"Revisar URL",icon:"fa-solid fa-triangle-exclamation"};
+        }
+        function updateResourceCardStatus(card) {
+            const input = card.querySelector('[data-resource-field="url"]');
+            const badge = card.querySelector("[data-resource-state]");
+            if (!input || !badge) return;
+            const state = getResourceLinkState(input.value);
+            badge.className = "resource-state is-" + state.state;
+            badge.innerHTML = '<i class="' + state.icon + '"></i><span>' + state.label + '</span>';
+            card.classList.toggle("resource-card-invalid", state.state === "invalid");
+        }
+        function updateResourceLinksSummary() {
+            const summary = document.getElementById("resourceLinksSummary");
+            const editor = document.getElementById("resourceLinksEditor");
+            if (!summary || !editor) return;
+            const cards = Array.from(editor.querySelectorAll("[data-resource-card]"));
+            const configured = cards.filter(function(card){return getResourceLinkState(card.querySelector('[data-resource-field="url"]').value).state === "configured";}).length;
+            const span = summary.querySelector("span");
+            if (span) span.textContent = configured + " de " + cards.length + " enlaces con URL válida";
+            const icon = summary.querySelector("i");
+            if (icon) icon.className = configured === cards.length ? "fa-solid fa-circle-check text-brand-600" : "fa-solid fa-link text-brand-600";
+        }
+        function makeResourceFieldLabel(text, htmlFor) {
+            const label = document.createElement("label");
+            label.className = "mb-1.5 mt-3 block text-xs font-extrabold uppercase tracking-wide text-gray-500";
+            label.textContent = text;
+            label.htmlFor = htmlFor;
+            return label;
+        }
+        function createResourceLinkCard(item, url, index) {
+            const card = document.createElement("article");
+            card.className = "resource-link-card";
+            card.style.setProperty("--resource-delay", (index * 24) + "ms");
+            card.dataset.resourceCard = item.key;
+            card.dataset.resourceCustom = item.custom ? "true" : "false";
+            const top = document.createElement("div");
+            top.className = "flex items-start gap-3";
+            const icon = document.createElement("span");
+            icon.className = "resource-card-icon";
+            const glyph = document.createElement("i");
+            glyph.className = item.icon || "fa-solid fa-link";
+            icon.appendChild(glyph);
+            const heading = document.createElement("div");
+            heading.className = "min-w-0 flex-1";
+            const titleRow = document.createElement("div");
+            titleRow.className = "flex flex-wrap items-center gap-2";
+            const nameId = "resourceName_" + item.key;
+            const nameInput = document.createElement("input");
+            nameInput.id = nameId;
+            nameInput.type = "text";
+            nameInput.maxLength = 80;
+            nameInput.required = true;
+            nameInput.placeholder = "Nombre visible del enlace";
+            nameInput.className = "resource-name-input flex-1";
+            nameInput.value = item.label;
+            nameInput.dataset.resourceField = "label";
+            nameInput.setAttribute("aria-label", "Nombre visible de " + item.label);
+            const badge = document.createElement("span");
+            badge.dataset.resourceState = "true";
+            badge.className = "resource-state is-pending";
+            titleRow.append(nameInput, badge);
+            const hint = document.createElement("p");
+            hint.className = "mt-1.5 text-xs text-gray-500";
+            hint.textContent = item.custom ? "Enlace adicional; puedes quitarlo si ya no se usa." : "Acceso del sistema; puedes cambiar su nombre y dirección.";
+            heading.append(titleRow, hint);
+            top.append(icon, heading);
+            const urlId = "resourceUrl_" + item.key;
+            const urlLabel = makeResourceFieldLabel("Dirección web", urlId);
+            const urlInput = document.createElement("input");
+            urlInput.id = urlId;
+            urlInput.type = "url";
+            urlInput.inputMode = "url";
+            urlInput.autocomplete = "off";
+            urlInput.spellcheck = false;
+            urlInput.placeholder = "https://…";
+            urlInput.className = "resource-link-input";
+            urlInput.value = String(url || "");
+            urlInput.dataset.resourceField = "url";
+            urlInput.setAttribute("aria-label", "URL de " + item.label);
+            urlInput.addEventListener("input", function(){ updateResourceCardStatus(card); updateResourceLinksSummary(); });
+            const descId = "resourceDescription_" + item.key;
+            const descLabel = makeResourceFieldLabel("Descripción (opcional)", descId);
+            const descInput = document.createElement("input");
+            descInput.id = descId;
+            descInput.type = "text";
+            descInput.maxLength = 160;
+            descInput.placeholder = "¿Para qué sirve este enlace?";
+            descInput.className = "resource-description-input";
+            descInput.value = item.description || "";
+            descInput.dataset.resourceField = "description";
+            const categoryId = "resourceCategory_" + item.key;
+            const categoryLabel = makeResourceFieldLabel("Sección donde aparecerá", categoryId);
+            const categorySelect = document.createElement("select");
+            categorySelect.id = categoryId;
+            categorySelect.className = "resource-category-select";
+            categorySelect.dataset.resourceField = "category";
+            RESOURCE_LINK_CATEGORIES.forEach(function(category){
+                const option = document.createElement("option");
+                option.value = category.key;
+                option.textContent = category.label;
+                option.selected = category.key === item.category;
+                categorySelect.appendChild(option);
+            });
+            const fields = document.createElement("div");
+            fields.className = "grid grid-cols-1 gap-x-3 sm:grid-cols-2";
+            fields.append(urlLabel, urlInput, descLabel, descInput, categoryLabel, categorySelect);
+            card.append(top, fields);
+            if (item.custom) {
+                const actions = document.createElement("div");
+                actions.className = "mt-4 flex justify-end border-t border-gray-100 pt-3";
+                const remove = document.createElement("button");
+                remove.type = "button";
+                remove.className = "resource-delete-button";
+                remove.innerHTML = '<i class="fa-regular fa-trash-can mr-1.5"></i>Quitar enlace';
+                remove.addEventListener("click", function(){
+                    card.remove();
+                    updateResourceLinksSummary();
+                    setResourceLinksStatus("Enlace retirado del borrador. Pulsa «Guardar cambios» para confirmar la eliminación.", "info");
+                });
+                actions.appendChild(remove);
+                card.appendChild(actions);
+            }
+            updateResourceCardStatus(card);
+            return card;
+        }
+        function populateResourceLinksEditor() {
+            const editor = document.getElementById("resourceLinksEditor");
+            if (!editor) return;
+            const links = {...protectedResourceLinks};
+            OBSOLETE_RESOURCE_KEYS.forEach(function(key){delete links[key];});
+            const keys = new Set(DEFAULT_RESOURCE_ITEMS.map(function(item){return item.key;}));
+            Object.keys(links).forEach(function(key){keys.add(key);});
+            Object.keys(protectedResourceMeta).forEach(function(key){if (!OBSOLETE_RESOURCE_KEYS.has(key)) keys.add(key);});
+            const prepared = Array.from(keys).filter(function(key){return /^[A-Za-z][A-Za-z0-9]*$/.test(key) && !OBSOLETE_RESOURCE_KEYS.has(key);}).map(function(key){
+                return getResourceMeta(key, !getDefaultResource(key));
+            });
+            editor.innerHTML = "";
+            const grids = {};
+            RESOURCE_LINK_CATEGORIES.forEach(function(category){
+                const section = document.createElement("section");
+                section.className = "resource-link-section";
+                section.dataset.resourceCategorySection = category.key;
+                const header = document.createElement("div");
+                header.className = "mb-3 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1.5";
+                const titleGroup = document.createElement("div");
+                titleGroup.className = "flex items-center gap-2";
+                const icon = document.createElement("i");
+                icon.className = "fa-solid fa-folder-open text-brand-700";
+                const title = document.createElement("h3");
+                title.className = "text-sm sm:text-base font-extrabold text-gray-900";
+                title.textContent = category.label;
+                titleGroup.append(icon,title);
+                const desc = document.createElement("p");
+                desc.className = "text-xs sm:text-sm text-gray-500";
+                desc.textContent = category.key === "extras" ? "Enlaces adicionales disponibles para el equipo." : "Puedes cambiar el nombre, la URL o mover enlaces entre secciones.";
+                header.append(titleGroup,desc);
+                const grid = document.createElement("div");
+                grid.className = "grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4";
+                grid.dataset.resourceGrid = category.key;
+                section.append(header,grid);
+                editor.appendChild(section);
+                grids[category.key] = grid;
+            });
+            prepared.sort(function(a,b){return a.label.localeCompare(b.label,"es");});
+            let index = 0;
+            prepared.forEach(function(item){
+                const grid = grids[item.category] || grids.extras;
+                grid.appendChild(createResourceLinkCard(item,links[item.key] || "",index++));
+            });
+            Object.values(grids).forEach(function(grid){
+                const section = grid.closest("[data-resource-category-section]");
+                if (!grid.children.length) section.classList.add("hidden");
+                else section.classList.remove("hidden");
+            });
+            updateResourceLinksSummary();
+        }
+        function addResourceLink() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const editor = document.getElementById("resourceLinksEditor");
+            const grid = editor && editor.querySelector('[data-resource-grid="extras"]');
+            if (!grid) return;
+            let key;
+            do { pendingResourceLinkCounter += 1; key = "customLink" + Date.now().toString(36) + pendingResourceLinkCounter.toString(36); }
+            while (document.querySelector('[data-resource-card="' + key + '"]') || protectedResourceLinks[key]);
+            const item = {key:key,label:"Nuevo enlace",description:"",category:"extras",custom:true,icon:"fa-solid fa-link"};
+            const card = createResourceLinkCard(item,"",Date.now()%1000);
+            grid.closest("[data-resource-category-section]").classList.remove("hidden");
+            grid.appendChild(card);
+            updateResourceLinksSummary();
+            const input = card.querySelector('[data-resource-field="label"]');
+            if (input) { input.focus(); input.select(); }
+            setResourceLinksStatus("Nuevo enlace añadido al borrador. Completa nombre y dirección, y guarda los cambios.","info");
+        }
+        function applyResourceLabels() {
+            const labels = {};
+            DEFAULT_RESOURCE_ITEMS.forEach(function(item){labels[item.key] = getResourceMeta(item.key,false).label;});
+            Object.keys(protectedResourceMeta).forEach(function(key){labels[key] = getResourceMeta(key,!getDefaultResource(key)).label;});
+            document.querySelectorAll("a[data-resource-key]").forEach(function(anchor){
+                const key = anchor.dataset.resourceKey;
+                const label = labels[key] || humanizeResourceKey(key);
+                anchor.setAttribute("aria-label","Abrir " + label);
+                if (anchor.getAttribute("aria-disabled") !== "true") anchor.title = label;
+            });
+            document.querySelectorAll("[data-resource-label-for]").forEach(function(node){
+                const key = node.dataset.resourceLabelFor;
+                node.textContent = labels[key] || humanizeResourceKey(key);
+            });
+            document.querySelectorAll("[data-resource-open-label]").forEach(function(node){
+                const key = node.dataset.resourceOpenLabel;
+                node.textContent = "Abrir " + (labels[key] || humanizeResourceKey(key));
+            });
+        }
+        function renderCustomTeamLinks() {
+            const section = document.getElementById("customTeamLinks");
+            const grid = document.getElementById("customTeamLinksGrid");
+            if (!section || !grid) return;
+            grid.innerHTML = "";
+            const entries = Object.keys(protectedResourceLinks).map(function(key){
+                const meta = getResourceMeta(key,!getDefaultResource(key));
+                let url = "";
+                try { const parsed = new URL(String(protectedResourceLinks[key] || "")); if (parsed.protocol === "https:") url = parsed.href; } catch (_) {}
+                return {key:key,meta:meta,url:url};
+            }).filter(function(item){return item.meta.custom && item.meta.label && item.url;})
+              .sort(function(a,b){return a.meta.label.localeCompare(b.meta.label,"es");});
+            if (!entries.length) { section.classList.add("hidden"); return; }
+            section.classList.remove("hidden");
+            entries.forEach(function(item,index){
+                const card = document.createElement("article");
+                card.className = "custom-team-link";
+                card.style.animationDelay = (index * 30) + "ms";
+                const row = document.createElement("div");
+                row.className = "flex items-start gap-3";
+                const icon = document.createElement("span");
+                icon.className = "resource-card-icon";
+                const glyph = document.createElement("i");
+                glyph.className = "fa-solid fa-link";
+                icon.appendChild(glyph);
+                const copy = document.createElement("div");
+                copy.className = "min-w-0 flex-1";
+                const title = document.createElement("h3");
+                title.className = "font-extrabold text-gray-900";
+                title.textContent = item.meta.label;
+                const desc = document.createElement("p");
+                desc.className = "mt-1 text-sm text-gray-500";
+                desc.textContent = item.meta.description || "Enlace de trabajo del equipo.";
+                const link = document.createElement("a");
+                link.href = item.url;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+                link.className = "mt-3 inline-flex min-h-10 items-center gap-2 rounded-lg bg-brand-900 px-3 py-2 text-sm font-bold text-white hover:bg-brand-800";
+                link.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i><span></span>';
+                link.querySelector("span").textContent = "Abrir " + item.meta.label;
+                copy.append(title,desc,link);
+                row.append(icon,copy);
+                card.appendChild(row);
+                grid.appendChild(card);
+            });
+        }
+        function setResourceLinksStatus(message,type) {
+            const status = document.getElementById("resourceLinksStatus");
+            if (!status) return;
+            const icon = status.querySelector("i");
+            const text = status.querySelector("span");
+            status.className = "resource-save-status" + (message ? " is-visible" : "") + (type ? " is-" + type : "");
+            if (icon) icon.className = type === "success" ? "fa-solid fa-circle-check mt-0.5" : type === "error" ? "fa-solid fa-circle-exclamation mt-0.5" : "fa-solid fa-circle-info mt-0.5";
+            if (text) text.textContent = message || "";
+        }
+        async function saveResourceLinks() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") {
+                setResourceLinksStatus("Solo el perfil de supervisora puede guardar estos cambios.","error"); return;
+            }
+            const editor = document.getElementById("resourceLinksEditor");
+            const button = document.getElementById("saveResourceLinksBtn");
+            if (!editor || !button) return;
+            const nextLinks = {};
+            const nextMeta = {};
+            const cards = Array.from(editor.querySelectorAll("[data-resource-card]"));
+            const seen = new Set();
+            for (const card of cards) {
+                const key = String(card.dataset.resourceCard || "").trim();
+                const labelInput = card.querySelector('[data-resource-field="label"]');
+                const urlInput = card.querySelector('[data-resource-field="url"]');
+                const descInput = card.querySelector('[data-resource-field="description"]');
+                const categoryInput = card.querySelector('[data-resource-field="category"]');
+                const label = labelInput ? labelInput.value.trim() : "";
+                const url = urlInput ? urlInput.value.trim() : "";
+                const description = descInput ? descInput.value.trim() : "";
+                const category = categoryInput ? categoryInput.value : "extras";
+                const custom = card.dataset.resourceCustom === "true";
+                if (!/^[A-Za-z][A-Za-z0-9]*$/.test(key) || seen.has(key)) {
+                    setResourceLinksStatus("Hay una clave interna inválida o repetida. Recarga el panel y vuelve a intentarlo.","error"); return;
+                }
+                seen.add(key);
+                if (custom && !label && !url) continue;
+                if (!label) {
+                    setResourceLinksStatus("Completa el nombre del enlace antes de guardar.","error");
+                    if (labelInput) labelInput.focus(); return;
+                }
+                if (!RESOURCE_LINK_CATEGORIES.some(function(item){return item.key === category;})) {
+                    setResourceLinksStatus("Selecciona una sección válida para «" + label + "».","error");
+                    if (categoryInput) categoryInput.focus(); return;
+                }
+                if (url) {
+                    try {
+                        const parsed = new URL(url);
+                        if (parsed.protocol !== "https:") throw new Error("HTTPS requerido");
+                        nextLinks[key] = parsed.href;
+                    } catch (_) {
+                        setResourceLinksStatus("La dirección de «" + label + "» debe ser una URL completa que empiece con https://.","error");
+                        if (urlInput) urlInput.focus(); updateResourceCardStatus(card); return;
+                    }
+                } else if (custom) {
+                    setResourceLinksStatus("Completa la dirección de «" + label + "» o quítalo del borrador.","error");
+                    if (urlInput) urlInput.focus(); return;
+                }
+                nextMeta[key] = {label:label,description:description,category:category,custom:custom};
+            }
+            OBSOLETE_RESOURCE_KEYS.forEach(function(key){delete nextLinks[key];delete nextMeta[key];});
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i>Guardando…';
+            const addButton = document.getElementById("addResourceLinkBtn");
+            if (addButton) addButton.disabled = true;
+            setResourceLinksStatus("Guardando nombres, enlaces y secciones en Firestore…","info");
+            try {
+                await db.collection("appConfig").doc("resources").set({
+                    links:nextLinks,
+                    linkMeta:nextMeta,
+                    updatedBy:signedInUser.uid,
+                    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+                });
+                protectedResourceLinks = nextLinks;
+                protectedResourceMeta = nextMeta;
+                await loadProtectedResources();
+                setResourceLinksStatus("Cambios guardados. Los nombres, direcciones y enlaces nuevos ya están disponibles.","success");
+            } catch (error) {
+                console.error("No se pudieron guardar los enlaces operativos:",error);
+                setResourceLinksStatus("No se pudo guardar. Verifica la conexión y los permisos de la cuenta supervisora.","error");
+            } finally {
+                button.disabled = false;
+                button.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i>Guardar cambios';
+                if (addButton) addButton.disabled = false;
+            }
         }
 
         function loadRosterEditor() {

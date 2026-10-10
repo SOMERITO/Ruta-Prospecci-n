@@ -2179,7 +2179,7 @@
                 let url = "";
                 try { const parsed = new URL(String(protectedResourceLinks[key] || "")); if (parsed.protocol === "https:") url = parsed.href; } catch (_) {}
                 return {key:key,meta:meta,url:url};
-            }).filter(function(item){return item.meta.custom && item.meta.label && item.url;})
+            }).filter(function(item){return item.meta.custom && item.meta.label && item.url && !OBSOLETE_RESOURCE_KEYS.has(item.key);})
               .sort(function(a,b){return a.meta.label.localeCompare(b.meta.label,"es");});
             if (!entries.length) { section.classList.add("hidden"); return; }
             section.classList.remove("hidden");

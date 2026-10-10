@@ -1530,11 +1530,13 @@
             
             let totalMeta = 0;
             let totalAvance = 0;
+            let totalReferidos = 0;
             let totalProyeccion = 0;
             
             data.forEach((row, idx) => {
                 totalMeta += row.meta;
                 totalAvance += row.avance;
+                totalReferidos += Number(row.referidos || 0);
                 totalProyeccion += row.proyeccion;
                 
                 let pct1 = row.meta > 0 ? Math.round((row.avance / row.meta) * 100) : 0;

@@ -991,7 +991,8 @@
             if (typeof metricsUnsubscribe === "function") metricsUnsubscribe();
             metricsUnsubscribe = null;
             currentMetricsDocumentExists = false;
-            sharedAvanceRows = buildDefaultAvanceData();
+            sharedAvanceRows = monthKey === getCurrentMonthKey() ? buildDefaultAvanceData() : [];
+            sharedMobilityRows = buildDefaultMobilityData(monthKey);
             isAvanceEditMode = false;
             const editButton = document.getElementById("btnToggleEdit");
             if (editButton) {
@@ -1000,6 +1001,7 @@
             }
             updateMetricsMonthStatus("Consultando " + formatMetricsMonth(monthKey) + "…");
             renderAvance();
+            renderMovilidades();
 
             const metricsRef = db.collection("monthlyMetrics").doc(monthKey);
             metricsUnsubscribe = metricsRef.onSnapshot(async (snapshot) => {

@@ -226,6 +226,67 @@
         }
         @media(prefers-reduced-motion:reduce){.roster-row,.roster-admin-content,.roster-heading-icon,.roster-add-button,.roster-save-button,.roster-remove-button{animation:none!important;transition:none!important}}
 
+
+        .calendar-today-wrap,.calendar-period-panel,.calendar-mobility-controls{min-width:0}
+        .calendar-field-label,.calendar-period-label{display:block;color:#334155;font-size:.84rem;line-height:1.35rem;font-weight:800}
+        .calendar-today-card{display:flex;align-items:center;gap:.85rem;min-height:90px;padding:1rem;border:1px solid #dbe6ec;border-radius:1rem;background:linear-gradient(115deg,#f0fbfc 0%,#fff 72%);box-shadow:0 2px 8px rgba(15,23,42,.035);transition:border-color 180ms ease,box-shadow 180ms ease}
+        .calendar-today-card:hover{border-color:#b8e5e7;box-shadow:0 6px 18px rgba(15,23,42,.055)}
+        .calendar-today-icon,.calendar-period-icon{display:flex;align-items:center;justify-content:center;flex:0 0 auto;width:2.8rem;height:2.8rem;border:1px solid #c7eef0;border-radius:.9rem;background:#e4f9fa;color:#18777d;font-size:1.15rem}
+        .calendar-today-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:.14rem}
+        .calendar-eyebrow{color:#237a80;font-size:.68rem;line-height:1rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+        .calendar-today-date{display:block;color:#102b3a;font-size:.98rem;font-weight:850;line-height:1.45rem;overflow-wrap:anywhere}
+        .calendar-today-caption{color:#64748b;font-size:.76rem;line-height:1.25rem}
+        .calendar-today-badge{display:inline-flex;align-items:center;gap:.38rem;flex:0 0 auto;padding:.42rem .65rem;border:1px solid #bbf7d0;border-radius:999px;background:#f0fdf4;color:#166534;font-size:.73rem;font-weight:850;white-space:nowrap}
+        .calendar-today-badge i{font-size:.45rem}
+        .calendar-source-input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important}
+        .calendar-period-panel{padding:1rem 1.1rem;border:1px solid #d5e8eb;border-radius:1.05rem;background:linear-gradient(115deg,#f2fbfc 0%,#fbfeff 60%,#fff 100%);box-shadow:0 2px 8px rgba(15,23,42,.025)}
+        .calendar-period-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+        .calendar-period-title{display:flex;align-items:center;gap:.8rem;min-width:0}
+        .calendar-period-current{margin-top:.12rem;color:#102b3a;font-size:1.05rem;font-weight:850;line-height:1.5rem;text-transform:capitalize}
+        .calendar-period-controls{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap}
+        .calendar-nav-button{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:42px;height:42px;border:1px solid #d4e1e7;border-radius:.75rem;background:#fff;color:#334155;box-shadow:0 1px 2px rgba(15,23,42,.025);transition:background-color 160ms ease,border-color 160ms ease,transform 160ms ease,box-shadow 160ms ease}
+        .calendar-nav-button:hover{border-color:#8ed8dc;background:#f0fcfc;color:#155e63;box-shadow:0 4px 10px rgba(38,162,167,.1);transform:translateY(-1px)}
+        .calendar-nav-button:active,.calendar-current-button:active{transform:translateY(0) scale(.98)}
+        .calendar-nav-button:focus-visible,.calendar-current-button:focus-visible,.calendar-month-input:focus-visible{outline:3px solid rgba(47,203,209,.38);outline-offset:2px}
+        .calendar-month-input-wrap{display:flex;align-items:center;gap:.55rem;min-height:42px;padding:0 .7rem;border:1px solid #cbdce3;border-radius:.75rem;background:#fff;color:#238087;transition:border-color 160ms ease,box-shadow 160ms ease}
+        .calendar-month-input-wrap:focus-within{border-color:#269ba2;box-shadow:0 0 0 3px rgba(47,203,209,.13)}
+        .calendar-month-input{min-width:140px;max-width:175px;min-height:40px;padding:.35rem .1rem;border:0;outline:0;background:transparent;color:#102b3a;font-size:.87rem;font-weight:800;line-height:1.25rem}
+        .calendar-current-button{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;min-height:42px;padding:.62rem .8rem;border:1px solid #b9e7e9;border-radius:.75rem;background:#fff;color:#155e63;font-size:.79rem;font-weight:850;white-space:nowrap;transition:background-color 160ms ease,border-color 160ms ease,transform 160ms ease,box-shadow 160ms ease}
+        .calendar-current-button:hover{border-color:#75ced3;background:#effbfc;box-shadow:0 4px 12px rgba(38,162,167,.09);transform:translateY(-1px)}
+        .calendar-status{margin-top:.75rem;padding-top:.65rem;border-top:1px solid #dbecef;color:#64748b;line-height:1.5rem}
+        .calendar-mobility-controls{display:flex;flex-direction:column;align-items:stretch;gap:.6rem;min-width:0;padding:.9rem;border:1px solid #dce9ed;border-radius:1rem;background:linear-gradient(115deg,#f3fbfc,#fff)}
+        .calendar-mobility-title{display:flex;align-items:baseline;justify-content:space-between;gap:1rem}
+        .calendar-mobility-controls .calendar-period-controls{flex-wrap:nowrap}
+        .calendar-mobility-controls .calendar-month-input-wrap{flex:1;min-width:0}
+        .calendar-mobility-controls .calendar-month-input{width:100%;min-width:0;max-width:none}
+        .calendar-mobility-controls #btnEditMovilidad{align-self:flex-start}
+        input[type="date"],input[type="month"]{accent-color:#269ba2;color-scheme:light}
+        input[type="date"]::-webkit-calendar-picker-indicator,input[type="month"]::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.72;transition:opacity 160ms ease}
+        input[type="date"]::-webkit-calendar-picker-indicator:hover,input[type="month"]::-webkit-calendar-picker-indicator:hover{opacity:1}
+        @media(max-width:760px){
+            .calendar-today-card{align-items:flex-start;gap:.65rem;padding:.85rem}
+            .calendar-today-icon,.calendar-period-icon{width:2.5rem;height:2.5rem;font-size:1rem}
+            .calendar-today-date{font-size:.92rem;line-height:1.35rem}
+            .calendar-today-caption{font-size:.73rem}
+            .calendar-today-badge{padding:.38rem .5rem;font-size:.68rem}
+            .calendar-period-panel{padding:.85rem}
+            .calendar-period-heading{align-items:stretch;flex-direction:column}
+            .calendar-period-controls{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;gap:.4rem}
+            .calendar-nav-button{width:40px;height:42px}
+            .calendar-month-input-wrap{min-width:0;width:100%;padding:0 .55rem}
+            .calendar-month-input{width:100%;min-width:0;max-width:none;font-size:.83rem}
+            .calendar-current-button{grid-column:1/-1;width:100%;min-height:40px}
+            .calendar-mobility-controls{padding:.75rem}
+            .calendar-mobility-controls .calendar-period-controls{display:grid;grid-template-columns:38px minmax(0,1fr) 38px}
+            .calendar-mobility-controls .calendar-nav-button{width:38px}
+            .calendar-mobility-controls .calendar-month-input-wrap{min-width:0}
+            .calendar-mobility-controls .calendar-current-button{grid-column:1/-1}
+            .calendar-mobility-title{align-items:flex-start;flex-direction:column;gap:.1rem}
+        }
+        @media(prefers-reduced-motion:reduce){
+            .calendar-today-card,.calendar-nav-button,.calendar-current-button,.calendar-month-input-wrap{animation:none!important;transition:none!important}
+        }
+
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
@@ -316,9 +377,18 @@
                             <option value="">-- Selecciona tu nombre --</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Actual (Solo Lectura)</label>
-                        <input type="date" id="trackerDate" class="w-full border-gray-300 rounded-lg shadow-sm bg-gray-100 text-gray-500 p-3" readonly>
+                    <div class="calendar-today-wrap">
+                        <label class="calendar-field-label">Fecha de trabajo</label>
+                        <div class="calendar-today-card">
+                            <span class="calendar-today-icon"><i class="fa-regular fa-calendar-check"></i></span>
+                            <div class="calendar-today-copy">
+                                <span class="calendar-eyebrow">Ruta del día</span>
+                                <strong id="trackerDateDisplay" class="calendar-today-date">Cargando fecha…</strong>
+                                <span class="calendar-today-caption">Se actualiza automáticamente con la fecha local.</span>
+                            </div>
+                            <span class="calendar-today-badge"><i class="fa-solid fa-circle"></i> Hoy</span>
+                        </div>
+                        <input type="date" id="trackerDate" class="calendar-source-input" readonly aria-hidden="true" tabindex="-1">
                     </div>
                 </div>
             </div>
@@ -717,11 +787,27 @@
                         </button>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4 rounded-lg border border-brand-100 bg-brand-50 p-3">
-                    <label for="avanceMonth" class="text-sm font-bold text-brand-900 whitespace-nowrap">Mes de las métricas</label>
-                    <input id="avanceMonth" type="month" class="border border-brand-200 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-800 focus:ring-brand-500 focus:border-brand-500">
-                    <p id="avanceMonthStatus" class="text-xs sm:text-sm text-gray-600" role="status" aria-live="polite">Selecciona el mes que deseas consultar.</p>
-                </div>
+                <section class="calendar-period-panel mb-5" aria-label="Selector de periodo de métricas">
+                    <div class="calendar-period-heading">
+                        <div class="calendar-period-title">
+                            <span class="calendar-period-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                            <div class="min-w-0">
+                                <label for="avanceMonth" class="calendar-period-label">Periodo de métricas</label>
+                                <p id="avanceMonthDisplay" class="calendar-period-current">Selecciona un mes</p>
+                            </div>
+                        </div>
+                        <div class="calendar-period-controls">
+                            <button type="button" class="calendar-nav-button" onclick="moveReportMonth(-1)" aria-label="Ver mes anterior" title="Mes anterior"><i class="fa-solid fa-chevron-left"></i></button>
+                            <label class="calendar-month-input-wrap" for="avanceMonth">
+                                <i class="fa-regular fa-calendar"></i>
+                                <input id="avanceMonth" type="month" class="calendar-month-input" aria-label="Seleccionar mes de las métricas">
+                            </label>
+                            <button type="button" class="calendar-nav-button" onclick="moveReportMonth(1)" aria-label="Ver mes siguiente" title="Mes siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+                            <button type="button" class="calendar-current-button" onclick="goToCurrentReportMonth()"><i class="fa-solid fa-calendar-day"></i><span>Mes actual</span></button>
+                        </div>
+                    </div>
+                    <p id="avanceMonthStatus" class="calendar-status text-sm" role="status" aria-live="polite">Selecciona el mes que deseas consultar.</p>
+                </section>
                 
                 <details id="metricImportPanel" class="hidden mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
                     <summary class="cursor-pointer font-bold text-gray-800">Importar historial de Avance</summary>
@@ -764,10 +850,21 @@
                         <h2 class="mt-1 text-xl sm:text-2xl font-bold text-gray-900"><i class="fa-solid fa-car-side text-brand-500 mr-2"></i>Avance de movilidades</h2>
                         <p class="mt-1 text-sm text-gray-500">Presupuesto, gastos y saldo por asesor.</p>
                     </div>
-                    <div class="flex flex-wrap gap-2 items-center">
-                        <label for="movilidadMonth" class="text-sm font-bold text-brand-900">Mes</label>
-                        <input id="movilidadMonth" type="month" class="border border-brand-200 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-800">
-                        <button id="btnEditMovilidad" onclick="toggleEditMovilidad()" class="hidden rounded-lg bg-gray-100 px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-200">
+                    <div class="calendar-mobility-controls">
+                        <div class="calendar-mobility-title">
+                            <label for="movilidadMonth" class="calendar-period-label">Periodo consultado</label>
+                            <p id="movilidadMonthDisplay" class="calendar-period-current">Selecciona un mes</p>
+                        </div>
+                        <div class="calendar-period-controls">
+                            <button type="button" class="calendar-nav-button" onclick="moveReportMonth(-1)" aria-label="Ver mes anterior" title="Mes anterior"><i class="fa-solid fa-chevron-left"></i></button>
+                            <label class="calendar-month-input-wrap" for="movilidadMonth">
+                                <i class="fa-regular fa-calendar"></i>
+                                <input id="movilidadMonth" type="month" class="calendar-month-input" aria-label="Seleccionar mes de movilidades">
+                            </label>
+                            <button type="button" class="calendar-nav-button" onclick="moveReportMonth(1)" aria-label="Ver mes siguiente" title="Mes siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+                            <button type="button" class="calendar-current-button" onclick="goToCurrentReportMonth()"><i class="fa-solid fa-calendar-day"></i><span>Mes actual</span></button>
+                        </div>
+                        <button id="btnEditMovilidad" onclick="toggleEditMovilidad()" class="hidden rounded-xl bg-white border border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all">
                             <i class="fa-solid fa-pen mr-2"></i>Editar registro
                         </button>
                     </div>
@@ -1200,11 +1297,38 @@
             return new Date(year, month - 1, 1).toLocaleDateString("es-PE", { month: "long", year: "numeric" });
         }
 
+        function capitalizeSpanish(text) {
+            const value = String(text || "");
+            return value ? value.charAt(0).toLocaleUpperCase("es-PE") + value.slice(1) : value;
+        }
+
+        function updateCalendarMonthDisplays() {
+            const monthInput = document.getElementById("avanceMonth");
+            const mobilityInput = document.getElementById("movilidadMonth");
+            const monthDisplay = document.getElementById("avanceMonthDisplay");
+            const mobilityDisplay = document.getElementById("movilidadMonthDisplay");
+            if (monthDisplay) monthDisplay.textContent = capitalizeSpanish(formatMetricsMonth(monthInput && monthInput.value));
+            if (mobilityDisplay) mobilityDisplay.textContent = capitalizeSpanish(formatMetricsMonth(mobilityInput && mobilityInput.value));
+        }
+
+        function moveReportMonth(offset) {
+            if (!signedInUser || !signedInProfile) return;
+            const [year, month] = (currentMetricsMonth || getCurrentMonthKey()).split("-").map(Number);
+            const target = new Date(year, month - 1 + Number(offset || 0), 1);
+            const key = target.getFullYear() + "-" + String(target.getMonth() + 1).padStart(2, "0");
+            subscribeToMetricsMonth(key);
+        }
+
+        function goToCurrentReportMonth() {
+            if (!signedInUser || !signedInProfile) return;
+            subscribeToMetricsMonth(getCurrentMonthKey());
+        }
+
         function updateMetricsMonthStatus(message, kind = "info") {
             const status = document.getElementById("avanceMonthStatus");
             if (!status) return;
             status.textContent = message;
-            status.className = "text-xs sm:text-sm";
+            status.className = "calendar-status text-sm";
             if (kind === "error") status.classList.add("text-red-700", "font-semibold");
             else if (kind === "success") status.classList.add("text-emerald-700", "font-semibold");
             else status.classList.add("text-gray-600");
@@ -1221,6 +1345,7 @@
             const mobilityMonthInput = document.getElementById("movilidadMonth");
             if (metricsMonthInput && metricsMonthInput.value !== monthKey) metricsMonthInput.value = monthKey;
             if (mobilityMonthInput && mobilityMonthInput.value !== monthKey) mobilityMonthInput.value = monthKey;
+            updateCalendarMonthDisplays();
             const token = ++metricsSubscriptionToken;
             if (typeof metricsUnsubscribe === "function") metricsUnsubscribe();
             metricsUnsubscribe = null;
@@ -1425,18 +1550,35 @@
             if(parts.length !== 3) return dateString;
             return `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
+
+        function updateTrackerDateDisplay() {
+            const display = document.getElementById("trackerDateDisplay");
+            if (!display || !dateInput || !dateInput.value) return;
+            const parts = dateInput.value.split("-").map(Number);
+            if (parts.length !== 3 || parts.some(Number.isNaN)) return;
+            const localDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            const label = localDate.toLocaleDateString("es-PE", {
+                weekday: "long", day: "numeric", month: "long", year: "numeric"
+            });
+            display.textContent = capitalizeSpanish(label);
+        }
         
         dateInput.value = getLocalDateString();
+        updateTrackerDateDisplay();
         const avanceMonthInput = document.getElementById("avanceMonth");
         avanceMonthInput.value = getCurrentMonthKey();
+        updateCalendarMonthDisplays();
         avanceMonthInput.addEventListener("change", () => {
+            updateCalendarMonthDisplays();
             if (!signedInUser || !signedInProfile) return;
             subscribeToMetricsMonth(avanceMonthInput.value);
         });
         const movilidadMonthInput = document.getElementById("movilidadMonth");
         if (movilidadMonthInput) {
             movilidadMonthInput.value = avanceMonthInput.value;
+            updateCalendarMonthDisplays();
             movilidadMonthInput.addEventListener("change", () => {
+                updateCalendarMonthDisplays();
                 if (!signedInUser || !signedInProfile) return;
                 subscribeToMetricsMonth(movilidadMonthInput.value);
             });
@@ -1446,6 +1588,7 @@
             const newDate = getLocalDateString();
             if (dateInput.value !== newDate) {
                 dateInput.value = newDate;
+                updateTrackerDateDisplay();
                 if(document.getElementById('asesorName').value !== "") {
                     loadUserWorkspace();
                 }

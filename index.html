@@ -1069,21 +1069,22 @@
                         proyeccion: Math.max(0, Number(row.proyeccion) || 0)
                     }));
 
-                if (signedInProfile.role === "supervisor") {
+                if (signedInProfile.role === "supervisor" && monthKey === getCurrentMonthKey()) {
                     const savedByName = new Map(normalizedSavedRows.map(row => [row.asesor, row]));
                     const currentAdvisorRows = buildDefaultAvanceData().map(baseRow => {
                         const saved = savedByName.get(baseRow.asesor);
                         return saved ? { ...baseRow, ...saved } : baseRow;
                     });
                     const currentNames = new Set(currentAdvisorRows.map(row => row.asesor));
-                    // Keep historical rows for advisors no longer on the roster, so monthly history is not lost.
                     sharedAvanceRows = [
                         ...currentAdvisorRows,
                         ...normalizedSavedRows.filter(row => !currentNames.has(row.asesor))
                     ];
                 } else {
-                    // Authorized advisors can view every team's metrics but cannot edit them.
-                    sharedAvanceRows = normalizedSavedRows.length ? normalizedSavedRows : buildDefaultAvanceData();
+                    // Historical months use only rows saved for that month; never add today's roster retrospectively.
+                    sharedAvanceRows = normalizedSavedRows.length
+                        ? normalizedSavedRows
+                        : (monthKey === getCurrentMonthKey() ? buildDefaultAvanceData() : []);
                 }
                 renderAvance();
                 updateMetricsMonthStatus("Datos guardados para " + formatMetricsMonth(monthKey) + ".", "success");

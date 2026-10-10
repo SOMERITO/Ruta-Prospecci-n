@@ -57,37 +57,34 @@ En el primer acceso, verifica `prospeccionwiener@gmail.com` desde el enlace que 
 
 **Limitación del acceso compartido:** Firebase no puede verificar qué persona física usa el nombre seleccionado. Cualquiera que conozca la contraseña compartida puede seleccionar otro asesor y modificar su progreso. La actividad queda atribuida a la cuenta general, no al asesor individual. Además, el permiso técnico de la cuenta compartida permite leer registros diarios de todo el equipo para que funcione la sincronización. Si necesitan impedir que una persona pueda ver o modificar registros ajenos, deberán usar cuentas individuales u otro método de autenticación por persona.
 
-## 5. Recursos privados de la ruta
+## 5. Lista de asesores y recursos privados
 
-Las URL operativas se cargan desde Firestore, no desde el HTML público.
+La aplicación ya incluye dos paneles exclusivos para la cuenta con rol `supervisor`, dentro de **Dashboard Jefatura**: **Administrar lista de asesores** y **Administrar enlaces de trabajo**. Los cambios se guardan en Firestore, y las reglas permiten editarlos únicamente a la supervisora.
 
-En Firestore → Datos, crea la colección `appConfig` y el documento `roster`. Añade un campo de tipo **mapa** llamado `advisorMap`. Cada entrada usa como clave el nombre normalizado (minúsculas, sin tildes, palabras separadas por guiones bajos) y como valor el nombre completo que debe mostrarse en la página. La supervisora administra este mapa. No pegues los nombres en el HTML ni en archivos públicos.
+Si hay que crear o reconstruir documentos inicialmente, en Firestore → Datos:
+- `appConfig/roster`: mapa `advisorMap`, donde cada clave es el nombre normalizado (minúsculas, sin tildes, palabras separadas por guiones bajos) y cada valor es el nombre completo que debe mostrar la página.
+- `appConfig/resources`: mapa `links`, con URLs aprobadas para el equipo.
 
-Después crea el documento `resources`. Añade un campo de tipo **mapa** llamado `links`. Dentro del mapa agrega campos de tipo **string** con estas claves:
+Claves activas para los enlaces:
+- `intranet`, `grupoRutasUbicaciones`, `grupoInformeActividades`, `crmZoho`
+- `avanza`, `plantillaVan`, `driveMovilidades`
+- `matrizSolicitudes`, `registroFichasDatos`, `digitalizacionFichas`, `actualizacionFichas`, `statusCartera`
 
-- `intranet`
-- `grupoRutasUbicaciones`
-- `grupoInformeActividades`
-- `crmZoho`
-- `taxiDirecto`
-- `cabify`
-- `formularioMaterial`
-- `matrizSolicitudes`
-- `registroFichasDatos`
-- `digitalizacionFichas`
-- `actualizacionFichas`
-- `statusCartera`
+Usa enlaces HTTPS y copia las URL desde las fuentes autorizadas. En el panel de enlaces, cada fila tiene el formato `clave=URL`; las filas vacías se ignoran. Al guardar, la aplicación elimina las claves antiguas `taxiDirecto`, `cabify` y `formularioMaterial`. Deben confirmarse los enlaces estables de cartera y Drive, además de los enlaces vigentes de los grupos de WhatsApp, antes de producción.
 
-Para cada campo, copia la URL vigente desde la fuente autorizada y confirma que la supervisora permite su uso. No pongas esas URL en `index.html`, en este archivo ni en otros archivos públicos.
+No pongas nombres del equipo ni URL operativas directamente en el HTML, este archivo o cualquier otro archivo público. No registres contraseñas, códigos de acceso ni enlaces que contengan tokens temporales.
 
-## 6. Migración y métricas iniciales
+## 6. Migración e historial mensual
 
-- Los registros diarios se guardan en `trackerRecords`. Con la cuenta compartida, cada documento usa la clave `shared_{advisorKey}_{YYYY-MM-DD}`, para separar el progreso por asesor y fecha. En la primera sesión, se intentan importar solo los registros locales que no existan ya en la nube.
-- Las métricas se guardan en `monthlyMetrics/{YYYY-MM}`, por ejemplo `monthlyMetrics/2026-10`. Cada mes queda separado; editar noviembre no modifica octubre.
-- Cada documento mensual contiene `month` (string), `rows` (array de mapas con `asesor`, `meta`, `avance`, `proyeccion`), `updatedBy` (UID) y `updatedAt` (timestamp).
-- Al abrir el mes actual, la aplicación intenta migrar métricas antiguas desde `avanceMetricsV6` del navegador de la supervisora si existe una copia local. Si no existe, los perfiles de asesores se muestran con valores iniciales en cero y la supervisora debe introducir las cifras del mes. No se copian valores a meses anteriores o futuros.
-- Cada asesor puede migrar desde su propio navegador los registros locales de su nombre, siempre que esa fecha todavía no esté en Firestore.
-- Los valores de métricas mostrados como datos iniciales en la versión anterior del HTML no se deben considerar migrados automáticamente. Antes de producción, comprueba los valores de origen y cárgalos en Firestore si siguen siendo vigentes.
+- Los registros diarios se guardan en `trackerRecords`. Con la cuenta compartida, cada documento usa la clave `shared_{advisorKey}_{YYYY-MM-DD}`, para separar el progreso por asesor y fecha. La vista de supervisión se actualiza mediante el listener en tiempo real de Firestore.
+- Las métricas se guardan en `monthlyMetrics/{YYYY-MM}`, por ejemplo `monthlyMetrics/2026-10`. Cada mes queda separado; editar otro mes no debe cambiar los datos de un mes histórico.
+- Cada documento mensual contiene `month`, `rows` (array con `asesor`, `meta`, `avance`, `referidos`, `proyeccion`), `mobilityRows` (array con `asesor`, `asignado`, `gasto`, cuando exista información de movilidades), `updatedBy` y `updatedAt`.
+- La columna Meta se interpreta como meta de **4.º de secundaria**. Los porcentajes, la proyección y el logro final mantienen las fórmulas existentes; referidos se suma por separado.
+- Al abrir el mes actual, la aplicación intenta migrar métricas desde `avanceMetricsV6` del navegador de la supervisora si existe una copia local. Si no existe, la supervisora debe importar o introducir las cifras reales del mes.
+- Los valores iniciales que solo aparecían en la versión anterior del HTML no se consideran migrados automáticamente. Los paneles **Importar historial de Avance** y **Importar o reconstruir un mes desde una tabla** permiten a Camila cargar datos históricos sin incrustar nombres o valores en el HTML público. Antes de importar, selecciona el mes correcto.
+- Para importar métricas, pega una fila por asesor con el formato `nombre;meta;avance;referidos;proyección`; también acepta `nombre;meta;avance;proyección`. Las filas se combinan por nombre para mantener otros registros.
+- Para importar movilidades, pega una fila por asesor con el formato `nombre;asignado;gasto`. La aplicación calcula saldo y porcentaje de ejecución. El reporte de septiembre debe cargarse explícitamente desde su propia tabla histórica, sin reasignar sus montos a los nombres actuales.
+- El presupuesto predeterminado para nuevos registros de movilidades es S/ 2,500 por asesor en el mes actual. La supervisora debe confirmar que ese criterio sigue siendo el aplicable al período antes de usar los totales como reporte oficial.
 
 ## 7. Aviso sobre el historial público
 
@@ -100,12 +97,14 @@ Antes de usar datos reales:
 
 ## 8. Verificaciones antes de producción
 
-- Probar con la cuenta supervisora de Camila y la cuenta compartida `asesor_compartido`.
-- Confirmar que la cuenta general permite elegir el nombre y marcar casillas en Asesor, y que Camila ve los cambios reflejados en el Dashboard.
-- Confirmar que la cuenta general puede ver Avance pero no modificar metas, avances de indicadores ni proyecciones mensuales.
-- Cambiar de mes en la sección Avance como supervisora, editar una meta y confirmar que solo cambia el documento de ese mes.
-- Comprobar que un correo institucional no autorizado no accede a Firestore y que otra cuenta de Gmail tampoco puede iniciar sesión como cuenta compartida.
-- Confirmar que una cuenta individual con rol `asesor` no puede consultar ni modificar registros ajenos. La cuenta compartida puede consultar los registros del equipo para sincronizarlos, pero no puede modificar métricas globales.
-- Probar la sincronización en dos navegadores o dispositivos.
-- Verificar recuperación de contraseña, confirmación del correo y cierre de sesión.
-- Mantener el proyecto en Spark sin vincular facturación y revisar el uso de cuotas.
+- Iniciar sesión con la cuenta supervisora de Camila y con la cuenta compartida autorizada; confirmar que otra cuenta de Gmail no puede acceder como equipo.
+- En Dashboard Jefatura, editar la lista y un enlace con rol supervisor, guardar, recargar e inspeccionar desde otro navegador. Comprobar que la cuenta compartida no puede abrir ni guardar cambios en esos paneles.
+- Actualizar una casilla diaria desde un navegador y confirmar que el Dashboard de Camila refleja el cambio en tiempo real desde un segundo dispositivo.
+- Confirmar que la cuenta compartida ve Avance y Movilidades, pero no puede modificar métricas ni presupuesto.
+- Probar Referidos postulantes y sus totales, y verificar que el logro final y los porcentajes existentes siguen calculándose según las fórmulas previas.
+- Importar el reporte de movilidades de septiembre en el mes de septiembre y confirmar que los diez registros, el total asignado, el gasto, el saldo y la ejecución coinciden con la fuente original.
+- Importar o recuperar las métricas históricas en el mes que corresponda. Confirmar que los asesores actuales no reciben valores de antiguos integrantes y que los registros históricos siguen visibles en su mes original.
+- Cambiar entre varios meses; comprobar que editar un mes no altera el documento de otro mes.
+- Verificar acceso a los enlaces de cartera, Avanza, VAN, Drive, formularios y grupos con una cuenta autorizada. No publicar el sitio hasta que los enlaces caducados o vacíos hayan sido reemplazados por enlaces estables.
+- Verificar recuperación de contraseña, correo confirmado y cierre de sesión.
+- Mantener Firebase en Spark sin vincular facturación y revisar el uso de cuotas. La comprobación estática de sintaxis no reemplaza una prueba integral con cuentas y dos dispositivos reales.

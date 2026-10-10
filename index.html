@@ -493,7 +493,7 @@
                 <details id="metricImportPanel" class="hidden mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
                     <summary class="cursor-pointer font-bold text-gray-800">Importar historial de Avance</summary>
                     <p class="mt-2 text-sm text-gray-600">Una fila por asesor, separada por punto y coma: nombre;meta;avance;referidos;proyección. También se acepta nombre;meta;avance;proyección (referidos se tomará como 0). Las filas se combinan por nombre y no reemplazan las demás.</p>
-                    <textarea id="metricImportText" rows="6" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm font-mono" placeholder="ASESOR ANTIGUO;670;553;0;0"></textarea>
+                    <textarea id="metricImportText" rows="6" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm font-mono" placeholder="NOMBRE DEL ASESOR;META;AVANCE;REFERIDOS;PROYECCIÓN"></textarea>
                     <button id="metricImportBtn" type="button" onclick="importMetricRows()" class="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">Importar al mes seleccionado</button>
                     <p id="metricImportStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
                 </details>
@@ -556,7 +556,7 @@
                 <details id="mobilityImportPanel" class="hidden mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
                     <summary class="cursor-pointer font-bold text-gray-800">Importar o reconstruir un mes desde una tabla</summary>
                     <p class="mt-2 text-sm text-gray-600">Pega una fila por asesor con el formato: nombre;asignado;gasto. Sirve para cargar reportes históricos sin mezclarlos con el equipo actual.</p>
-                    <textarea id="mobilityImportText" rows="6" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm" placeholder="CAROLINA;2500;4454&#10;MARTIN;2500;5572"></textarea>
+                    <textarea id="mobilityImportText" rows="6" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm" placeholder="ASESOR A;2500;0&#10;ASESOR B;2500;0"></textarea>
                     <button id="mobilityImportBtn" type="button" onclick="importMobilityRows()" class="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">Importar al mes seleccionado</button>
                     <p id="mobilityImportStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
                 </details>

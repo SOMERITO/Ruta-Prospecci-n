@@ -666,6 +666,7 @@
             document.getElementById("btnEditMovilidad").classList.toggle("hidden", role !== "supervisor");
             document.getElementById("rosterAdminPanel").classList.toggle("hidden", role !== "supervisor");
             document.getElementById("resourceAdminPanel").classList.toggle("hidden", role !== "supervisor");
+            document.getElementById("mobilityImportPanel").classList.toggle("hidden", role !== "supervisor");
 
             if (role === "supervisor") {
                 asesorTab.classList.add("hidden");
@@ -1828,11 +1829,11 @@
             if (button) button.disabled = true;
             if (status) status.textContent = "Guardando enlaces protegidos…";
             try {
-                await db.collection("appConfig").doc("resources").set({
+                await db.collection("appConfig").doc("resources").update({
                     links: nextLinks,
                     updatedBy: signedInUser.uid,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
+                });
                 protectedResourceLinks = nextLinks;
                 await loadProtectedResources();
                 if (status) status.textContent = "Enlaces guardados. Los accesos activos ya se actualizaron.";

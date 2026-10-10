@@ -1903,7 +1903,7 @@
             if (button) button.disabled = true;
             if (status) status.textContent = "Guardando enlaces protegidos…";
             try {
-                await db.collection("appConfig").doc("resources").update({
+                await db.collection("appConfig").doc("resources").set({
                     links: nextLinks,
                     updatedBy: signedInUser.uid,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1950,7 +1950,7 @@
                     advisorMap: nextMap,
                     updatedBy: signedInUser.uid,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
+                });
                 await loadAuthorizedAdvisors();
                 asesorSelect.innerHTML = '<option value="">-- Selecciona tu nombre --</option>';
                 advisorProfiles.forEach(profile => asesorSelect.add(new Option(profile.asesorNombre, profile.asesorNombre)));

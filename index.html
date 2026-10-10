@@ -1167,9 +1167,17 @@
         const avanceMonthInput = document.getElementById("avanceMonth");
         avanceMonthInput.value = getCurrentMonthKey();
         avanceMonthInput.addEventListener("change", () => {
-            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            if (!signedInUser || !signedInProfile) return;
             subscribeToMetricsMonth(avanceMonthInput.value);
         });
+        const movilidadMonthInput = document.getElementById("movilidadMonth");
+        if (movilidadMonthInput) {
+            movilidadMonthInput.value = avanceMonthInput.value;
+            movilidadMonthInput.addEventListener("change", () => {
+                if (!signedInUser || !signedInProfile) return;
+                subscribeToMetricsMonth(movilidadMonthInput.value);
+            });
+        }
         
         window.addEventListener('focus', () => { 
             const newDate = getLocalDateString();

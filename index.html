@@ -1817,6 +1817,52 @@
             }
         }
 
+        async function importMobilityRows() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const input = document.getElementById("mobilityImportText");
+            const status = document.getElementById("mobilityImportStatus");
+            const button = document.getElementById("mobilityImportBtn");
+            const lines = input.value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+            const rows = [];
+            for (const line of lines) {
+                const parts = line.split(";").map(part => part.trim());
+                if (parts.length !== 3 || !parts[0]) {
+                    if (status) status.textContent = "Formato inválido. Usa una línea por asesor: nombre;asignado;gasto.";
+                    return;
+                }
+                const assigned = Number(parts[1]);
+                const spent = Number(parts[2]);
+                if (!Number.isFinite(assigned) || !Number.isFinite(spent) || assigned < 0 || spent < 0) {
+                    if (status) status.textContent = "Los montos deben ser números iguales o mayores que cero.";
+                    return;
+                }
+                rows.push({ asesor: parts[0], asignado: assigned, gasto: spent });
+            }
+            if (!rows.length) {
+                if (status) status.textContent = "Pega al menos una fila antes de importar.";
+                return;
+            }
+            if (button) button.disabled = true;
+            if (status) status.textContent = "Importando " + rows.length + " filas a " + formatMetricsMonth(currentMetricsMonth) + "…";
+            try {
+                await db.collection("monthlyMetrics").doc(currentMetricsMonth).set({
+                    month: currentMetricsMonth,
+                    mobilityRows: rows,
+                    updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                sharedMobilityRows = rows;
+                isMovilidadEditMode = false;
+                renderMovilidades();
+                if (status) status.textContent = "Importación completada. Se guardaron " + rows.length + " filas.";
+            } catch (error) {
+                console.error("No se pudo importar el reporte de movilidades:", error);
+                if (status) status.textContent = "No se pudo importar. Verifica la conexión y las reglas de Firestore.";
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+
         function toggleEditMovilidad() {
             if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
             isMovilidadEditMode = !isMovilidadEditMode;

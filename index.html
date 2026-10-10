@@ -1522,6 +1522,71 @@
 
         let isAvanceEditMode = false;
 
+        async function importMetricRows() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const input = document.getElementById("metricImportText");
+            const status = document.getElementById("metricImportStatus");
+            const button = document.getElementById("metricImportBtn");
+            const imported = [];
+            const seen = new Set();
+            const lines = input.value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+
+            for (const line of lines) {
+                const parts = line.split(";").map(part => part.trim());
+                if (parts.length !== 4 && parts.length !== 5) {
+                    if (status) status.textContent = "Formato inválido. Usa nombre;meta;avance;proyección o nombre;meta;avance;referidos;proyección.";
+                    return;
+                }
+                const name = parts[0];
+                const meta = Number(parts[1]);
+                const avance = Number(parts[2]);
+                const referidos = parts.length === 5 ? Number(parts[3]) : 0;
+                const proyeccion = parts.length === 5 ? Number(parts[4]) : Number(parts[3]);
+                const key = normalizeAdvisorKey(name);
+                if (!key || seen.has(key)) {
+                    if (status) status.textContent = "Hay un nombre vacío o repetido en las filas importadas.";
+                    return;
+                }
+                if ([meta, avance, referidos, proyeccion].some(value => !Number.isFinite(value) || value < 0)) {
+                    if (status) status.textContent = "Los valores numéricos deben ser iguales o mayores que cero.";
+                    return;
+                }
+                seen.add(key);
+                imported.push({ asesor: name, meta, avance, referidos, proyeccion });
+            }
+            if (!imported.length) {
+                if (status) status.textContent = "Pega por lo menos una fila antes de importar.";
+                return;
+            }
+
+            const mergedByKey = new Map();
+            loadAvanceData().forEach(row => mergedByKey.set(normalizeAdvisorKey(row.asesor), { ...row }));
+            imported.forEach(row => {
+                const key = normalizeAdvisorKey(row.asesor);
+                const previous = mergedByKey.get(key);
+                mergedByKey.set(key, { ...previous, ...row, asesor: previous ? previous.asesor : row.asesor });
+            });
+            const mergedRows = Array.from(mergedByKey.values());
+            if (button) button.disabled = true;
+            if (status) status.textContent = "Guardando " + imported.length + " filas en " + formatMetricsMonth(currentMetricsMonth) + "…";
+            try {
+                await db.collection("monthlyMetrics").doc(currentMetricsMonth).set({
+                    month: currentMetricsMonth,
+                    rows: mergedRows,
+                    updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                sharedAvanceRows = mergedRows;
+                renderAvance();
+                if (status) status.textContent = "Historial importado. Se actualizaron " + imported.length + " filas y se conservaron las demás.";
+            } catch (error) {
+                console.error("No se pudo importar el historial de avance:", error);
+                if (status) status.textContent = "No se pudo guardar el historial. Verifica la conexión y las reglas de Firestore.";
+            } finally {
+                if (button) button.disabled = false;
+            }
+        }
+
         function loadAvanceData() {
             if (signedInUser && signedInProfile && Array.isArray(sharedAvanceRows)) {
                 return sharedAvanceRows;

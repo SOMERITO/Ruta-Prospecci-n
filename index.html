@@ -1040,7 +1040,7 @@
                         }
                     }
 
-                    sharedAvanceRows = buildDefaultAvanceData();
+                    sharedAvanceRows = monthKey === getCurrentMonthKey() ? buildDefaultAvanceData() : [];
                     sharedMobilityRows = buildDefaultMobilityData(monthKey);
                     renderAvance();
                     renderMovilidades();

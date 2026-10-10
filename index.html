@@ -416,6 +416,13 @@
         </div>
 
         <div id="jefatura" class="tab-content relative">
+            <details id="resourceAdminPanel" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border border-brand-100">
+                <summary class="cursor-pointer font-bold text-gray-900"><i class="fa-solid fa-link mr-2 text-brand-600"></i>Administrar enlaces de trabajo</summary>
+                <p class="mt-2 text-sm text-gray-600">Una fila por enlace con el formato clave=URL. Los enlaces se guardan en Firestore y solo Camila puede modificarlos. Al guardar, se retiran las claves obsoletas de Taxi Directo, Cabify y Solicitud de Material.</p>
+                <textarea id="resourceLinksEditor" rows="10" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm font-mono" aria-label="Enlaces operativos" spellcheck="false"></textarea>
+                <button id="saveResourceLinksBtn" type="button" onclick="saveResourceLinks()" class="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar enlaces</button>
+                <p id="resourceLinksStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+            </details>
             <details id="rosterAdminPanel" class="hidden bg-white rounded-xl shadow-md p-4 sm:p-6 mb-6 border border-brand-100">
                 <summary class="cursor-pointer font-bold text-gray-900"><i class="fa-solid fa-users-gear mr-2 text-brand-600"></i>Administrar lista de asesores</summary>
                 <p class="mt-2 text-sm text-gray-600">Una persona por línea. Esta lista se guarda en Firestore y se actualizará para el equipo.</p>

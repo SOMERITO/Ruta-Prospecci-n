@@ -674,6 +674,7 @@
             document.getElementById("rosterAdminPanel").classList.toggle("hidden", role !== "supervisor");
             document.getElementById("resourceAdminPanel").classList.toggle("hidden", role !== "supervisor");
             document.getElementById("mobilityImportPanel").classList.toggle("hidden", role !== "supervisor");
+            document.getElementById("metricImportPanel").classList.toggle("hidden", role !== "supervisor");
 
             if (role === "supervisor") {
                 asesorTab.classList.add("hidden");

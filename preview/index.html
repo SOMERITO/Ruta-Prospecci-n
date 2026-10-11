@@ -2121,7 +2121,11 @@
                 renderMetricExcelImportPreview();
                 if (errors.length) setMetricExcelStatus("La vista previa detectó " + errors.length + " fila(s) con datos inválidos dentro del cálculo. Corrige el archivo antes de guardar.", "error");
                 else if (!eligibleRows) setMetricExcelStatus("El archivo se leyó, pero no hay registros que cumplan los filtros para " + formatMetricsMonth(targetMonth) + ". Revisa el periodo antes de continuar.", "warning");
-                else setMetricExcelStatus("Vista previa lista. Revisa las coincidencias de nombres antes de guardar.", "success");
+                else {
+                    const unmappedNames = Array.from(groups.keys()).filter(function(key) { return !imported.mapping[key]; }).length;
+                    if (unmappedNames) setMetricExcelStatus("Vista previa lista, pero hay " + unmappedNames + " promotor(es) sin coincidencia. Asígnalos al asesor correcto antes de guardar.", "warning");
+                    else setMetricExcelStatus("Vista previa lista. Revisa las coincidencias de nombres antes de guardar.", "success");
+                }
             } catch (error) {
                 console.error("Error al leer la importación de Excel:", error);
                 setMetricExcelStatus(error && error.message ? error.message : "No se pudo leer el Excel. Verifica el archivo e inténtalo de nuevo.", "error");
@@ -2195,6 +2199,11 @@
             if (!pendingMetricExcelImport || !select) return;
             pendingMetricExcelImport.mapping[select.dataset.metricSourceKey] = select.value;
             refreshMetricExcelApplyState();
+            const applyButton = document.getElementById("metricExcelApplyBtn");
+            if (applyButton && !applyButton.disabled) {
+                if (!pendingMetricExcelImport.eligibleRows) setMetricExcelStatus("No hay registros válidos para el periodo. Si continúas, Avance quedará en cero.", "warning");
+                else setMetricExcelStatus("Todos los nombres están asociados. Revisa la vista previa y confirma para guardar.", "success");
+            }
         }
 
         function refreshMetricExcelApplyState() {

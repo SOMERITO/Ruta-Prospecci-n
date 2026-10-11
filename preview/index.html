@@ -810,11 +810,37 @@
                 </section>
                 
                 <details id="metricImportPanel" class="hidden mb-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                    <summary class="cursor-pointer font-bold text-gray-800">Importar historial de Avance</summary>
-                    <p class="mt-2 text-sm text-gray-600">Una fila por asesor, separada por punto y coma: nombre;meta;avance;referidos;proyección. También se acepta nombre;meta;avance;proyección (referidos se tomará como 0). Las filas se combinan por nombre y no reemplazan las demás.</p>
-                    <textarea id="metricImportText" rows="6" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm font-mono" placeholder="NOMBRE DEL ASESOR;META;AVANCE;REFERIDOS;PROYECCIÓN"></textarea>
-                    <button id="metricImportBtn" type="button" onclick="importMetricRows()" class="mt-3 rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800">Importar al mes seleccionado</button>
-                    <p id="metricImportStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+                    <summary class="cursor-pointer font-bold text-gray-800">Actualizar Avance desde Excel</summary>
+                    <p class="mt-2 text-sm text-gray-600">Carga el archivo de Camila. El portal leerá la hoja <strong>Base Fichas</strong> y recalculará el indicador del periodo seleccionado, usando únicamente registros válidos de <strong>4.º de secundaria</strong>. La carga reemplaza el valor anterior de Avance para ese mes, no lo suma; Meta, Referidos postulantes y Proyección se conservan.</p>
+                    <div class="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                        <div>
+                            <label for="metricExcelFile" class="mb-1 block text-sm font-bold text-gray-700">Archivo Excel (.xlsx)</label>
+                            <input id="metricExcelFile" type="file" accept=".xlsx,.xls,.xlsm" onchange="handleMetricExcelFileChange(event)" class="block w-full rounded-lg border border-gray-300 bg-white p-3 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-brand-100 file:px-3 file:py-2 file:font-bold file:text-brand-900">
+                            <p id="metricExcelFileName" class="mt-1 text-xs text-gray-500">No se ha seleccionado ningún archivo.</p>
+                        </div>
+                        <div class="rounded-lg border border-brand-100 bg-white px-4 py-3">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Periodo de destino</p>
+                            <p id="metricExcelTargetMonth" class="mt-1 font-bold text-brand-900">Mes seleccionado en Métricas de Avance</p>
+                        </div>
+                    </div>
+                    <div id="metricExcelPreview" class="hidden mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                        <h3 class="font-bold text-gray-900">Vista previa de la importación</h3>
+                        <p id="metricExcelPreviewDescription" class="mt-1 text-sm text-gray-600"></p>
+                        <div id="metricExcelSummaryCards" class="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4"></div>
+                        <div id="metricExcelMappingContainer" class="mt-4"></div>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <button type="button" onclick="downloadMetricImportBackup()" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50"><i class="fa-solid fa-download mr-2"></i>Descargar respaldo del mes</button>
+                            <button id="metricExcelApplyBtn" type="button" onclick="applyMetricExcelImport()" disabled class="rounded-lg bg-brand-900 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-50"><i class="fa-solid fa-rotate mr-2"></i>Recalcular y guardar Avance</button>
+                        </div>
+                    </div>
+                    <p id="metricExcelImportStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+                    <details class="mt-4 rounded-lg border border-gray-200 bg-white p-3">
+                        <summary class="cursor-pointer text-sm font-bold text-gray-700">Alternativa: importar valores manualmente</summary>
+                        <p class="mt-2 text-sm text-gray-600">Para cargas manuales antiguas, pega una fila por asesor separada por punto y coma: nombre;meta;avance;referidos;proyección. También se acepta nombre;meta;avance;proyección (referidos será 0).</p>
+                        <textarea id="metricImportText" rows="5" class="mt-3 w-full rounded-lg border border-gray-300 p-3 text-sm font-mono" placeholder="NOMBRE DEL ASESOR;META;AVANCE;REFERIDOS;PROYECCIÓN"></textarea>
+                        <button id="metricImportBtn" type="button" onclick="importMetricRows()" class="mt-3 rounded-lg bg-gray-700 px-4 py-2 text-sm font-bold text-white hover:bg-gray-800">Importar datos manuales</button>
+                        <p id="metricImportStatus" class="mt-2 text-sm" role="status" aria-live="polite"></p>
+                    </details>
                 </details>
                 <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg bg-white">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -1899,6 +1925,391 @@
         }
 
         let isAvanceEditMode = false;
+
+
+        // Recalcula el Avance mensual desde los registros de la hoja Base Fichas.
+        let pendingMetricExcelImport = null;
+        let metricXlsxLoaderPromise = null;
+
+        function normalizeMetricExcelHeader(value) {
+            return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/\u00a0/g, " ").toLowerCase().replace(/[^a-z0-9]/g, "");
+        }
+
+        function escapeMetricExcelHtml(value) {
+            return String(value == null ? "" : value).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        }
+
+        function loadMetricXlsxLibrary() {
+            if (window.XLSX) return Promise.resolve(window.XLSX);
+            if (metricXlsxLoaderPromise) return metricXlsxLoaderPromise;
+            metricXlsxLoaderPromise = new Promise(function(resolve, reject) {
+                const script = document.createElement("script");
+                script.src = "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+                script.async = true;
+                script.onload = function() {
+                    if (window.XLSX) resolve(window.XLSX);
+                    else reject(new Error("La biblioteca de lectura de Excel no se inicializó."));
+                };
+                script.onerror = function() {
+                    metricXlsxLoaderPromise = null;
+                    reject(new Error("No se pudo cargar el lector de Excel. Comprueba tu conexión e inténtalo de nuevo."));
+                };
+                document.head.appendChild(script);
+            });
+            return metricXlsxLoaderPromise;
+        }
+
+        function getMetricExcelDate(value, xlsx) {
+            if (value instanceof Date && Number.isFinite(value.getTime())) {
+                return { year: value.getFullYear(), month: value.getMonth() + 1, day: value.getDate() };
+            }
+            if (typeof value === "number" && Number.isFinite(value)) {
+                const parts = xlsx.SSF.parse_date_code(value);
+                if (parts && parts.y && parts.m && parts.d) return { year: parts.y, month: parts.m, day: parts.d };
+                return null;
+            }
+            const text = String(value || "").trim();
+            if (!text) return null;
+            let match = text.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+            if (match) return { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
+            match = text.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+            if (match) return { year: Number(match[3]), month: Number(match[2]), day: Number(match[1]) };
+            return null;
+        }
+
+        function getMetricExcelNumeric(value) {
+            if (typeof value === "number") return Number.isFinite(value) ? value : null;
+            const text = String(value == null ? "" : value).trim().replace(/\u00a0/g, "").replace(/\s/g, "");
+            if (!text) return null;
+            const normalized = /^\d{1,3}([.,]\d{3})+$/.test(text) ? text.replace(/[.,]/g, "") : text.replace(",", ".");
+            const number = Number(normalized);
+            return Number.isFinite(number) ? number : null;
+        }
+
+        function getMetricExcelCellValue(sheet, address) {
+            const cell = sheet && sheet[address];
+            return cell && Object.prototype.hasOwnProperty.call(cell, "v") ? cell.v : "";
+        }
+
+        function setMetricExcelStatus(message, kind) {
+            const status = document.getElementById("metricExcelImportStatus");
+            if (!status) return;
+            status.textContent = message;
+            status.className = "mt-2 text-sm";
+            if (kind === "error") status.classList.add("text-red-700", "font-semibold");
+            else if (kind === "success") status.classList.add("text-emerald-700", "font-semibold");
+            else if (kind === "warning") status.classList.add("text-amber-700", "font-semibold");
+            else status.classList.add("text-gray-600");
+        }
+
+        function metricExcelCard(label, value) {
+            return '<div class="rounded-lg border border-gray-200 bg-gray-50 p-3"><p class="text-xs text-gray-500">' +
+                escapeMetricExcelHtml(label) + '</p><p class="mt-1 text-xl font-extrabold text-gray-900">' +
+                escapeMetricExcelHtml(value) + '</p></div>';
+        }
+
+        async function handleMetricExcelFileChange(event) {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const input = event && event.target;
+            const file = input && input.files && input.files[0];
+            if (!file) return;
+            pendingMetricExcelImport = null;
+            const preview = document.getElementById("metricExcelPreview");
+            const applyButton = document.getElementById("metricExcelApplyBtn");
+            const previewFile = document.getElementById("metricExcelFileName");
+            if (preview) preview.classList.add("hidden");
+            if (applyButton) applyButton.disabled = true;
+            if (previewFile) previewFile.textContent = file.name;
+            setMetricExcelStatus("Leyendo el archivo y revisando la hoja Base Fichas…", "info");
+            try {
+                const xlsx = await loadMetricXlsxLibrary();
+                const workbook = xlsx.read(await file.arrayBuffer(), { type: "array", cellDates: false });
+                const baseSheetName = workbook.SheetNames.find(function(name) {
+                    return normalizeMetricExcelHeader(name) === "basefichas";
+                });
+                if (!baseSheetName) throw new Error('El archivo no contiene una hoja llamada "Base Fichas".');
+                const sourceRows = xlsx.utils.sheet_to_json(workbook.Sheets[baseSheetName], { defval: "", raw: true });
+                if (!sourceRows.length) throw new Error('La hoja "Base Fichas" no contiene registros para importar.');
+
+                const headerMap = {};
+                Object.keys(sourceRows[0] || {}).forEach(function(header) {
+                    headerMap[normalizeMetricExcelHeader(header)] = header;
+                });
+                const requiredHeaders = {
+                    date: "fechadelaactividadenelcolegio",
+                    category: "categoriacolegio",
+                    grade: "grado",
+                    quantity: "cantidaddefichasrecolectadas",
+                    advisor: "promotorresponsable"
+                };
+                const missing = Object.keys(requiredHeaders).filter(function(key) { return !headerMap[requiredHeaders[key]]; });
+                if (missing.length) throw new Error("Faltan columnas necesarias en Base Fichas: " + missing.map(function(key) { return requiredHeaders[key]; }).join(", ") + ".");
+
+                const configName = workbook.SheetNames.find(function(name) {
+                    return normalizeMetricExcelHeader(name) === "config";
+                });
+                const configSheet = configName ? workbook.Sheets[configName] : null;
+                const configuredGrade = String(getMetricExcelCellValue(configSheet, "J2") || "4° secundaria").trim();
+                const validCategories = [];
+                for (let row = 4; row <= 13; row++) {
+                    const category = String(getMetricExcelCellValue(configSheet, "I" + row) || "").trim();
+                    if (category) validCategories.push(normalizeMetricExcelHeader(category));
+                }
+                // Compatible with the workbook's current fourth-grade category rules if Config is absent.
+                const acceptedCategories = new Set(validCategories.length ? validCategories : ["AAA", "AAA+", "CADENA"].map(normalizeMetricExcelHeader));
+                const gradeKey = normalizeMetricExcelHeader(configuredGrade);
+                const targetMonth = currentMetricsMonth;
+                if (!/^\d{4}-\d{2}$/.test(targetMonth || "")) throw new Error("Selecciona primero un periodo válido en Métricas de Avance.");
+
+                const groups = new Map();
+                const errors = [];
+                let monthRows = 0, gradeRows = 0, eligibleRows = 0, totalFichas = 0, unknownDateRows = 0;
+                sourceRows.forEach(function(row, index) {
+                    const excelRowNumber = index + 2;
+                    const quantityValue = row[headerMap[requiredHeaders.quantity]];
+                    const dateValue = row[headerMap[requiredHeaders.date]];
+                    const promoter = String(row[headerMap[requiredHeaders.advisor]] || "").replace(/\u00a0/g, " ").trim();
+                    const grade = String(row[headerMap[requiredHeaders.grade]] || "").replace(/\u00a0/g, " ").trim();
+                    const category = String(row[headerMap[requiredHeaders.category]] || "").replace(/\u00a0/g, " ").trim();
+                    const date = getMetricExcelDate(dateValue, xlsx);
+                    if (!date) {
+                        if (dateValue || promoter || grade || category || String(quantityValue == null ? "" : quantityValue).trim() !== "") unknownDateRows++;
+                        return;
+                    }
+                    const rowMonth = String(date.year) + "-" + String(date.month).padStart(2, "0");
+                    if (rowMonth !== targetMonth) return;
+                    monthRows++;
+                    if (normalizeMetricExcelHeader(grade) !== gradeKey) return;
+                    gradeRows++;
+                    if (!category || !acceptedCategories.has(normalizeMetricExcelHeader(category))) return;
+                    eligibleRows++;
+                    const quantity = getMetricExcelNumeric(quantityValue);
+                    if (!promoter) {
+                        errors.push("Fila " + excelRowNumber + ": falta Promotor Responsable.");
+                        return;
+                    }
+                    if (quantity === null || quantity < 0) {
+                        errors.push("Fila " + excelRowNumber + ": Cantidad de fichas recolectadas está vacía o no es válida.");
+                        return;
+                    }
+                    const sourceKey = normalizeAdvisorKey(promoter);
+                    if (!sourceKey) {
+                        errors.push("Fila " + excelRowNumber + ": no se pudo reconocer el nombre del promotor.");
+                        return;
+                    }
+                    const group = groups.get(sourceKey) || { key: sourceKey, sourceName: promoter, fichas: 0, records: 0 };
+                    group.fichas += quantity;
+                    group.records += 1;
+                    groups.set(sourceKey, group);
+                    totalFichas += quantity;
+                });
+
+                const imported = {
+                    fileName: file.name, monthKey: targetMonth, sheetName: baseSheetName, sourceRowCount: sourceRows.length,
+                    monthRows: monthRows, gradeRows: gradeRows, eligibleRows: eligibleRows, totalFichas: totalFichas,
+                    unknownDateRows: unknownDateRows, grade: configuredGrade, groups: groups, mapping: {}, errors: errors
+                };
+                groups.forEach(function(group, key) {
+                    const direct = advisorProfiles.find(function(profile) {
+                        return profile.advisorKey === key || normalizeAdvisorKey(profile.asesorNombre) === key;
+                    });
+                    imported.mapping[key] = direct ? direct.advisorKey : "";
+                });
+                pendingMetricExcelImport = imported;
+                renderMetricExcelImportPreview();
+                if (errors.length) setMetricExcelStatus("La vista previa detectó " + errors.length + " fila(s) con datos inválidos dentro del cálculo. Corrige el archivo antes de guardar.", "error");
+                else if (!eligibleRows) setMetricExcelStatus("El archivo se leyó, pero no hay registros que cumplan los filtros para " + formatMetricsMonth(targetMonth) + ". Revisa el periodo antes de continuar.", "warning");
+                else setMetricExcelStatus("Vista previa lista. Revisa las coincidencias de nombres antes de guardar.", "success");
+            } catch (error) {
+                console.error("Error al leer la importación de Excel:", error);
+                setMetricExcelStatus(error && error.message ? error.message : "No se pudo leer el Excel. Verifica el archivo e inténtalo de nuevo.", "error");
+            } finally {
+                if (input) input.value = "";
+            }
+        }
+
+        function renderMetricExcelImportPreview() {
+            const pending = pendingMetricExcelImport;
+            const preview = document.getElementById("metricExcelPreview");
+            const monthLabel = document.getElementById("metricExcelTargetMonth");
+            const description = document.getElementById("metricExcelPreviewDescription");
+            const cards = document.getElementById("metricExcelSummaryCards");
+            const mapping = document.getElementById("metricExcelMappingContainer");
+            const applyButton = document.getElementById("metricExcelApplyBtn");
+            if (!pending || !preview || !cards || !mapping || !applyButton) return;
+            preview.classList.remove("hidden");
+            if (monthLabel) monthLabel.textContent = capitalizeSpanish(formatMetricsMonth(pending.monthKey));
+            if (description) description.textContent = "Archivo: " + pending.fileName + ". Hoja leída: " + pending.sheetName +
+                ". Filtro aplicado: " + pending.grade + " y categorías configuradas en el Excel. Las importaciones vuelven a calcular el periodo y no acumulan cargas anteriores.";
+            cards.innerHTML = metricExcelCard("Filas leídas", pending.sourceRowCount.toLocaleString("es-PE")) +
+                metricExcelCard("Registros del mes", pending.monthRows.toLocaleString("es-PE")) +
+                metricExcelCard("Registros válidos", pending.eligibleRows.toLocaleString("es-PE")) +
+                metricExcelCard("Fichas que se calcularán", pending.totalFichas.toLocaleString("es-PE"));
+
+            if (!pending.groups.size) {
+                mapping.innerHTML = '<p class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">No se encontraron fichas que cumplan el filtro de grado y categoría en este periodo. Si continúas, el Avance del periodo quedará en cero para los asesores del portal.</p>';
+            } else {
+                const optionMarkupFor = function(selected) {
+                    return '<option value="">Seleccionar asesor del portal</option>' + advisorProfiles.map(function(profile) {
+                        const key = escapeMetricExcelHtml(profile.advisorKey);
+                        const name = escapeMetricExcelHtml(profile.asesorNombre);
+                        return '<option value="' + key + '"' + (profile.advisorKey === selected ? " selected" : "") + '>' + name + '</option>';
+                    }).join("");
+                };
+                const rows = Array.from(pending.groups.values()).sort(function(a, b) {
+                    return a.sourceName.localeCompare(b.sourceName, "es");
+                }).map(function(group) {
+                    const selected = pending.mapping[group.key] || "";
+                    const selectedProfile = advisorProfiles.find(function(profile) { return profile.advisorKey === selected; });
+                    const note = selected && selectedProfile && normalizeAdvisorKey(selectedProfile.asesorNombre) !== group.key
+                        ? '<p class="mt-1 text-xs text-amber-700">Nombre asignado manualmente</p>' : "";
+                    return '<tr class="border-t border-gray-100"><td class="px-3 py-3 text-sm font-semibold text-gray-900">' +
+                        escapeMetricExcelHtml(group.sourceName) + '</td><td class="px-3 py-3 text-center text-sm text-gray-600">' +
+                        group.records.toLocaleString("es-PE") + '</td><td class="px-3 py-3 text-center text-sm font-bold text-gray-900">' +
+                        group.fichas.toLocaleString("es-PE") + '</td><td class="px-3 py-3"><select data-metric-source-key="' +
+                        escapeMetricExcelHtml(group.key) + '" onchange="updateMetricExcelMapping(this)" class="w-full min-w-[180px] rounded-lg border border-gray-300 bg-white p-2 text-sm">' +
+                        optionMarkupFor(selected) + '</select>' + note + '</td></tr>';
+                }).join("");
+                mapping.innerHTML = '<div class="overflow-x-auto rounded-lg border border-gray-200"><table class="min-w-full"><thead class="bg-gray-50"><tr>' +
+                    '<th class="px-3 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500">Promotor en Excel</th>' +
+                    '<th class="px-3 py-3 text-center text-xs font-bold uppercase tracking-wide text-gray-500">Registros</th>' +
+                    '<th class="px-3 py-3 text-center text-xs font-bold uppercase tracking-wide text-gray-500">Fichas</th>' +
+                    '<th class="px-3 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500">Asesor correspondiente en el portal</th>' +
+                    '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+            }
+            if (pending.errors.length) {
+                const firstErrors = pending.errors.slice(0, 5).map(escapeMetricExcelHtml).join("<br>");
+                mapping.insertAdjacentHTML("beforeend", '<div class="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"><strong>Errores que impiden guardar:</strong><br>' +
+                    firstErrors + (pending.errors.length > 5 ? '<br>Y ' + (pending.errors.length - 5) + ' error(es) más.' : "") + '</div>');
+            }
+            if (pending.unknownDateRows) mapping.insertAdjacentHTML("beforeend",
+                '<p class="mt-2 text-xs text-gray-500">Se encontraron ' + pending.unknownDateRows.toLocaleString("es-PE") + ' fila(s) sin fecha interpretable. No se incluyeron en el cálculo.</p>');
+            if (!pending.eligibleRows) mapping.insertAdjacentHTML("beforeend",
+                '<p class="mt-2 text-xs text-amber-700">El cálculo dará cero para los asesores del portal porque no hay registros válidos en el periodo.</p>');
+            refreshMetricExcelApplyState();
+        }
+
+        function updateMetricExcelMapping(select) {
+            if (!pendingMetricExcelImport || !select) return;
+            pendingMetricExcelImport.mapping[select.dataset.metricSourceKey] = select.value;
+            refreshMetricExcelApplyState();
+        }
+
+        function refreshMetricExcelApplyState() {
+            const pending = pendingMetricExcelImport;
+            const applyButton = document.getElementById("metricExcelApplyBtn");
+            if (!pending || !applyButton) return;
+            const unmapped = Array.from(pending.groups.keys()).filter(function(key) {
+                return !pending.mapping[key] || !advisorProfiles.some(function(profile) { return profile.advisorKey === pending.mapping[key]; });
+            }).length;
+            const canApply = pending.monthKey === currentMetricsMonth && pending.errors.length === 0 &&
+                advisorProfiles.length > 0 && unmapped === 0;
+            applyButton.disabled = !canApply;
+            if (pending.monthKey !== currentMetricsMonth) setMetricExcelStatus("Cambió el periodo seleccionado después de leer el archivo. Vuelve a cargarlo para generar una vista previa correcta.", "warning");
+            else if (!advisorProfiles.length) setMetricExcelStatus("No se ha cargado la lista de asesores del portal. Actualiza la página y vuelve a intentarlo.", "error");
+            else if (unmapped) setMetricExcelStatus("Debes asignar " + unmapped + " promotor(es) del Excel a un asesor del portal antes de guardar.", "warning");
+            else if (pending.errors.length) setMetricExcelStatus("Corrige los errores detectados antes de guardar.", "error");
+        }
+
+        function downloadMetricImportBackup() {
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;
+            const monthKey = currentMetricsMonth || getCurrentMonthKey();
+            const backup = {
+                format: "ruta-prospeccion-monthly-metrics-backup",
+                month: monthKey,
+                exportedAt: new Date().toISOString(),
+                rows: (Array.isArray(sharedAvanceRows) ? sharedAvanceRows : []).map(function(row) { return Object.assign({}, row); }),
+                mobilityRows: (Array.isArray(sharedMobilityRows) ? sharedMobilityRows : []).map(function(row) { return Object.assign({}, row); })
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "respaldo-ruta-prospeccion-" + monthKey + ".json";
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+            setMetricExcelStatus("Respaldo descargado para " + formatMetricsMonth(monthKey) + ".", "success");
+        }
+
+        async function applyMetricExcelImport() {
+            const pending = pendingMetricExcelImport;
+            if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor" || !pending) return;
+            refreshMetricExcelApplyState();
+            const button = document.getElementById("metricExcelApplyBtn");
+            if (!button || button.disabled) return;
+            if (pending.monthKey !== currentMetricsMonth) {
+                setMetricExcelStatus("El periodo ha cambiado. Vuelve a seleccionar el archivo para revisar los datos del periodo correcto.", "error");
+                return;
+            }
+            if (pending.eligibleRows === 0) {
+                const proceedEmpty = window.confirm("No hay registros válidos de " + pending.grade + " para " + formatMetricsMonth(pending.monthKey) +
+                    ". Si continúas, el Avance del mes quedará en cero para los asesores del portal. ¿Deseas continuar?");
+                if (!proceedEmpty) return;
+            }
+            const confirmed = window.confirm("Vas a recalcular Avance para " + formatMetricsMonth(pending.monthKey) + " desde la hoja Base Fichas.\n\n" +
+                "Fichas calculadas: " + pending.totalFichas.toLocaleString("es-PE") + "\n" +
+                "Registros válidos: " + pending.eligibleRows.toLocaleString("es-PE") + "\n\n" +
+                "Se reemplazará Avance del periodo seleccionado. Meta, Referidos postulantes, Proyección y los demás meses se conservarán. Las cargas repetidas no se suman. ¿Continuar?");
+            if (!confirmed) return;
+
+            const buttonText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Guardando…';
+            setMetricExcelStatus("Calculando valores finales y guardando en Firestore…", "info");
+            try {
+                const totalsByAdvisor = new Map();
+                pending.groups.forEach(function(group, sourceKey) {
+                    const targetKey = pending.mapping[sourceKey];
+                    if (!targetKey) return;
+                    totalsByAdvisor.set(targetKey, (totalsByAdvisor.get(targetKey) || 0) + group.fichas);
+                });
+                const existingRows = Array.isArray(sharedAvanceRows) && sharedAvanceRows.length
+                    ? sharedAvanceRows.map(function(row) { return Object.assign({}, row); })
+                    : buildDefaultAvanceData();
+                const existingByKey = new Map(existingRows.map(function(row) {
+                    return [normalizeAdvisorKey(row.asesor), row];
+                }));
+                const currentRosterKeys = new Set(advisorProfiles.map(function(profile) { return profile.advisorKey; }));
+                const updatedRows = [];
+                advisorProfiles.forEach(function(profile) {
+                    const previous = existingByKey.get(profile.advisorKey) || {
+                        asesor: profile.asesorNombre, meta: 0, avance: 0, referidos: 0, proyeccion: 0
+                    };
+                    updatedRows.push(Object.assign({}, previous, {
+                        asesor: profile.asesorNombre,
+                        avance: totalsByAdvisor.get(profile.advisorKey) || 0
+                    }));
+                });
+                // Preserva filas antiguas no pertenecientes al padrón y sus otros indicadores.
+                existingRows.forEach(function(row) {
+                    const key = normalizeAdvisorKey(row.asesor);
+                    if (!key || currentRosterKeys.has(key)) return;
+                    updatedRows.push(Object.assign({}, row, { avance: totalsByAdvisor.get(key) || 0 }));
+                });
+
+                await db.collection("monthlyMetrics").doc(pending.monthKey).set({
+                    month: pending.monthKey, rows: updatedRows, updatedBy: signedInUser.uid,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                sharedAvanceRows = updatedRows;
+                renderAvance();
+                currentMetricsDocumentExists = true;
+                setMetricExcelStatus("Importación guardada. Se recalcularon " + updatedRows.length + " filas del periodo " +
+                    formatMetricsMonth(pending.monthKey) + " a partir de " + pending.eligibleRows.toLocaleString("es-PE") +
+                    " registros válidos. Meta, Referidos postulantes, Proyección y los demás meses no se modificaron.", "success");
+                updateMetricsMonthStatus("Avance recalculado desde Excel para " + formatMetricsMonth(pending.monthKey) + ".", "success");
+            } catch (error) {
+                console.error("No se pudo guardar la importación de Base Fichas:", error);
+                setMetricExcelStatus("No se pudo guardar. Los datos visibles no deben considerarse importados; verifica la conexión y las reglas de Firestore.", "error");
+            } finally {
+                button.innerHTML = buttonText;
+                refreshMetricExcelApplyState();
+            }
+        }
 
         async function importMetricRows() {
             if (!signedInUser || !signedInProfile || signedInProfile.role !== "supervisor") return;

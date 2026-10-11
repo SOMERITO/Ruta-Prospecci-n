@@ -1936,6 +1936,10 @@
                 .replace(/\u00a0/g, " ").toLowerCase().replace(/[^a-z0-9]/g, "");
         }
 
+        function normalizeMetricExcelDisplayName(value) {
+            return String(value || "").replace(/\u00a0/g, " ").trim().replace(/\s+/g, " ").toLocaleLowerCase("es-PE");
+        }
+
         function escapeMetricExcelHtml(value) {
             return String(value == null ? "" : value).replace(/&/g, "&amp;").replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -2112,8 +2116,9 @@
                     unknownDateRows: unknownDateRows, grade: configuredGrade, groups: groups, mapping: {}, errors: errors
                 };
                 groups.forEach(function(group, key) {
+                    // Auto-match only exact display names (ignoring case/extra spaces). Accent differences require review.
                     const direct = advisorProfiles.find(function(profile) {
-                        return profile.advisorKey === key || normalizeAdvisorKey(profile.asesorNombre) === key;
+                        return normalizeMetricExcelDisplayName(profile.asesorNombre) === normalizeMetricExcelDisplayName(group.sourceName);
                     });
                     imported.mapping[key] = direct ? direct.advisorKey : "";
                 });
@@ -2167,8 +2172,8 @@
                 }).map(function(group) {
                     const selected = pending.mapping[group.key] || "";
                     const selectedProfile = advisorProfiles.find(function(profile) { return profile.advisorKey === selected; });
-                    const note = selected && selectedProfile && normalizeAdvisorKey(selectedProfile.asesorNombre) !== group.key
-                        ? '<p class="mt-1 text-xs text-amber-700">Nombre asignado manualmente</p>' : "";
+                    const note = selected && selectedProfile && normalizeMetricExcelDisplayName(selectedProfile.asesorNombre) !== normalizeMetricExcelDisplayName(group.sourceName)
+                        ? '<p class="mt-1 text-xs text-amber-700">El nombre difiere en Excel; confirma la correspondencia.</p>' : "";
                     return '<tr class="border-t border-gray-100"><td class="px-3 py-3 text-sm font-semibold text-gray-900">' +
                         escapeMetricExcelHtml(group.sourceName) + '</td><td class="px-3 py-3 text-center text-sm text-gray-600">' +
                         group.records.toLocaleString("es-PE") + '</td><td class="px-3 py-3 text-center text-sm font-bold text-gray-900">' +

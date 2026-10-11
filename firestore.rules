@@ -1,0 +1,112 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Institutional accounts must be verified and use the university domain.
+    function hasInstitutionalIdentity() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email.matches('^[^@]+@uwiener[.]edu[.]pe$')
+        && request.auth.token.email_verified == true;
+    }
+
+    // Only this exact, verified Gmail address may be used for the team's shared login.
+    function hasSharedTeamIdentity() {
+      return request.auth != null
+        && request.auth.token.email == 'prospeccionwiener@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function hasAuthorizedProfile() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.email == request.auth.token.email
+        && (
+          (hasInstitutionalIdentity()
+            && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role != 'asesor_compartido')
+          ||
+          (hasSharedTeamIdentity()
+            && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'asesor_compartido')
+        );
+    }
+
+    function isSupervisor() {
+      return hasAuthorizedProfile()
+        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'supervisor';
+    }
+
+    function isSharedAdvisor() {
+      return hasAuthorizedProfile()
+        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'asesor_compartido';
+    }
+
+    function canWriteSharedAdvisorRecord(recordId) {
+      return isSharedAdvisor()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerEmail == request.auth.token.email
+        && request.resource.data.asesor is string
+        && request.resource.data.advisorKey is string
+        && request.resource.data.advisorKey.matches('^[a-z0-9_]+$')
+        && request.resource.data.date is string
+        && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && get(/databases/$(database)/documents/appConfig/roster).data.advisorMap.get(request.resource.data.advisorKey, '') == request.resource.data.asesor
+        && recordId == 'shared_' + request.resource.data.advisorKey + '_' + request.resource.data.date;
+    }
+
+    function canWriteOwnRecord(recordId) {
+      return hasAuthorizedProfile()
+        && get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.role == 'asesor'
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerEmail == request.auth.token.email
+        && request.resource.data.asesor == get(/databases/$(database)/documents/authorizedUsers/$(request.auth.uid)).data.asesorNombre
+        && request.resource.data.date is string
+        && recordId == request.auth.uid + '_' + request.resource.data.date;
+    }
+
+    // User can only read their own profile document; profiles and roles cannot be changed by clients.
+    match /authorizedUsers/{uid} {
+      allow get: if request.auth != null
+        && request.auth.uid == uid
+        && (hasInstitutionalIdentity() || hasSharedTeamIdentity());
+      allow list: if isSupervisor();
+      allow create, update, delete: if false;
+    }
+
+    // The supervisor and the shared team account can read all daily progress.
+    // Individual adviser accounts can only access their own records.
+    match /trackerRecords/{recordId} {
+      allow get, list: if isSupervisor()
+        || isSharedAdvisor()
+        || (hasAuthorizedProfile() && resource.data.ownerUid == request.auth.uid);
+      allow create: if canWriteOwnRecord(recordId) || canWriteSharedAdvisorRecord(recordId);
+      allow update: if resource.data.ownerUid == request.auth.uid
+        && (canWriteOwnRecord(recordId) || canWriteSharedAdvisorRecord(recordId));
+      allow delete: if false;
+    }
+
+    // One document per month. All authorized users may view team indicators;
+    // only the supervisor may create, edit, or delete monthly figures.
+    match /monthlyMetrics/{monthId} {
+      allow get: if hasAuthorizedProfile();
+      allow list: if false;
+      allow create, update, delete: if isSupervisor();
+    }
+
+    // Legacy metrics path: supervisor only.
+    match /appData/{documentId} {
+      allow read, write: if isSupervisor();
+    }
+
+    // Operational links and roster are private to authorized profiles.
+    match /appConfig/{documentId} {
+      allow get: if hasAuthorizedProfile();
+      allow list: if false;
+      allow create, update, delete: if isSupervisor();
+    }
+
+    // Deny everything else.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

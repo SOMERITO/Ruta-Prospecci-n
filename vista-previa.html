@@ -877,7 +877,7 @@
                     </div>
                     
                     <div class="flex space-x-3 items-center">
-                        <button onclick="toggleEditAvance()" id="btnToggleEdit" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center">
+                        <button onclick="toggleEditAvance()" id="btnToggleEdit" style="display:none" aria-hidden="true" tabindex="-1" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors items-center justify-center">
                             <i class="fa-solid fa-pen mr-2"></i>Editar
                         </button>
                         <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white h-10 w-10 rounded-full text-lg shadow-md transition-all flex items-center justify-center shrink-0" title="Copiar Imagen">
@@ -1124,7 +1124,15 @@
             document.getElementById("signedInEmail").textContent = signedInUser.email || "";
             document.getElementById("signOutBtn").classList.remove("hidden");
 
-            document.getElementById("btnToggleEdit").classList.toggle("hidden", role !== "supervisor");
+            const metricsEditButton = document.getElementById("btnToggleEdit");
+            if (metricsEditButton) {
+                const canEditMetrics = role === "supervisor";
+                // El estilo en línea evita que utilidades de Tailwind como flex anulen el ocultamiento.
+                metricsEditButton.style.display = canEditMetrics ? "flex" : "none";
+                metricsEditButton.setAttribute("aria-hidden", String(!canEditMetrics));
+                metricsEditButton.tabIndex = canEditMetrics ? 0 : -1;
+                metricsEditButton.disabled = !canEditMetrics;
+            }
             document.getElementById("btnEditMovilidad").classList.toggle("hidden", role !== "supervisor");
             document.getElementById("rosterAdminPanel").classList.toggle("hidden", role !== "supervisor");
             document.getElementById("resourceAdminPanel").classList.toggle("hidden", role !== "supervisor");
@@ -3457,7 +3465,9 @@
             if (!btn || !container) return;
 
             // Conserva el estado visual real del botón de edición para no mostrarlo a perfiles no autorizados.
-            const originalEditDisplay = btnEdit ? btnEdit.style.display : "";
+            const originalEditDisplay = btnEdit ? btnEdit.style.display : "none";
+            const originalEditAriaHidden = btnEdit ? btnEdit.getAttribute("aria-hidden") : "true";
+            const originalEditTabIndex = btnEdit ? btnEdit.tabIndex : -1;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             btn.disabled = true;
             btn.style.opacity = "0";
@@ -3517,7 +3527,11 @@
                 btn.classList.remove("bg-emerald-500", "hover:bg-emerald-600");
                 btn.classList.add("bg-brand-500", "hover:bg-brand-600");
                 btn.disabled = false;
-                if (btnEdit) btnEdit.style.display = originalEditDisplay;
+                if (btnEdit) {
+                    btnEdit.style.display = originalEditDisplay;
+                    btnEdit.setAttribute("aria-hidden", originalEditAriaHidden || "true");
+                    btnEdit.tabIndex = originalEditTabIndex;
+                }
                 if (wasEditing) toggleEditAvance();
             }
         }

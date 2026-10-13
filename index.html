@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 15 //////// -->
+<!-- //////// Versión 16 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3590,17 +3590,45 @@
                                 cell.style.setProperty("vertical-align", "middle", "important");
                             });
 
-                            // Los porcentajes son cápsulas inline en la página. Al renderizar el clon,
-                            // su línea base puede desplazarse; convertirlas en flex centrado mantiene
-                            // el texto centrado sin cambiar sus colores ni sus bordes.
+                            // html2canvas sitúa demasiado abajo el texto cuando queda como nodo de texto
+                            // directo dentro de la cápsula. En la copia de captura, envolver el porcentaje
+                            // en una caja de altura fija centra el texto de forma estable sin tocar la página.
                             clonedTable.querySelectorAll("tbody td span.rounded-full.border").forEach(function (badge) {
-                                badge.style.setProperty("display", "inline-flex", "important");
-                                badge.style.setProperty("align-items", "center", "important");
-                                badge.style.setProperty("justify-content", "center", "important");
+                                const labelText = badge.textContent.trim();
+                                const label = clonedDocument.createElement("span");
+                                label.textContent = labelText;
+                                label.style.cssText = [
+                                    "position:absolute",
+                                    "left:0",
+                                    "right:0",
+                                    "top:0",
+                                    "bottom:0",
+                                    "display:block",
+                                    "padding:0",
+                                    "margin:0",
+                                    "text-align:center",
+                                    "line-height:26px",
+                                    "font-size:12px",
+                                    "font-weight:700",
+                                    "white-space:nowrap",
+                                    "color:inherit",
+                                    "box-sizing:border-box"
+                                ].join(";");
+
+                                badge.textContent = "";
+                                badge.appendChild(label);
+                                badge.style.setProperty("display", "inline-block", "important");
+                                badge.style.setProperty("position", "relative", "important");
+                                badge.style.setProperty("height", "28px", "important");
+                                badge.style.setProperty("min-width", "52px", "important");
+                                badge.style.setProperty("width", Math.max(52, labelText.length * 8 + 28) + "px", "important");
+                                badge.style.setProperty("padding", "0", "important");
+                                badge.style.setProperty("margin", "0 auto", "important");
+                                badge.style.setProperty("line-height", "26px", "important");
                                 badge.style.setProperty("vertical-align", "middle", "important");
-                                badge.style.setProperty("line-height", "1rem", "important");
                                 badge.style.setProperty("white-space", "nowrap", "important");
                                 badge.style.setProperty("box-sizing", "border-box", "important");
+                                badge.style.setProperty("overflow", "hidden", "important");
                             });
                         }
                     }

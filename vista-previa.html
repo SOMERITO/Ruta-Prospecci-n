@@ -877,7 +877,7 @@
                     </div>
                     
                     <div class="flex space-x-3 items-center">
-                        <button onclick="toggleEditAvance()" id="btnToggleEdit" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center">
+                        <button onclick="toggleEditAvance()" id="btnToggleEdit" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center">
                             <i class="fa-solid fa-pen mr-2"></i>Editar
                         </button>
                         <button onclick="copyAvanceScreenshot()" id="btnCopyAvance" class="bg-brand-500 hover:bg-brand-600 text-white h-10 w-10 rounded-full text-lg shadow-md transition-all flex items-center justify-center shrink-0" title="Copiar Imagen">
@@ -3448,65 +3448,77 @@
         }
 
         async function copyAvanceScreenshot() {
-            let wasEditing = isAvanceEditMode;
-            if(wasEditing) {
-                toggleEditAvance(); // Esto lo pasa a texto fijo y re-renderiza
-            }
+            const wasEditing = Boolean(signedInProfile && signedInProfile.role === "supervisor" && isAvanceEditMode);
+            if (wasEditing) toggleEditAvance(); // La captura debe mostrar valores, no campos editables.
 
-            const btn = document.getElementById('btnCopyAvance');
-            const btnEdit = document.getElementById('btnToggleEdit');
-            
+            const btn = document.getElementById("btnCopyAvance");
+            const btnEdit = document.getElementById("btnToggleEdit");
+            const container = document.getElementById("avanceCaptureContainer");
+            if (!btn || !container) return;
+
+            // Conserva el estado visual real del botón de edición para no mostrarlo a perfiles no autorizados.
+            const originalEditDisplay = btnEdit ? btnEdit.style.display : "";
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             btn.disabled = true;
-            if(btnEdit) btnEdit.style.display = 'none';
+            btn.style.opacity = "0";
+            if (btnEdit) btnEdit.style.display = "none";
 
-            const container = document.getElementById('avanceCaptureContainer');
-            btn.style.opacity = '0'; 
-            
             try {
                 const canvas = await html2canvas(container, {
-                    scale: 2, 
+                    scale: 2,
                     backgroundColor: "#ffffff",
-                    logging: false
-                });
-                
-                btn.style.opacity = '1';
-                if(btnEdit) btnEdit.style.display = 'flex';
-                
-                canvas.toBlob(async function(blob) {
-                    try {
-                        const item = new ClipboardItem({ "image/png": blob });
-                        await navigator.clipboard.write([item]);
-                        
-                        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-                        btn.classList.replace('bg-brand-500', 'bg-emerald-500');
-                        btn.classList.replace('hover:bg-brand-600', 'hover:bg-emerald-600');
-                        
-                        setTimeout(() => {
-                            btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
-                            btn.classList.replace('bg-emerald-500', 'bg-brand-500');
-                            btn.classList.replace('hover:bg-emerald-600', 'hover:bg-brand-600');
-                            btn.disabled = false;
-                            
-                            // Restaurar estado de edición si estaba activo
-                            if(wasEditing) toggleEditAvance();
-                        }, 2000);
-                        
-                    } catch (err) {
-                        console.error("Error al copiar: ", err);
-                        showAppToast("No se pudo copiar la captura. Prueba con Chrome o Edge y vuelve a intentarlo.", "error", { duration: 6500 });
-                        btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
-                        btn.disabled = false;
-                        if(wasEditing) toggleEditAvance();
+                    logging: false,
+                    onclone: function (clonedDocument) {
+                        // html2canvas puede colocar la línea base de cifras ligeramente más abajo que el navegador.
+                        // Ajusta solo los valores numéricos; conserva alineados los nombres y las insignias de porcentaje.
+                        const clonedRows = clonedDocument.querySelectorAll("#avanceTableBody tr");
+                        clonedRows.forEach(function (row) {
+                            Array.from(row.cells).forEach(function (cell, columnIndex) {
+                                if (![1, 2, 4, 5, 6].includes(columnIndex)) return;
+                                Array.from(cell.childNodes).forEach(function (node) {
+                                    if (node.nodeType === 3 && node.textContent.trim()) {
+                                        const wrapper = clonedDocument.createElement("span");
+                                        wrapper.className = "rp-capture-number-baseline";
+                                        wrapper.textContent = node.textContent;
+                                        cell.replaceChild(wrapper, node);
+                                    } else if (node.nodeType === 1) {
+                                        node.classList.add("rp-capture-number-baseline");
+                                    }
+                                });
+                            });
+                        });
+                        clonedDocument.querySelectorAll(".rp-capture-number-baseline").forEach(function (node) {
+                            node.style.position = "relative";
+                            node.style.top = "-2px";
+                        });
                     }
-                }, "image/png");
-            } catch (err) {
-                console.error("Error al generar imagen: ", err);
-                btn.style.opacity = '1';
-                if(btnEdit) btnEdit.style.display = 'flex';
+                });
+
+                const blob = await new Promise(function (resolve, reject) {
+                    canvas.toBlob(function (result) {
+                        if (result) resolve(result);
+                        else reject(new Error("No se pudo generar la imagen PNG."));
+                    }, "image/png");
+                });
+                const item = new ClipboardItem({ "image/png": blob });
+                await navigator.clipboard.write([item]);
+
+                btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                btn.classList.remove("bg-brand-500", "hover:bg-brand-600");
+                btn.classList.add("bg-emerald-500", "hover:bg-emerald-600");
+                showAppToast("La captura de Métricas de Avance está lista para pegar.", "success");
+                await new Promise(function (resolve) { window.setTimeout(resolve, 1700); });
+            } catch (error) {
+                console.error("No se pudo copiar la captura de Métricas de Avance:", error);
+                showAppToast("No se pudo copiar la captura. Comprueba los permisos del portapapeles e inténtalo nuevamente.", "error", { duration: 6500 });
+            } finally {
+                btn.style.opacity = "1";
                 btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
+                btn.classList.remove("bg-emerald-500", "hover:bg-emerald-600");
+                btn.classList.add("bg-brand-500", "hover:bg-brand-600");
                 btn.disabled = false;
-                if(wasEditing) toggleEditAvance();
+                if (btnEdit) btnEdit.style.display = originalEditDisplay;
+                if (wasEditing) toggleEditAvance();
             }
         }
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 12 //////// -->
+<!-- //////// Versión 13 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3478,6 +3478,11 @@
             const originalButtonHTML = btn.innerHTML;
             const originalButtonDisabled = btn.disabled;
             let captureRoot = null;
+            const captureHostTop = Math.max(
+                document.documentElement.scrollHeight,
+                document.body ? document.body.scrollHeight : 0,
+                window.scrollY + window.innerHeight
+            ) + 100;
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
@@ -3489,9 +3494,9 @@
                 captureRoot.setAttribute("data-avance-capture-root", "true");
                 captureRoot.setAttribute("aria-hidden", "true");
                 captureRoot.style.cssText = [
-                    "position:fixed",
-                    "left:-10000px",
-                    "top:0",
+                    "position:absolute",
+                    "left:0",
+                    "top:" + captureHostTop + "px",
                     "display:block",
                     "width:max-content",
                     "max-width:none",
@@ -3556,12 +3561,14 @@
 
                 const canvas = await html2canvas(captureRoot, {
                     scale: 2,
-                    x: rootRect.left,
-                    y: rootRect.top,
+                    x: 0,
+                    y: captureHostTop,
                     width: captureWidth,
                     height: captureHeight,
-                    windowWidth: Math.max(document.documentElement.clientWidth, captureWidth + Math.abs(Math.min(0, rootRect.left))),
-                    windowHeight: Math.max(document.documentElement.clientHeight, captureHeight),
+                    windowWidth: Math.max(document.documentElement.clientWidth, captureWidth + 32),
+                    // El clon temporal vive debajo del contenido normal para evitar que se vea;
+                    // ampliamos la ventana de captura para que html2canvas pueda renderizarlo completo.
+                    windowHeight: Math.max(document.documentElement.clientHeight, captureHostTop + captureHeight + 100),
                     backgroundColor: "#ffffff",
                     logging: false,
                     foreignObjectRendering: true,

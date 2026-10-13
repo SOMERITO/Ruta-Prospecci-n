@@ -3479,8 +3479,8 @@
                     backgroundColor: "#ffffff",
                     logging: false,
                     onclone: function (clonedDocument) {
-                        // Centra los contenidos en un eje común de cada celda durante la captura.
-                        // La tabla original no se modifica y los nodos conservan negritas, colores y porcentajes.
+                        // Contenedores en flujo normal: evita diferencias de html2canvas con position:absolute
+                        // dentro de celdas de tabla. Todos los valores y badges tienen la misma altura y centrado.
                         const centeredColumns = [1, 2, 3, 4, 5, 6, 7];
                         const clonedRows = clonedDocument.querySelectorAll("#avanceTableBody tr");
 
@@ -3496,18 +3496,17 @@
                                 }
                                 cell.appendChild(wrapper);
 
-                                // El mismo centrado absoluto para números y badges evita diferencias de línea base.
-                                cell.style.position = "relative";
-                                wrapper.style.position = "absolute";
-                                wrapper.style.left = "0";
-                                wrapper.style.right = "0";
-                                wrapper.style.top = "50%";
-                                wrapper.style.transform = "translateY(-50%)";
+                                // Mantener el contenedor dentro del flujo conserva el cálculo normal de altura de la fila.
+                                wrapper.style.position = "static";
+                                wrapper.style.inset = "auto";
+                                wrapper.style.transform = "none";
                                 wrapper.style.display = "flex";
                                 wrapper.style.width = "100%";
+                                wrapper.style.minHeight = "30px";
                                 wrapper.style.boxSizing = "border-box";
                                 wrapper.style.alignItems = "center";
                                 wrapper.style.justifyContent = "center";
+                                wrapper.style.textAlign = "center";
                                 wrapper.style.whiteSpace = "nowrap";
                                 wrapper.style.lineHeight = "normal";
                                 wrapper.style.margin = "0";

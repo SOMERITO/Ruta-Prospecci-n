@@ -3479,8 +3479,8 @@
                     backgroundColor: "#ffffff",
                     logging: false,
                     onclone: function (clonedDocument) {
-                        // Usa el centro real de la insignia de porcentaje de cada fila como referencia.
-                        // Así la captura alinea cada número con la fila sin offsets fijos ni cambios en la página original.
+                        // Conserva el HTML y el formato original de los números; solo cambia la alineación
+                        // dentro del documento clonado que se usa para la captura.
                         const numericColumns = [1, 2, 4, 5, 6];
                         const clonedRows = clonedDocument.querySelectorAll("#avanceTableBody tr");
 
@@ -3489,39 +3489,45 @@
                                 cell.style.verticalAlign = "middle";
                                 if (!numericColumns.includes(columnIndex)) return;
 
-                                const wrapper = clonedDocument.createElement("span");
+                                // Envolver los nodos existentes preserva negritas, colores y formato.
+                                const wrapper = clonedDocument.createElement("div");
                                 wrapper.className = "rp-capture-cell-value";
-                                wrapper.textContent = cell.textContent.trim();
-                                cell.textContent = "";
+                                while (cell.firstChild) {
+                                    wrapper.appendChild(cell.firstChild);
+                                }
                                 cell.appendChild(wrapper);
 
-                                wrapper.style.display = "inline-block";
-                                wrapper.style.lineHeight = "normal";
+                                wrapper.style.display = "flex";
+                                wrapper.style.width = "100%";
+                                wrapper.style.boxSizing = "border-box";
+                                wrapper.style.alignItems = "center";
+                                wrapper.style.justifyContent = "center";
                                 wrapper.style.whiteSpace = "nowrap";
+                                wrapper.style.lineHeight = "normal";
                                 wrapper.style.position = "relative";
                                 wrapper.style.top = "0px";
                             });
                         });
 
-                        // Mide el texto y la insignia en la misma fila para corregir únicamente la captura.
+                        // Igualar el alto del contenedor numérico a la insignia de porcentaje de su fila.
+                        // Medir el centro real de ambos y corregir solo el clon evita desplazamientos arbitrarios.
                         clonedRows.forEach(function (row) {
                             const referenceBadge = row.cells[3] && row.cells[3].querySelector("span");
                             if (!referenceBadge) return;
+
                             const badgeRect = referenceBadge.getBoundingClientRect();
                             const referenceCenter = badgeRect.top + badgeRect.height / 2;
+                            const badgeHeight = badgeRect.height;
 
                             Array.from(row.cells).forEach(function (cell, columnIndex) {
                                 if (!numericColumns.includes(columnIndex)) return;
                                 const wrapper = cell.querySelector(".rp-capture-cell-value");
                                 if (!wrapper) return;
 
-                                const range = clonedDocument.createRange();
-                                range.selectNodeContents(wrapper);
-                                const textRect = range.getBoundingClientRect();
-                                if (!textRect.height) return;
-
-                                const textCenter = textRect.top + textRect.height / 2;
-                                const correction = referenceCenter - textCenter;
+                                wrapper.style.minHeight = badgeHeight.toFixed(2) + "px";
+                                const wrapperRect = wrapper.getBoundingClientRect();
+                                const wrapperCenter = wrapperRect.top + wrapperRect.height / 2;
+                                const correction = referenceCenter - wrapperCenter;
                                 wrapper.style.top = correction.toFixed(2) + "px";
                             });
                         });

@@ -3479,8 +3479,7 @@
                     backgroundColor: "#ffffff",
                     logging: false,
                     onclone: function (clonedDocument) {
-                        // Contenedores en flujo normal: evita diferencias de html2canvas con position:absolute
-                        // dentro de celdas de tabla. Todos los valores y badges tienen la misma altura y centrado.
+                        // Mantener cifras, porcentaje y formato en el flujo normal de la tabla durante la captura.
                         const centeredColumns = [1, 2, 3, 4, 5, 6, 7];
                         const clonedRows = clonedDocument.querySelectorAll("#avanceTableBody tr");
 
@@ -3496,10 +3495,7 @@
                                 }
                                 cell.appendChild(wrapper);
 
-                                // Mantener el contenedor dentro del flujo conserva el cálculo normal de altura de la fila.
                                 wrapper.style.position = "static";
-                                wrapper.style.inset = "auto";
-                                wrapper.style.transform = "none";
                                 wrapper.style.display = "flex";
                                 wrapper.style.width = "100%";
                                 wrapper.style.minHeight = "30px";
@@ -3511,6 +3507,32 @@
                                 wrapper.style.lineHeight = "normal";
                                 wrapper.style.margin = "0";
                                 wrapper.style.padding = "0";
+                            });
+                        });
+
+                        // Centrar el número en el interior de cada insignia roja, amarilla o verde.
+                        // Se anula el padding vertical y el line-height heredados para evitar que bajen el texto.
+                        clonedRows.forEach(function (row) {
+                            [3, 7].forEach(function (columnIndex) {
+                                const cell = row.cells[columnIndex];
+                                const badge = cell && cell.querySelector(".rp-capture-cell-value > span");
+                                if (!badge) return;
+
+                                badge.style.display = "inline-flex";
+                                badge.style.alignItems = "center";
+                                badge.style.justifyContent = "center";
+                                badge.style.boxSizing = "border-box";
+                                badge.style.height = "30px";
+                                badge.style.minHeight = "30px";
+                                badge.style.lineHeight = "1";
+                                badge.style.paddingTop = "0";
+                                badge.style.paddingBottom = "0";
+                                badge.style.verticalAlign = "middle";
+                                badge.style.position = "static";
+                                badge.style.top = "auto";
+                                badge.style.transform = "none";
+                                badge.style.alignSelf = "center";
+                                badge.style.whiteSpace = "nowrap";
                             });
                         });
                     }

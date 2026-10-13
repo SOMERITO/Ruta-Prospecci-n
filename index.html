@@ -3465,91 +3465,108 @@
         }
 
         async function copyAvanceScreenshot() {
-            // Capturar el DOM como está renderizado. No reconstruir filas ni insignias,
-            // porque eso cambia el baseline y el posicionamiento de las cápsulas en html2canvas.
             const wasEditing = Boolean(signedInProfile && signedInProfile.role === "supervisor" && isAvanceEditMode);
             if (wasEditing) toggleEditAvance();
 
             const btn = document.getElementById("btnCopyAvance");
-            const container = document.getElementById("avanceCaptureContainer");
-            if (!btn || !container) {
+            const sourceTable = document.getElementById("avanceMetricsTable");
+            if (!btn || !sourceTable) {
                 if (wasEditing) toggleEditAvance();
                 return;
             }
 
             const originalButtonHTML = btn.innerHTML;
             const originalButtonDisabled = btn.disabled;
+            let captureRoot = null;
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
             try {
-                // Dimensionar la imagen con la tabla completa, no solo el área visible del scroll.
-                const sourceRect = container.getBoundingClientRect();
-                const sourceTable = container.querySelector("#avanceMetricsTable") || container.querySelector("table");
-                const sourceScroller = sourceTable ? sourceTable.closest(".overflow-x-auto, .overflow-auto, .overflow-y-auto") : null;
-                const scrollerRect = sourceScroller ? sourceScroller.getBoundingClientRect() : sourceRect;
-                const containerStyle = window.getComputedStyle(container);
-                const paddingRight = parseFloat(containerStyle.paddingRight) || 0;
-                const paddingBottom = parseFloat(containerStyle.paddingBottom) || 0;
-                const tableWidth = sourceTable ? Math.max(sourceTable.offsetWidth, sourceTable.scrollWidth) : sourceRect.width;
-                const tableHeight = sourceTable ? Math.max(sourceTable.offsetHeight, sourceTable.scrollHeight) : sourceRect.height;
-                const captureWidth = Math.ceil(Math.max(sourceRect.width, scrollerRect.left - sourceRect.left + tableWidth + paddingRight));
-                const captureHeight = Math.ceil(Math.max(sourceRect.height, scrollerRect.top - sourceRect.top + tableHeight + paddingBottom));
+                // Construir una copia independiente de la tabla completa. Al no usar el contenedor
+                // desplazable de la página, ni el scroll horizontal ni el vertical pueden recortar
+                // Asesor, Meta, Avance o los encabezados.
+                captureRoot = document.createElement("div");
+                captureRoot.setAttribute("data-avance-capture-root", "true");
+                captureRoot.setAttribute("aria-hidden", "true");
+                captureRoot.style.cssText = [
+                    "position:fixed",
+                    "left:-10000px",
+                    "top:0",
+                    "display:block",
+                    "width:max-content",
+                    "max-width:none",
+                    "min-width:0",
+                    "height:auto",
+                    "overflow:visible",
+                    "box-sizing:border-box",
+                    "padding:24px",
+                    "margin:0",
+                    "background:#ffffff",
+                    "color:#0f172a",
+                    "font-family:Arial,Helvetica,sans-serif"
+                ].join(";");
 
-                const canvas = await html2canvas(container, {
+                const heading = document.createElement("div");
+                heading.style.cssText = "display:block;width:max-content;margin:0 0 18px 0;color:#0f172a;";
+                const title = document.createElement("div");
+                title.textContent = "Métricas de Avance";
+                title.style.cssText = "font-size:24px;font-weight:800;line-height:1.3;margin:0 0 6px 0;";
+                const selectedMonth = document.getElementById("avanceMonthDisplay");
+                const period = document.createElement("div");
+                period.textContent = "Periodo: " + (selectedMonth && selectedMonth.textContent.trim() ? selectedMonth.textContent.trim() : (currentMetricsMonth || ""));
+                period.style.cssText = "font-size:13px;font-weight:600;color:#475569;line-height:1.5;";
+                heading.appendChild(title);
+                heading.appendChild(period);
+
+                const tableClone = sourceTable.cloneNode(true);
+                tableClone.removeAttribute("id");
+                tableClone.style.setProperty("display", "table", "important");
+                tableClone.style.setProperty("width", "max-content", "important");
+                tableClone.style.setProperty("min-width", "max-content", "important");
+                tableClone.style.setProperty("max-width", "none", "important");
+                tableClone.style.setProperty("table-layout", "auto", "important");
+                tableClone.style.setProperty("overflow", "visible", "important");
+                tableClone.style.setProperty("border-collapse", "separate", "important");
+                tableClone.style.setProperty("border-spacing", "0", "important");
+
+                tableClone.querySelectorAll("thead").forEach(function (element) {
+                    element.style.setProperty("display", "table-header-group", "important");
+                });
+                tableClone.querySelectorAll("tbody").forEach(function (element) {
+                    element.style.setProperty("display", "table-row-group", "important");
+                });
+                tableClone.querySelectorAll("tr").forEach(function (element) {
+                    element.style.setProperty("display", "table-row", "important");
+                });
+                tableClone.querySelectorAll("th, td").forEach(function (element) {
+                    element.style.setProperty("display", "table-cell", "important");
+                    element.style.setProperty("white-space", "nowrap", "important");
+                    element.style.setProperty("overflow", "visible", "important");
+                });
+
+                captureRoot.appendChild(heading);
+                captureRoot.appendChild(tableClone);
+                document.body.appendChild(captureRoot);
+
+                // Esperar a que el navegador calcule el ancho natural de las ocho columnas.
+                await new Promise(function (resolve) { window.requestAnimationFrame(resolve); });
+                const rootRect = captureRoot.getBoundingClientRect();
+                const captureWidth = Math.ceil(Math.max(captureRoot.scrollWidth, rootRect.width));
+                const captureHeight = Math.ceil(Math.max(captureRoot.scrollHeight, rootRect.height));
+
+                const canvas = await html2canvas(captureRoot, {
                     scale: 2,
+                    x: rootRect.left,
+                    y: rootRect.top,
                     width: captureWidth,
                     height: captureHeight,
-                    windowWidth: Math.max(document.documentElement.clientWidth, captureWidth),
+                    windowWidth: Math.max(document.documentElement.clientWidth, captureWidth + Math.abs(Math.min(0, rootRect.left))),
                     windowHeight: Math.max(document.documentElement.clientHeight, captureHeight),
                     backgroundColor: "#ffffff",
                     logging: false,
-                    // foreignObject conserva el estilo de las insignias. Expandimos el viewport de captura
-                    // para que no se recorten las columnas o filas dentro de contenedores con scroll.
                     foreignObjectRendering: true,
-                    onclone: function (clonedDocument) {
-                        const clonedRoot = clonedDocument.getElementById("avanceCaptureContainer");
-                        if (!clonedRoot) return;
-
-                        // Expandir el clon según las dimensiones calculadas para la tabla de métricas,
-                        // evitando que html2canvas recorte columnas en contenedores con desplazamiento.
-                        clonedRoot.style.setProperty("width", captureWidth + "px", "important");
-                        clonedRoot.style.setProperty("max-width", "none", "important");
-                        clonedRoot.style.setProperty("height", "auto", "important");
-                        clonedRoot.style.setProperty("overflow", "visible", "important");
-
-                        const clonedTable = clonedRoot.querySelector("#avanceMetricsTable");
-                        if (clonedTable) {
-                            clonedTable.style.setProperty("width", "max-content", "important");
-                            clonedTable.style.setProperty("min-width", "100%", "important");
-                            clonedTable.style.setProperty("table-layout", "auto", "important");
-                        }
-
-                        // Reiniciar el desplazamiento en el clon para capturar desde el inicio.
-                        [clonedRoot].concat(Array.from(clonedRoot.querySelectorAll("*"))).forEach(function (element) {
-                            if (element.scrollLeft) element.scrollLeft = 0;
-                            if (element.scrollTop) element.scrollTop = 0;
-                        });
-
-                        // Evitar que el viewport interno recorte la tabla completa; no tocamos sus celdas ni insignias.
-                        clonedRoot.querySelectorAll(".overflow-x-auto, .overflow-y-auto, .overflow-auto").forEach(function (scroller) {
-                            scroller.style.setProperty("overflow", "visible", "important");
-                            scroller.style.setProperty("overflow-x", "visible", "important");
-                            scroller.style.setProperty("overflow-y", "visible", "important");
-                            scroller.style.setProperty("max-width", "none", "important");
-                            scroller.style.setProperty("max-height", "none", "important");
-                            scroller.style.setProperty("height", "auto", "important");
-                            scroller.style.setProperty("scrollbar-width", "none", "important");
-                        });
-
-                        // Ocultar solo controles de acción y conservar el espacio que ocupan.
-                        ["btnCopyAvance", "btnToggleEdit"].forEach(function (id) {
-                            const control = clonedDocument.getElementById(id);
-                            if (!control) return;
-                            control.style.visibility = "hidden";
-                            control.style.opacity = "0";
-                        });
-                    }
+                    scrollX: 0,
+                    scrollY: 0
                 });
 
                 const blob = await new Promise(function (resolve, reject) {
@@ -3562,18 +3579,18 @@
                 if (!navigator.clipboard || typeof ClipboardItem === "undefined") {
                     throw new Error("El navegador no permite copiar imágenes al portapapeles.");
                 }
-                const item = new ClipboardItem({ "image/png": blob });
-                await navigator.clipboard.write([item]);
+                await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
 
                 btn.innerHTML = '<i class="fa-solid fa-check"></i>';
                 btn.classList.remove("bg-brand-500", "hover:bg-brand-600");
                 btn.classList.add("bg-emerald-500", "hover:bg-emerald-600");
-                showAppToast("Captura copiada. La tabla se tomó sin modificar sus filas ni sus insignias.", "success");
+                showAppToast("Captura completa copiada con encabezados y todas las columnas de Métricas de Avance.", "success");
                 await new Promise(function (resolve) { window.setTimeout(resolve, 1200); });
             } catch (error) {
                 console.error("No se pudo copiar la captura de Métricas de Avance:", error);
                 showAppToast("No se pudo copiar la captura. Comprueba los permisos del portapapeles e inténtalo nuevamente.", "error", { duration: 6500 });
             } finally {
+                if (captureRoot && captureRoot.parentNode) captureRoot.parentNode.removeChild(captureRoot);
                 btn.innerHTML = originalButtonHTML;
                 btn.disabled = originalButtonDisabled;
                 btn.classList.remove("bg-emerald-500", "hover:bg-emerald-600");

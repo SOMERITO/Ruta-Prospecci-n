@@ -3478,32 +3478,50 @@
                     backgroundColor: "#ffffff",
                     logging: false,
                     onclone: function (clonedDocument) {
-                        // Centra el contenido de cada celda numérica como una sola unidad.
-                        // La altura mínima coincide con las insignias de porcentaje (24 px), sin agrandar las filas.
+                        // Usa el centro real de la insignia de porcentaje de cada fila como referencia.
+                        // Así la captura alinea cada número con la fila sin offsets fijos ni cambios en la página original.
                         const numericColumns = [1, 2, 4, 5, 6];
                         const clonedRows = clonedDocument.querySelectorAll("#avanceTableBody tr");
+
                         clonedRows.forEach(function (row) {
                             Array.from(row.cells).forEach(function (cell, columnIndex) {
                                 cell.style.verticalAlign = "middle";
                                 if (!numericColumns.includes(columnIndex)) return;
 
-                                const wrapper = clonedDocument.createElement("div");
+                                const wrapper = clonedDocument.createElement("span");
                                 wrapper.className = "rp-capture-cell-value";
-                                while (cell.firstChild) {
-                                    wrapper.appendChild(cell.firstChild);
-                                }
+                                wrapper.textContent = cell.textContent.trim();
+                                cell.textContent = "";
                                 cell.appendChild(wrapper);
 
-                                wrapper.style.display = "flex";
-                                wrapper.style.width = "100%";
-                                wrapper.style.minHeight = "24px";
-                                wrapper.style.boxSizing = "border-box";
-                                wrapper.style.alignItems = "center";
-                                wrapper.style.justifyContent = "center";
+                                wrapper.style.display = "inline-block";
                                 wrapper.style.lineHeight = "normal";
                                 wrapper.style.whiteSpace = "nowrap";
-                                wrapper.style.position = "static";
-                                wrapper.style.transform = "none";
+                                wrapper.style.position = "relative";
+                                wrapper.style.top = "0px";
+                            });
+                        });
+
+                        // Mide el texto y la insignia en la misma fila para corregir únicamente la captura.
+                        clonedRows.forEach(function (row) {
+                            const referenceBadge = row.cells[3] && row.cells[3].querySelector("span");
+                            if (!referenceBadge) return;
+                            const badgeRect = referenceBadge.getBoundingClientRect();
+                            const referenceCenter = badgeRect.top + badgeRect.height / 2;
+
+                            Array.from(row.cells).forEach(function (cell, columnIndex) {
+                                if (!numericColumns.includes(columnIndex)) return;
+                                const wrapper = cell.querySelector(".rp-capture-cell-value");
+                                if (!wrapper) return;
+
+                                const range = clonedDocument.createRange();
+                                range.selectNodeContents(wrapper);
+                                const textRect = range.getBoundingClientRect();
+                                if (!textRect.height) return;
+
+                                const textCenter = textRect.top + textRect.height / 2;
+                                const correction = referenceCenter - textCenter;
+                                wrapper.style.top = correction.toFixed(2) + "px";
                             });
                         });
                     }

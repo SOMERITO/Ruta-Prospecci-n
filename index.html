@@ -3478,27 +3478,40 @@
                     backgroundColor: "#ffffff",
                     logging: false,
                     onclone: function (clonedDocument) {
-                        // html2canvas puede colocar la línea base de cifras ligeramente más abajo que el navegador.
-                        // Ajusta solo los valores numéricos; conserva alineados los nombres y las insignias de porcentaje.
+                        // Centrado vertical consistente en la captura. Se alinean los valores con la altura
+                        // visual de las insignias de porcentaje sin desplazar el nombre ni alterar la página real.
+                        const numericColumns = [1, 2, 4, 5, 6];
                         const clonedRows = clonedDocument.querySelectorAll("#avanceTableBody tr");
                         clonedRows.forEach(function (row) {
                             Array.from(row.cells).forEach(function (cell, columnIndex) {
-                                if (![1, 2, 4, 5, 6].includes(columnIndex)) return;
+                                cell.style.verticalAlign = "middle";
+                                if (!numericColumns.includes(columnIndex)) return;
+
                                 Array.from(cell.childNodes).forEach(function (node) {
                                     if (node.nodeType === 3 && node.textContent.trim()) {
                                         const wrapper = clonedDocument.createElement("span");
-                                        wrapper.className = "rp-capture-number-baseline";
-                                        wrapper.textContent = node.textContent;
+                                        wrapper.className = "rp-capture-number-center";
+                                        wrapper.textContent = node.textContent.trim();
                                         cell.replaceChild(wrapper, node);
                                     } else if (node.nodeType === 1) {
-                                        node.classList.add("rp-capture-number-baseline");
+                                        node.classList.add("rp-capture-number-center");
                                     }
                                 });
                             });
                         });
-                        clonedDocument.querySelectorAll(".rp-capture-number-baseline").forEach(function (node) {
-                            node.style.position = "relative";
-                            node.style.top = "-2px";
+
+                        clonedDocument.querySelectorAll(".rp-capture-number-center").forEach(function (node) {
+                            node.style.display = "inline-flex";
+                            node.style.alignItems = "center";
+                            node.style.justifyContent = "center";
+                            node.style.verticalAlign = "middle";
+                            node.style.height = "30px";
+                            node.style.minHeight = "30px";
+                            node.style.lineHeight = "1";
+                            node.style.position = "static";
+                            node.style.top = "auto";
+                            node.style.transform = "none";
+                            node.style.whiteSpace = "nowrap";
                         });
                     }
                 });

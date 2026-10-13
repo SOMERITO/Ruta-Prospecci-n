@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 10 //////// -->
+<!-- //////// Versión 11 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -941,7 +941,7 @@
                     </details>
                 </details>
                 <div class="overflow-x-auto shadow ring-1 ring-black ring-opacity-5 md:rounded-lg bg-white">
-                    <table class="min-w-full divide-y divide-gray-200">
+                    <table id="avanceMetricsTable" class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asesor</th>
@@ -2610,6 +2610,15 @@
                 `;
                 tbody.appendChild(trTotal);
             }
+
+            // En modo consulta, volver al inicio para que no parezca que faltan columnas o encabezados.
+            if (!isAvanceEditMode) {
+                const tableScroller = tbody.closest(".overflow-x-auto, .overflow-auto, .overflow-y-auto");
+                if (tableScroller) {
+                    tableScroller.scrollLeft = 0;
+                    tableScroller.scrollTop = 0;
+                }
+            }
         }
 
         function updateAvance(idx, field, val) {
@@ -3476,7 +3485,7 @@
             try {
                 // Dimensionar la imagen con la tabla completa, no solo el área visible del scroll.
                 const sourceRect = container.getBoundingClientRect();
-                const sourceTable = container.querySelector("table");
+                const sourceTable = container.querySelector("#avanceMetricsTable") || container.querySelector("table");
                 const sourceScroller = sourceTable ? sourceTable.closest(".overflow-x-auto, .overflow-auto, .overflow-y-auto") : null;
                 const scrollerRect = sourceScroller ? sourceScroller.getBoundingClientRect() : sourceRect;
                 const containerStyle = window.getComputedStyle(container);
@@ -3502,7 +3511,21 @@
                         const clonedRoot = clonedDocument.getElementById("avanceCaptureContainer");
                         if (!clonedRoot) return;
 
-                        // Restablecer las posiciones de scroll heredadas en todos los descendientes.
+                        // Expandir el clon según las dimensiones calculadas para la tabla de métricas,
+                        // evitando que html2canvas recorte columnas en contenedores con desplazamiento.
+                        clonedRoot.style.setProperty("width", captureWidth + "px", "important");
+                        clonedRoot.style.setProperty("max-width", "none", "important");
+                        clonedRoot.style.setProperty("height", "auto", "important");
+                        clonedRoot.style.setProperty("overflow", "visible", "important");
+
+                        const clonedTable = clonedRoot.querySelector("#avanceMetricsTable");
+                        if (clonedTable) {
+                            clonedTable.style.setProperty("width", "max-content", "important");
+                            clonedTable.style.setProperty("min-width", "100%", "important");
+                            clonedTable.style.setProperty("table-layout", "auto", "important");
+                        }
+
+                        // Reiniciar el desplazamiento en el clon para capturar desde el inicio.
                         [clonedRoot].concat(Array.from(clonedRoot.querySelectorAll("*"))).forEach(function (element) {
                             if (element.scrollLeft) element.scrollLeft = 0;
                             if (element.scrollTop) element.scrollTop = 0;

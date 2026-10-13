@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 6 //////// -->
+<!-- //////// Versión 7 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3456,22 +3456,22 @@
         }
 
         async function copyAvanceScreenshot() {
+            // Capturar el DOM como está renderizado. No reconstruir filas ni insignias,
+            // porque eso cambia el baseline y el posicionamiento de las cápsulas en html2canvas.
             const wasEditing = Boolean(signedInProfile && signedInProfile.role === "supervisor" && isAvanceEditMode);
-            if (wasEditing) toggleEditAvance(); // La captura debe mostrar valores, no campos editables.
+            if (wasEditing) toggleEditAvance();
 
             const btn = document.getElementById("btnCopyAvance");
-            const btnEdit = document.getElementById("btnToggleEdit");
             const container = document.getElementById("avanceCaptureContainer");
-            if (!btn || !container) return;
+            if (!btn || !container) {
+                if (wasEditing) toggleEditAvance();
+                return;
+            }
 
-            // Conserva el estado visual real del botón de edición para no mostrarlo a perfiles no autorizados.
-            const originalEditDisplay = btnEdit ? btnEdit.style.display : "none";
-            const originalEditAriaHidden = btnEdit ? btnEdit.getAttribute("aria-hidden") : "true";
-            const originalEditTabIndex = btnEdit ? btnEdit.tabIndex : -1;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            const originalButtonHTML = btn.innerHTML;
+            const originalButtonDisabled = btn.disabled;
             btn.disabled = true;
-            btn.style.opacity = "0";
-            if (btnEdit) btnEdit.style.display = "none";
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
             try {
                 const canvas = await html2canvas(container, {
@@ -3479,73 +3479,13 @@
                     backgroundColor: "#ffffff",
                     logging: false,
                     onclone: function (clonedDocument) {
-                        // Mantener cifras, porcentaje y formato en el flujo normal de la tabla durante la captura.
-                        const centeredColumns = [1, 2, 3, 4, 5, 6, 7];
-                        const clonedRows = clonedDocument.querySelectorAll("#avanceTableBody tr");
-
-                        clonedRows.forEach(function (row) {
-                            Array.from(row.cells).forEach(function (cell, columnIndex) {
-                                cell.style.verticalAlign = "middle";
-                                if (!centeredColumns.includes(columnIndex)) return;
-
-                                const wrapper = clonedDocument.createElement("div");
-                                wrapper.className = "rp-capture-cell-value";
-                                while (cell.firstChild) {
-                                    wrapper.appendChild(cell.firstChild);
-                                }
-                                cell.appendChild(wrapper);
-
-                                wrapper.style.position = "static";
-                                wrapper.style.display = "flex";
-                                wrapper.style.width = "100%";
-                                wrapper.style.minHeight = "30px";
-                                wrapper.style.boxSizing = "border-box";
-                                wrapper.style.alignItems = "center";
-                                wrapper.style.justifyContent = "center";
-                                wrapper.style.textAlign = "center";
-                                wrapper.style.whiteSpace = "nowrap";
-                                wrapper.style.lineHeight = "normal";
-                                wrapper.style.margin = "0";
-                                wrapper.style.padding = "0";
-                            });
-                        });
-
-                        // Reconstruir las insignias como un único contenedor: el texto queda directamente
-                        // dentro de la cápsula, evitando que html2canvas desplace una etiqueta interna.
-                        clonedRows.forEach(function (row) {
-                            [3, 7].forEach(function (columnIndex) {
-                                const cell = row.cells[columnIndex];
-                                const originalBadge = cell && cell.querySelector(".rp-capture-cell-value > span");
-                                if (!originalBadge) return;
-
-                                const badgeText = originalBadge.textContent.trim();
-                                const badgeClasses = originalBadge.className;
-                                const badge = clonedDocument.createElement("span");
-                                badge.className = badgeClasses;
-                                badge.textContent = badgeText;
-                                originalBadge.replaceWith(badge);
-
-                                // El fondo y el texto comparten la misma caja flex, sin spans internos ni padding heredado.
-                                badge.style.display = "flex";
-                                badge.style.flex = "0 0 52px";
-                                badge.style.width = "52px";
-                                badge.style.minWidth = "52px";
-                                badge.style.maxWidth = "52px";
-                                badge.style.height = "30px";
-                                badge.style.minHeight = "30px";
-                                badge.style.boxSizing = "border-box";
-                                badge.style.alignItems = "center";
-                                badge.style.justifyContent = "center";
-                                badge.style.textAlign = "center";
-                                badge.style.padding = "0";
-                                badge.style.margin = "0 auto";
-                                badge.style.lineHeight = "1";
-                                badge.style.verticalAlign = "middle";
-                                badge.style.position = "static";
-                                badge.style.top = "auto";
-                                badge.style.transform = "none";
-                                badge.style.whiteSpace = "nowrap";
-                            });
+                        // Ocultar solo controles de acción en el clon, usando visibility para conservar
+                        // exactamente su espacio. No tocar celdas, números, filas ni insignias de color.
+                        ["btnCopyAvance", "btnToggleEdit"].forEach(function (id) {
+                            const control = clonedDocument.getElementById(id);
+                            if (!control) return;
+                            control.style.visibility = "hidden";
+                            control.style.opacity = "0";
                         });
                     }
                 });
@@ -3556,32 +3496,29 @@
                         else reject(new Error("No se pudo generar la imagen PNG."));
                     }, "image/png");
                 });
+
+                if (!navigator.clipboard || typeof ClipboardItem === "undefined") {
+                    throw new Error("El navegador no permite copiar imágenes al portapapeles.");
+                }
                 const item = new ClipboardItem({ "image/png": blob });
                 await navigator.clipboard.write([item]);
 
                 btn.innerHTML = '<i class="fa-solid fa-check"></i>';
                 btn.classList.remove("bg-brand-500", "hover:bg-brand-600");
                 btn.classList.add("bg-emerald-500", "hover:bg-emerald-600");
-                showAppToast("La captura de Métricas de Avance está lista para pegar.", "success");
-                await new Promise(function (resolve) { window.setTimeout(resolve, 1700); });
+                showAppToast("Captura copiada. La tabla se tomó sin modificar sus filas ni sus insignias.", "success");
+                await new Promise(function (resolve) { window.setTimeout(resolve, 1200); });
             } catch (error) {
                 console.error("No se pudo copiar la captura de Métricas de Avance:", error);
                 showAppToast("No se pudo copiar la captura. Comprueba los permisos del portapapeles e inténtalo nuevamente.", "error", { duration: 6500 });
             } finally {
-                btn.style.opacity = "1";
-                btn.innerHTML = '<i class="fa-solid fa-camera"></i>';
+                btn.innerHTML = originalButtonHTML;
+                btn.disabled = originalButtonDisabled;
                 btn.classList.remove("bg-emerald-500", "hover:bg-emerald-600");
                 btn.classList.add("bg-brand-500", "hover:bg-brand-600");
-                btn.disabled = false;
-                if (btnEdit) {
-                    btnEdit.style.display = originalEditDisplay;
-                    btnEdit.setAttribute("aria-hidden", originalEditAriaHidden || "true");
-                    btnEdit.tabIndex = originalEditTabIndex;
-                }
                 if (wasEditing) toggleEditAvance();
             }
         }
-
 
         function showAppToast(message, type = "info", options = {}) {
             const kind = ["success", "error", "warning", "info"].includes(type) ? type : "info";

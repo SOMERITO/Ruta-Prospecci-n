@@ -3509,30 +3509,57 @@
                             });
                         });
 
-                        // Centrar el número en el interior de cada insignia roja, amarilla o verde.
-                        // Se anula el padding vertical y el line-height heredados para evitar que bajen el texto.
+                        // Construir cada insignia como una cápsula flex con el texto en un elemento interno.
+                        // Esto centra el porcentaje por geometría, no mediante line-height o el baseline de la fuente.
                         clonedRows.forEach(function (row) {
                             [3, 7].forEach(function (columnIndex) {
                                 const cell = row.cells[columnIndex];
                                 const badge = cell && cell.querySelector(".rp-capture-cell-value > span");
                                 if (!badge) return;
 
-                                // Line-height igual a la altura centra el glifo de forma estable en html2canvas.
-                                // Ancho fijo para que 0%, 90% y 102% ocupen la misma cápsula.
-                                badge.style.display = "inline-block";
-                                badge.style.boxSizing = "border-box";
+                                const label = clonedDocument.createElement("span");
+                                label.className = "rp-capture-badge-label";
+                                while (badge.firstChild) {
+                                    label.appendChild(badge.firstChild);
+                                }
+                                badge.appendChild(label);
+
+                                // La caja conserva el color/borde original, con tamaño uniforme.
+                                badge.style.display = "inline-flex";
+                                badge.style.flex = "0 0 52px";
                                 badge.style.width = "52px";
                                 badge.style.minWidth = "52px";
+                                badge.style.maxWidth = "52px";
                                 badge.style.height = "30px";
                                 badge.style.minHeight = "30px";
-                                badge.style.lineHeight = "30px";
-                                badge.style.textAlign = "center";
+                                badge.style.boxSizing = "border-box";
+                                badge.style.alignItems = "center";
+                                badge.style.justifyContent = "center";
                                 badge.style.padding = "0";
+                                badge.style.margin = "auto";
+                                badge.style.lineHeight = "normal";
                                 badge.style.verticalAlign = "middle";
-                                badge.style.position = "static";
-                                badge.style.top = "auto";
+                                badge.style.position = "relative";
+                                badge.style.top = "0";
                                 badge.style.transform = "none";
                                 badge.style.whiteSpace = "nowrap";
+
+                                // El texto llena la cápsula y se centra en ambos ejes.
+                                label.style.display = "flex";
+                                label.style.flex = "1 1 auto";
+                                label.style.width = "100%";
+                                label.style.height = "100%";
+                                label.style.boxSizing = "border-box";
+                                label.style.alignItems = "center";
+                                label.style.justifyContent = "center";
+                                label.style.textAlign = "center";
+                                label.style.padding = "0";
+                                label.style.margin = "0";
+                                label.style.lineHeight = "1";
+                                label.style.position = "static";
+                                label.style.top = "auto";
+                                label.style.transform = "none";
+                                label.style.whiteSpace = "nowrap";
                             });
                         });
                     }

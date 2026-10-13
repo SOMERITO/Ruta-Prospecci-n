@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 8 //////// -->
+<!-- //////// Versión 9 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3478,43 +3478,16 @@
                     scale: 2,
                     backgroundColor: "#ffffff",
                     logging: false,
+                    // Usa el renderizador basado en SVG foreignObject del navegador para preservar
+                    // exactamente el CSS/layout de las cápsulas; no reconstruir ni desplazar su texto.
+                    foreignObjectRendering: true,
                     onclone: function (clonedDocument) {
-                        // Ocultar solo controles de acción sin cambiar el espacio que ocupan.
+                        // Ocultar solo controles de acción, conservando el espacio y el layout original.
                         ["btnCopyAvance", "btnToggleEdit"].forEach(function (id) {
                             const control = clonedDocument.getElementById(id);
                             if (!control) return;
                             control.style.visibility = "hidden";
                             control.style.opacity = "0";
-                        });
-
-                        // html2canvas dibuja el fondo de los spans acolchados bien,
-                        // pero dibuja su texto demasiado abajo. Corregir únicamente el texto interno.
-                        const badges = clonedDocument.querySelectorAll(
-                            "#avanceTableBody tr td:nth-child(4) > span, #avanceTableBody tr td:nth-child(8) > span"
-                        );
-                        badges.forEach(function (badge) {
-                            const label = clonedDocument.createElement("span");
-                            label.className = "rp-capture-badge-label";
-                            while (badge.firstChild) label.appendChild(badge.firstChild);
-                            badge.appendChild(label);
-
-                            label.style.display = "inline-block";
-                            label.style.position = "relative";
-                            label.style.top = "0px";
-                            label.style.lineHeight = "inherit";
-                            label.style.padding = "0";
-                            label.style.margin = "0";
-                            label.style.transform = "none";
-
-                            const badgeRect = badge.getBoundingClientRect();
-                            const range = clonedDocument.createRange();
-                            range.selectNodeContents(label);
-                            const textRect = range.getBoundingClientRect();
-                            if (!badgeRect.height || !textRect.height) return;
-
-                            const badgeCenter = badgeRect.top + badgeRect.height / 2;
-                            const textCenter = textRect.top + textRect.height / 2;
-                            label.style.top = (badgeCenter - textCenter).toFixed(2) + "px";
                         });
                     }
                 });

@@ -3518,20 +3518,21 @@
                                 const badge = cell && cell.querySelector(".rp-capture-cell-value > span");
                                 if (!badge) return;
 
-                                badge.style.display = "inline-flex";
-                                badge.style.alignItems = "center";
-                                badge.style.justifyContent = "center";
+                                // Line-height igual a la altura centra el glifo de forma estable en html2canvas.
+                                // Ancho fijo para que 0%, 90% y 102% ocupen la misma cápsula.
+                                badge.style.display = "inline-block";
                                 badge.style.boxSizing = "border-box";
+                                badge.style.width = "52px";
+                                badge.style.minWidth = "52px";
                                 badge.style.height = "30px";
                                 badge.style.minHeight = "30px";
-                                badge.style.lineHeight = "1";
-                                badge.style.paddingTop = "0";
-                                badge.style.paddingBottom = "0";
+                                badge.style.lineHeight = "30px";
+                                badge.style.textAlign = "center";
+                                badge.style.padding = "0";
                                 badge.style.verticalAlign = "middle";
                                 badge.style.position = "static";
                                 badge.style.top = "auto";
                                 badge.style.transform = "none";
-                                badge.style.alignSelf = "center";
                                 badge.style.whiteSpace = "nowrap";
                             });
                         });

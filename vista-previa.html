@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 5 //////// -->
+<!-- //////// Versión 6 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3510,23 +3510,23 @@
                             });
                         });
 
-                        // Construir cada insignia como una cápsula flex con el texto en un elemento interno.
-                        // Esto centra el porcentaje por geometría, no mediante line-height o el baseline de la fuente.
+                        // Reconstruir las insignias como un único contenedor: el texto queda directamente
+                        // dentro de la cápsula, evitando que html2canvas desplace una etiqueta interna.
                         clonedRows.forEach(function (row) {
                             [3, 7].forEach(function (columnIndex) {
                                 const cell = row.cells[columnIndex];
-                                const badge = cell && cell.querySelector(".rp-capture-cell-value > span");
-                                if (!badge) return;
+                                const originalBadge = cell && cell.querySelector(".rp-capture-cell-value > span");
+                                if (!originalBadge) return;
 
-                                const label = clonedDocument.createElement("span");
-                                label.className = "rp-capture-badge-label";
-                                while (badge.firstChild) {
-                                    label.appendChild(badge.firstChild);
-                                }
-                                badge.appendChild(label);
+                                const badgeText = originalBadge.textContent.trim();
+                                const badgeClasses = originalBadge.className;
+                                const badge = clonedDocument.createElement("span");
+                                badge.className = badgeClasses;
+                                badge.textContent = badgeText;
+                                originalBadge.replaceWith(badge);
 
-                                // La caja conserva el color/borde original, con tamaño uniforme.
-                                badge.style.display = "inline-flex";
+                                // El fondo y el texto comparten la misma caja flex, sin spans internos ni padding heredado.
+                                badge.style.display = "flex";
                                 badge.style.flex = "0 0 52px";
                                 badge.style.width = "52px";
                                 badge.style.minWidth = "52px";
@@ -3536,31 +3536,15 @@
                                 badge.style.boxSizing = "border-box";
                                 badge.style.alignItems = "center";
                                 badge.style.justifyContent = "center";
+                                badge.style.textAlign = "center";
                                 badge.style.padding = "0";
-                                badge.style.margin = "auto";
-                                badge.style.lineHeight = "normal";
+                                badge.style.margin = "0 auto";
+                                badge.style.lineHeight = "1";
                                 badge.style.verticalAlign = "middle";
-                                badge.style.position = "relative";
-                                badge.style.top = "0";
+                                badge.style.position = "static";
+                                badge.style.top = "auto";
                                 badge.style.transform = "none";
                                 badge.style.whiteSpace = "nowrap";
-
-                                // El texto llena la cápsula y se centra en ambos ejes.
-                                label.style.display = "flex";
-                                label.style.flex = "1 1 auto";
-                                label.style.width = "100%";
-                                label.style.height = "100%";
-                                label.style.boxSizing = "border-box";
-                                label.style.alignItems = "center";
-                                label.style.justifyContent = "center";
-                                label.style.textAlign = "center";
-                                label.style.padding = "0";
-                                label.style.margin = "0";
-                                label.style.lineHeight = "1";
-                                label.style.position = "static";
-                                label.style.top = "auto";
-                                label.style.transform = "none";
-                                label.style.whiteSpace = "nowrap";
                             });
                         });
                     }

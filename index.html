@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 14 //////// -->
+<!-- //////// Versión 15 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3584,6 +3584,24 @@
                             clonedTable.style.setProperty("width", "max-content", "important");
                             clonedTable.style.setProperty("min-width", "max-content", "important");
                             clonedTable.style.setProperty("max-width", "none", "important");
+
+                            // Conservar la alineación vertical de las celdas de la página.
+                            clonedTable.querySelectorAll("th, td").forEach(function (cell) {
+                                cell.style.setProperty("vertical-align", "middle", "important");
+                            });
+
+                            // Los porcentajes son cápsulas inline en la página. Al renderizar el clon,
+                            // su línea base puede desplazarse; convertirlas en flex centrado mantiene
+                            // el texto centrado sin cambiar sus colores ni sus bordes.
+                            clonedTable.querySelectorAll("tbody td span.rounded-full.border").forEach(function (badge) {
+                                badge.style.setProperty("display", "inline-flex", "important");
+                                badge.style.setProperty("align-items", "center", "important");
+                                badge.style.setProperty("justify-content", "center", "important");
+                                badge.style.setProperty("vertical-align", "middle", "important");
+                                badge.style.setProperty("line-height", "1rem", "important");
+                                badge.style.setProperty("white-space", "nowrap", "important");
+                                badge.style.setProperty("box-sizing", "border-box", "important");
+                            });
                         }
                     }
                 });

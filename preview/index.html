@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 9 //////// -->
+<!-- //////// Versión 10 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3474,15 +3474,52 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
             try {
+                // Dimensionar la imagen con la tabla completa, no solo el área visible del scroll.
+                const sourceRect = container.getBoundingClientRect();
+                const sourceTable = container.querySelector("table");
+                const sourceScroller = sourceTable ? sourceTable.closest(".overflow-x-auto, .overflow-auto, .overflow-y-auto") : null;
+                const scrollerRect = sourceScroller ? sourceScroller.getBoundingClientRect() : sourceRect;
+                const containerStyle = window.getComputedStyle(container);
+                const paddingRight = parseFloat(containerStyle.paddingRight) || 0;
+                const paddingBottom = parseFloat(containerStyle.paddingBottom) || 0;
+                const tableWidth = sourceTable ? Math.max(sourceTable.offsetWidth, sourceTable.scrollWidth) : sourceRect.width;
+                const tableHeight = sourceTable ? Math.max(sourceTable.offsetHeight, sourceTable.scrollHeight) : sourceRect.height;
+                const captureWidth = Math.ceil(Math.max(sourceRect.width, scrollerRect.left - sourceRect.left + tableWidth + paddingRight));
+                const captureHeight = Math.ceil(Math.max(sourceRect.height, scrollerRect.top - sourceRect.top + tableHeight + paddingBottom));
+
                 const canvas = await html2canvas(container, {
                     scale: 2,
+                    width: captureWidth,
+                    height: captureHeight,
+                    windowWidth: Math.max(document.documentElement.clientWidth, captureWidth),
+                    windowHeight: Math.max(document.documentElement.clientHeight, captureHeight),
                     backgroundColor: "#ffffff",
                     logging: false,
-                    // Usa el renderizador basado en SVG foreignObject del navegador para preservar
-                    // exactamente el CSS/layout de las cápsulas; no reconstruir ni desplazar su texto.
+                    // foreignObject conserva el estilo de las insignias. Expandimos el viewport de captura
+                    // para que no se recorten las columnas o filas dentro de contenedores con scroll.
                     foreignObjectRendering: true,
                     onclone: function (clonedDocument) {
-                        // Ocultar solo controles de acción, conservando el espacio y el layout original.
+                        const clonedRoot = clonedDocument.getElementById("avanceCaptureContainer");
+                        if (!clonedRoot) return;
+
+                        // Restablecer las posiciones de scroll heredadas en todos los descendientes.
+                        [clonedRoot].concat(Array.from(clonedRoot.querySelectorAll("*"))).forEach(function (element) {
+                            if (element.scrollLeft) element.scrollLeft = 0;
+                            if (element.scrollTop) element.scrollTop = 0;
+                        });
+
+                        // Evitar que el viewport interno recorte la tabla completa; no tocamos sus celdas ni insignias.
+                        clonedRoot.querySelectorAll(".overflow-x-auto, .overflow-y-auto, .overflow-auto").forEach(function (scroller) {
+                            scroller.style.setProperty("overflow", "visible", "important");
+                            scroller.style.setProperty("overflow-x", "visible", "important");
+                            scroller.style.setProperty("overflow-y", "visible", "important");
+                            scroller.style.setProperty("max-width", "none", "important");
+                            scroller.style.setProperty("max-height", "none", "important");
+                            scroller.style.setProperty("height", "auto", "important");
+                            scroller.style.setProperty("scrollbar-width", "none", "important");
+                        });
+
+                        // Ocultar solo controles de acción y conservar el espacio que ocupan.
                         ["btnCopyAvance", "btnToggleEdit"].forEach(function (id) {
                             const control = clonedDocument.getElementById(id);
                             if (!control) return;

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ruta Prospección</title>
+    <meta name="app-version" content="1">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -423,6 +424,9 @@
                 </button>
             </div>
             <p id="authMessage" role="status" aria-live="polite" class="mt-4 rounded-lg p-3 text-sm text-center bg-blue-50 text-blue-800"></p>
+            <div class="mt-4 flex justify-center">
+                <span data-app-version-label data-version-format="full" title="Versión cargada de Ruta Prospección" class="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-[11px] font-bold tracking-wide text-gray-500">Versión 1</span>
+            </div>
         </div>
     </section>
 
@@ -433,6 +437,7 @@
                 <div class="flex items-center space-x-3">
                     <i class="fa-solid fa-route text-2xl text-brand-500"></i>
                     <span class="font-bold text-xl tracking-wide">Ruta Prospección</span>
+                    <span data-app-version-label data-version-format="short" title="Versión cargada de Ruta Prospección" class="inline-flex items-center rounded-md border border-brand-700 bg-brand-800 px-2 py-1 text-[10px] font-extrabold tracking-wide text-brand-100">v1</span>
                 </div>
                 <div class="flex items-center gap-2 sm:gap-3 min-w-0">
                     <span id="signedInEmail" class="text-xs sm:text-sm text-brand-100 truncate max-w-[42vw]"></span>
@@ -1027,6 +1032,12 @@
     </div><!-- /#appContent -->
 
     <script>
+        // Fuente única del número visible de versión: actualizar junto con CHANGELOG.md en cada publicación.
+        const APP_VERSION = (document.querySelector('meta[name="app-version"]')?.content || "1").trim();
+        document.querySelectorAll("[data-app-version-label]").forEach(function (label) {
+            label.textContent = label.dataset.versionFormat === "short" ? "v" + APP_VERSION : "Versión " + APP_VERSION;
+        });
+
         const SHARED_TEAM_EMAIL = "prospeccionwiener@gmail.com";
 
         const firebaseConfig = {

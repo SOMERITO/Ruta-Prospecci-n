@@ -3478,17 +3478,16 @@
                     backgroundColor: "#ffffff",
                     logging: false,
                     onclone: function (clonedDocument) {
-                        // Conserva el HTML y el formato original de los números; solo cambia la alineación
-                        // dentro del documento clonado que se usa para la captura.
-                        const numericColumns = [1, 2, 4, 5, 6];
+                        // Centra los contenidos en un eje común de cada celda durante la captura.
+                        // La tabla original no se modifica y los nodos conservan negritas, colores y porcentajes.
+                        const centeredColumns = [1, 2, 3, 4, 5, 6, 7];
                         const clonedRows = clonedDocument.querySelectorAll("#avanceTableBody tr");
 
                         clonedRows.forEach(function (row) {
                             Array.from(row.cells).forEach(function (cell, columnIndex) {
                                 cell.style.verticalAlign = "middle";
-                                if (!numericColumns.includes(columnIndex)) return;
+                                if (!centeredColumns.includes(columnIndex)) return;
 
-                                // Envolver los nodos existentes preserva negritas, colores y formato.
                                 const wrapper = clonedDocument.createElement("div");
                                 wrapper.className = "rp-capture-cell-value";
                                 while (cell.firstChild) {
@@ -3496,6 +3495,13 @@
                                 }
                                 cell.appendChild(wrapper);
 
+                                // El mismo centrado absoluto para números y badges evita diferencias de línea base.
+                                cell.style.position = "relative";
+                                wrapper.style.position = "absolute";
+                                wrapper.style.left = "0";
+                                wrapper.style.right = "0";
+                                wrapper.style.top = "50%";
+                                wrapper.style.transform = "translateY(-50%)";
                                 wrapper.style.display = "flex";
                                 wrapper.style.width = "100%";
                                 wrapper.style.boxSizing = "border-box";
@@ -3503,31 +3509,8 @@
                                 wrapper.style.justifyContent = "center";
                                 wrapper.style.whiteSpace = "nowrap";
                                 wrapper.style.lineHeight = "normal";
-                                wrapper.style.position = "relative";
-                                wrapper.style.top = "0px";
-                            });
-                        });
-
-                        // Igualar el alto del contenedor numérico a la insignia de porcentaje de su fila.
-                        // Medir el centro real de ambos y corregir solo el clon evita desplazamientos arbitrarios.
-                        clonedRows.forEach(function (row) {
-                            const referenceBadge = row.cells[3] && row.cells[3].querySelector("span");
-                            if (!referenceBadge) return;
-
-                            const badgeRect = referenceBadge.getBoundingClientRect();
-                            const referenceCenter = badgeRect.top + badgeRect.height / 2;
-                            const badgeHeight = badgeRect.height;
-
-                            Array.from(row.cells).forEach(function (cell, columnIndex) {
-                                if (!numericColumns.includes(columnIndex)) return;
-                                const wrapper = cell.querySelector(".rp-capture-cell-value");
-                                if (!wrapper) return;
-
-                                wrapper.style.minHeight = badgeHeight.toFixed(2) + "px";
-                                const wrapperRect = wrapper.getBoundingClientRect();
-                                const wrapperCenter = wrapperRect.top + wrapperRect.height / 2;
-                                const correction = referenceCenter - wrapperCenter;
-                                wrapper.style.top = correction.toFixed(2) + "px";
+                                wrapper.style.margin = "0";
+                                wrapper.style.padding = "0";
                             });
                         });
                     }

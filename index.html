@@ -378,6 +378,406 @@
             button:not(.tab-btn) { transition: none !important; }
         }
 
+
+        /* ==========================================================================
+           PROFESSIONAL BUTTONS & FLUID ANIMATIONS SUITE (Versión 21)
+           ========================================================================== */
+        :root {
+            --rp-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+            --rp-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --rp-shadow-btn: 0 4px 12px -2px rgba(9, 41, 42, 0.14), 0 2px 4px -1px rgba(9, 41, 42, 0.08);
+            --rp-shadow-btn-hover: 0 10px 22px -4px rgba(28, 122, 125, 0.28), 0 4px 10px -2px rgba(9, 41, 42, 0.12);
+            --rp-shadow-card-hover: 0 14px 32px -8px rgba(9, 41, 42, 0.10), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+        }
+
+        /* Global smooth animations for views, cards, and interactive surfaces */
+        .tab-content.active {
+            animation: rp-view-enter 380ms var(--rp-ease-out) both;
+        }
+        @keyframes rp-view-enter {
+            0% { opacity: 0; transform: translateY(12px) scale(0.994); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Auth Gate card floating entrance */
+        #authGate > div {
+            animation: rp-auth-float 520ms var(--rp-ease-out) both;
+            box-shadow: 0 24px 60px -12px rgba(9, 41, 42, 0.16), 0 0 0 1px rgba(47, 203, 209, 0.12);
+        }
+        #authGate .fa-route {
+            animation: rp-logo-pulse 3.6s ease-in-out infinite;
+        }
+        @keyframes rp-auth-float {
+            0% { opacity: 0; transform: translateY(18px) scale(0.97); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes rp-logo-pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 0 rgba(51, 213, 227, 0)); }
+            50% { transform: scale(1.08) rotate(-4deg); filter: drop-shadow(0 0 8px rgba(51, 213, 227, 0.45)); }
+        }
+
+        /* Navbar subtle animated sheen & route icon motion */
+        nav.bg-brand-900 {
+            background: linear-gradient(110deg, #072122 0%, #09292a 45%, #114548 100%);
+            border-bottom: 1px solid rgba(102, 223, 233, 0.16);
+        }
+        nav.bg-brand-900 .fa-route {
+            transition: transform 320ms var(--rp-ease-spring), color 220ms ease;
+        }
+        nav.bg-brand-900:hover .fa-route {
+            transform: translateX(2px) rotate(-6deg) scale(1.08);
+            color: #66dfe9;
+        }
+
+        /* Universal tactile button foundation & shimmer effect */
+        button:not(.tab-btn):not(.rp-toast__close),
+        a[data-resource-key],
+        .custom-team-link a {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            transition:
+                transform 240ms var(--rp-ease-out),
+                box-shadow 240ms var(--rp-ease-out),
+                background-color 200ms ease,
+                border-color 200ms ease,
+                color 200ms ease,
+                filter 200ms ease !important;
+        }
+
+        /* Subtle light sweep on buttons when hovered */
+        button:not(:disabled):not(.tab-btn):not(.rp-toast__close):not(#toggleLoginPassword):not(#resetPasswordBtn)::after,
+        #movilidades a[data-resource-key]::after,
+        .custom-team-link a::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -110%;
+            width: 65%;
+            height: 100%;
+            background: linear-gradient(
+                100deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.26) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: skewX(-20deg);
+            transition: left 560ms var(--rp-ease-out);
+            pointer-events: none;
+            z-index: 1;
+        }
+        button:not(:disabled):not(.tab-btn):not(.rp-toast__close):not(#toggleLoginPassword):not(#resetPasswordBtn):hover::after,
+        #movilidades a[data-resource-key]:hover::after,
+        .custom-team-link a:hover::after {
+            left: 135%;
+        }
+
+        /* Primary solid brand buttons */
+        #loginSubmit,
+        #saveResourceLinksBtn,
+        #saveRosterBtn,
+        .roster-save-button,
+        .resource-save-button,
+        #metricExcelApplyBtn,
+        #mobilityImportBtn,
+        #movilidades a[data-resource-key],
+        .custom-team-link a {
+            background-image: linear-gradient(135deg, #1c7a7d 0%, #0f4649 52%, #09292a 100%) !important;
+            border: 1px solid rgba(102, 223, 233, 0.25) !important;
+            box-shadow: var(--rp-shadow-btn), inset 0 1px 0 rgba(255, 255, 255, 0.22) !important;
+        }
+        #loginSubmit:not(:disabled):hover,
+        #saveResourceLinksBtn:not(:disabled):hover,
+        #saveRosterBtn:not(:disabled):hover,
+        .roster-save-button:not(:disabled):hover,
+        .resource-save-button:not(:disabled):hover,
+        #metricExcelApplyBtn:not(:disabled):hover,
+        #mobilityImportBtn:not(:disabled):hover,
+        #movilidades a[data-resource-key]:hover,
+        .custom-team-link a:hover {
+            transform: translateY(-2px) scale(1.01) !important;
+            box-shadow: var(--rp-shadow-btn-hover), inset 0 1px 0 rgba(255, 255, 255, 0.32) !important;
+            filter: brightness(1.05);
+        }
+        #loginSubmit:not(:disabled):active,
+        #saveResourceLinksBtn:not(:disabled):active,
+        #saveRosterBtn:not(:disabled):active,
+        .roster-save-button:not(:disabled):active,
+        .resource-save-button:not(:disabled):active,
+        #metricExcelApplyBtn:not(:disabled):active,
+        #mobilityImportBtn:not(:disabled):active,
+        #movilidades a[data-resource-key]:active,
+        .custom-team-link a:active {
+            transform: translateY(0) scale(0.98) !important;
+        }
+
+        /* Camera Screenshot Button (#btnCopyAvance) special hero polish */
+        #btnCopyAvance {
+            background: linear-gradient(135deg, #33d5e3 0%, #26a2a7 55%, #1c7a7d 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.35) !important;
+            box-shadow: 0 6px 16px -2px rgba(38, 162, 167, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+        }
+        #btnCopyAvance:not(:disabled):hover {
+            transform: translateY(-2px) scale(1.07) !important;
+            box-shadow: 0 0 0 5px rgba(47, 203, 209, 0.20), 0 10px 24px -3px rgba(28, 122, 125, 0.5) !important;
+        }
+        #btnCopyAvance:not(:disabled):hover i {
+            animation: rp-camera-pop 420ms var(--rp-ease-spring) both;
+        }
+        @keyframes rp-camera-pop {
+            0% { transform: scale(1) rotate(0deg); }
+            45% { transform: scale(1.22) rotate(-10deg); }
+            100% { transform: scale(1.1) rotate(0deg); }
+        }
+
+        /* Secondary & outline buttons (#btnToggleEdit, #btnEditMovilidad, .calendar-current-button, .roster-add-button, .resource-add-button) */
+        #btnToggleEdit,
+        #btnEditMovilidad,
+        .calendar-current-button,
+        .roster-add-button,
+        .resource-add-button {
+            background: linear-gradient(180deg, #ffffff 0%, #f4fbfb 100%);
+            border: 1px solid #b5e4e7 !important;
+            color: #135154;
+            box-shadow: 0 2px 6px rgba(9, 41, 42, 0.06), inset 0 1px 0 #ffffff !important;
+        }
+        #btnToggleEdit:not(:disabled):hover,
+        #btnEditMovilidad:not(:disabled):hover,
+        .calendar-current-button:not(:disabled):hover,
+        .roster-add-button:not(:disabled):hover,
+        .resource-add-button:not(:disabled):hover {
+            background: linear-gradient(180deg, #f0fcfc 0%, #e4f9fa 100%);
+            border-color: #33d5e3 !important;
+            color: #09292a;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 18px -4px rgba(38, 162, 167, 0.22), inset 0 1px 0 #ffffff !important;
+        }
+        #btnToggleEdit:hover i,
+        #btnEditMovilidad:hover i {
+            transform: rotate(-12deg) scale(1.12);
+            transition: transform 220ms var(--rp-ease-spring);
+        }
+        .roster-add-button:hover i.fa-plus,
+        .resource-add-button:hover i.fa-plus {
+            transform: rotate(90deg) scale(1.12);
+            transition: transform 260ms var(--rp-ease-spring);
+        }
+
+        /* Calendar navigation buttons (< and >) */
+        .calendar-nav-button {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 0 2px 5px rgba(15, 23, 42, 0.05), inset 0 1px 0 #ffffff;
+        }
+        .calendar-nav-button i {
+            transition: transform 220ms var(--rp-ease-spring), color 180ms ease;
+        }
+        .calendar-nav-button:hover i.fa-chevron-left {
+            transform: translateX(-2.5px) scale(1.1);
+        }
+        .calendar-nav-button:hover i.fa-chevron-right {
+            transform: translateX(2.5px) scale(1.1);
+        }
+
+        /* Sign out button in navbar */
+        #signOutBtn {
+            background: linear-gradient(135deg, rgba(28, 122, 125, 0.35) 0%, rgba(19, 81, 84, 0.65) 100%);
+            border: 1px solid rgba(102, 223, 233, 0.28);
+            backdrop-filter: blur(6px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }
+        #signOutBtn:hover {
+            background: linear-gradient(135deg, rgba(38, 162, 167, 0.55) 0%, rgba(28, 122, 125, 0.85) 100%);
+            border-color: rgba(153, 234, 240, 0.5);
+            transform: translateY(-1.5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.24);
+        }
+        #signOutBtn i {
+            transition: transform 220ms var(--rp-ease-spring);
+        }
+        #signOutBtn:hover i {
+            transform: translateX(2px);
+        }
+
+        /* Navigation Tab Buttons (.tab-btn) with animated indicator & icon bounce */
+        .tab-btn {
+            position: relative;
+            padding-left: 0.85rem !important;
+            padding-right: 0.85rem !important;
+            border-bottom: 3px solid transparent !important;
+            transition: color 220ms ease, background-color 220ms ease, transform 200ms var(--rp-ease-out) !important;
+        }
+        .tab-btn::after {
+            content: "";
+            position: absolute;
+            left: 0.5rem;
+            right: 0.5rem;
+            bottom: -3px;
+            height: 3px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #2fcbd1 0%, #1c7a7d 100%);
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform 280ms var(--rp-ease-out);
+        }
+        .tab-btn.active::after {
+            transform: scaleX(1);
+        }
+        .tab-btn i {
+            display: inline-block;
+            transition: transform 240ms var(--rp-ease-spring), color 200ms ease;
+        }
+        .tab-btn:hover i {
+            transform: translateY(-2px) scale(1.1);
+            color: #26a2a7;
+        }
+        .tab-btn.active i {
+            color: #1c7a7d;
+            transform: scale(1.06);
+        }
+
+        /* Quick-action circular resource links in Asesor steps */
+        #trackerForm a[data-resource-key] {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 0 3px 8px -1px rgba(15, 23, 42, 0.08), inset 0 1px 0 #ffffff;
+        }
+        #trackerForm a[data-resource-key] i {
+            transition: transform 240ms var(--rp-ease-spring);
+        }
+        #trackerForm a[data-resource-key]:hover {
+            transform: translateY(-2px) scale(1.08) !important;
+            box-shadow: 0 8px 18px -3px rgba(38, 162, 167, 0.25), inset 0 1px 0 #ffffff !important;
+        }
+        #trackerForm a[data-resource-key]:hover i {
+            transform: scale(1.15) rotate(-5deg);
+        }
+
+        /* Accordion section header buttons & checklist item transitions */
+        #trackerForm button[onclick^="toggleSection"] {
+            background: linear-gradient(90deg, #f8fafc 0%, #ffffff 100%);
+            border-left: 3px solid transparent;
+            transition: background 220ms ease, border-color 220ms ease, padding-left 220ms var(--rp-ease-out) !important;
+        }
+        #trackerForm button[onclick^="toggleSection"]:hover {
+            background: linear-gradient(90deg, #effbfc 0%, #ffffff 100%);
+            border-left-color: #2fcbd1;
+            padding-left: 1.25rem !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        #trackerForm .accordion-content > div {
+            transition: transform 200ms var(--rp-ease-out), background-color 180ms ease, border-color 180ms ease, box-shadow 200ms ease;
+        }
+        #trackerForm .accordion-content > div:hover {
+            transform: translateX(3px);
+            box-shadow: 0 4px 12px -2px rgba(9, 41, 42, 0.06);
+        }
+
+        /* Animated Progress Bar Shimmer */
+        #progressBar,
+        #dashboardTableBody .bg-brand-500.h-2 {
+            position: relative;
+            overflow: hidden;
+            background-image: linear-gradient(90deg, #26a2a7 0%, #2fcbd1 50%, #33d5e3 100%);
+        }
+        #progressBar::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.35) 50%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            animation: rp-progress-shimmer 2.4s infinite linear;
+        }
+        @keyframes rp-progress-shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Live pulse dot on 'Hoy' badge */
+        .calendar-today-badge i {
+            animation: rp-live-dot 2s ease-in-out infinite;
+        }
+        @keyframes rp-live-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(1.35); }
+        }
+
+        /* Staggered table row entrance & hover micro-interaction */
+        #dashboardTableBody tr,
+        #avanceTableBody tr,
+        #movilidadTableBody tr {
+            animation: rp-row-cascade 340ms var(--rp-ease-out) both;
+            animation-delay: var(--rp-row-delay, 0ms);
+            transition: background-color 160ms ease, transform 180ms var(--rp-ease-out), box-shadow 180ms ease;
+        }
+        #dashboardTableBody tr:hover,
+        #avanceTableBody tr:not(.bg-brand-50):hover,
+        #movilidadTableBody tr:hover {
+            background-color: #f4fbfc !important;
+        }
+        @keyframes rp-row-cascade {
+            0% { opacity: 0; transform: translateY(8px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Status & percentage pill badges subtle pop & hover polish */
+        #avanceTableBody span.rounded-full.border,
+        #dashboardTableBody span.rounded-full.border,
+        #movilidadTableBody span.rounded-full {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 200ms var(--rp-ease-spring), box-shadow 200ms ease;
+        }
+        #avanceTableBody tr:hover span.rounded-full.border,
+        #dashboardTableBody tr:hover span.rounded-full.border,
+        #movilidadTableBody tr:hover span.rounded-full {
+            transform: scale(1.06);
+            box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
+        }
+
+        /* Movilidades summary cards entrance & hover lift */
+        #movilidades section > .grid > div,
+        #movilidades > section.grid > div {
+            transition: transform 240ms var(--rp-ease-out), box-shadow 240ms var(--rp-ease-out), border-color 200ms ease;
+        }
+        #movilidades section > .grid > div:hover,
+        #movilidades > section.grid > div:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--rp-shadow-card-hover);
+        }
+
+        /* Button click ripple wave */
+        .rp-click-ripple {
+            position: absolute;
+            border-radius: 999px;
+            transform: scale(0);
+            background: rgba(255, 255, 255, 0.42);
+            pointer-events: none;
+            animation: rp-ripple-wave 520ms var(--rp-ease-out) forwards;
+            z-index: 2;
+        }
+        @keyframes rp-ripple-wave {
+            to { transform: scale(2.8); opacity: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .tab-content.active,
+            #authGate > div,
+            #authGate .fa-route,
+            #progressBar::after,
+            .calendar-today-badge i,
+            #dashboardTableBody tr,
+            #avanceTableBody tr,
+            #movilidadTableBody tr,
+            .rp-click-ripple {
+                animation: none !important;
+            }
+        }
+
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col relative">
@@ -2014,9 +2414,10 @@
                 }
             };
 
-            fullDashboardData.forEach(record => {
+            fullDashboardData.forEach((record, idx) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50 transition-colors";
+                tr.style.setProperty("--rp-row-delay", Math.min(idx * 25, 280) + "ms");
                 
                 const phaseColor = getPhaseColorClass(record.phase);
                 const subphaseColorText = getSubphaseColorClass(record.phase);
@@ -2572,6 +2973,7 @@
                 
                 let tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50 transition-colors";
+                tr.style.setProperty("--rp-row-delay", Math.min(idx * 25, 280) + "ms");
                 
                 let metaCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.meta}" onchange="updateAvance(${idx}, 'meta', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.meta}</span>`;
                 let avanceCell = isAvanceEditMode ? `<input type="number" min="0" class="w-16 p-1 border border-gray-300 rounded text-center text-xs sm:text-sm focus:ring-brand-500 focus:border-brand-500 font-semibold" value="${row.avance}" onchange="updateAvance(${idx}, 'avance', this.value)">` : `<span class="text-xs sm:text-sm font-bold text-gray-700">${row.avance}</span>`;
@@ -2736,6 +3138,7 @@
                 const rowName = String(row.asesor || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 const tr = document.createElement("tr");
                 tr.className = "hover:bg-gray-50";
+                tr.style.setProperty("--rp-row-delay", Math.min(index * 25, 280) + "ms");
                 tr.innerHTML = '<td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-gray-900">' + rowName + '</td>' +
                     '<td class="whitespace-nowrap px-4 py-3 text-right text-sm">' + assignedCell + '</td>' +
                     '<td class="whitespace-nowrap px-4 py-3 text-right text-sm font-semibold text-gray-900">' + spentCell + '</td>' +
@@ -3471,10 +3874,7 @@
             const btn = document.getElementById("btnCopyAvance");
             const sourceTable = document.getElementById("avanceMetricsTable");
             const sourcePeriod = document.querySelector("#avance .calendar-period-panel");
-            const sourceScroller = sourceTable
-                ? sourceTable.closest(".overflow-x-auto, .overflow-auto, .overflow-y-auto")
-                : null;
-            if (!btn || !sourceTable || !sourcePeriod || !sourceScroller) {
+            if (!btn || !sourceTable || !sourcePeriod) {
                 if (wasEditing) toggleEditAvance();
                 showAppToast("No se encontró el panel de periodo o la tabla completa para capturar.", "error");
                 return;
@@ -3482,208 +3882,442 @@
 
             const originalButtonHTML = btn.innerHTML;
             const originalButtonDisabled = btn.disabled;
-            let captureRoot = null;
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
             try {
-                // Capturar el selector de periodo real y la tabla real, no una tabla reconstruida.
-                // Esto conserva el aspecto de la página y alinea cada dato en su fila original.
-                captureRoot = document.createElement("div");
-                captureRoot.id = "avanceCaptureRootTemporary";
-                captureRoot.setAttribute("aria-hidden", "true");
-                captureRoot.style.cssText = [
-                    "position:fixed",
-                    "left:0",
-                    "top:0",
-                    "display:block",
-                    "width:max-content",
-                    "max-width:none",
-                    "min-width:0",
-                    "height:auto",
-                    "overflow:visible",
-                    "box-sizing:border-box",
-                    "padding:24px",
-                    "margin:0",
-                    "background:#ffffff",
-                    "color:#0f172a",
-                    "font-family:Arial,Helvetica,sans-serif",
-                    "opacity:0",
-                    "pointer-events:none",
-                    "z-index:2147483647"
-                ].join(";");
-
-                const periodClone = sourcePeriod.cloneNode(true);
-                const sourceMonthInput = document.getElementById("avanceMonth");
-                const clonedMonthInput = periodClone.querySelector('input[type="month"]');
-                if (sourceMonthInput && clonedMonthInput) {
-                    // Un input[type=month] suele renderizarse como "2026-10" dentro de html2canvas,
-                    // aunque la página lo muestre localizado. En la imagen usamos el mismo texto visible
-                    // del selector para conservar su alineación y evitar ese cambio de formato.
-                    const monthDisplay = document.getElementById("avanceMonthDisplay");
-                    const monthLabel = document.createElement("span");
-                    monthLabel.className = clonedMonthInput.className;
-                    monthLabel.textContent = monthDisplay && monthDisplay.textContent.trim()
-                        ? monthDisplay.textContent.trim()
-                        : sourceMonthInput.value;
-                    monthLabel.setAttribute("aria-label", "Periodo seleccionado");
-                    monthLabel.style.setProperty("display", "inline-flex", "important");
-                    monthLabel.style.setProperty("align-items", "center", "important");
-                    monthLabel.style.setProperty("box-sizing", "border-box", "important");
-                    clonedMonthInput.replaceWith(monthLabel);
-                    const monthWrap = periodClone.querySelector(".calendar-month-input-wrap");
-                    if (monthWrap) monthWrap.removeAttribute("for");
+                if (document.fonts && document.fonts.ready) {
+                    await document.fonts.ready;
                 }
-                periodClone.style.setProperty("box-sizing", "border-box", "important");
-                periodClone.style.setProperty("width", "max-content", "important");
-                periodClone.style.setProperty("max-width", "none", "important");
-
-                const tablePanelClone = sourceScroller.cloneNode(true);
-                tablePanelClone.style.setProperty("display", "block", "important");
-                tablePanelClone.style.setProperty("width", "max-content", "important");
-                tablePanelClone.style.setProperty("min-width", "0", "important");
-                tablePanelClone.style.setProperty("max-width", "none", "important");
-                tablePanelClone.style.setProperty("height", "auto", "important");
-                tablePanelClone.style.setProperty("max-height", "none", "important");
-                tablePanelClone.style.setProperty("overflow", "visible", "important");
-
-                const tableClone = tablePanelClone.querySelector("table");
-                if (!tableClone) throw new Error("No se pudo copiar la tabla de Métricas de Avance.");
-                tableClone.style.setProperty("display", "table", "important");
-                tableClone.style.setProperty("width", "max-content", "important");
-                tableClone.style.setProperty("min-width", "max-content", "important");
-                tableClone.style.setProperty("max-width", "none", "important");
-                tableClone.style.setProperty("table-layout", "auto", "important");
-                tableClone.style.setProperty("overflow", "visible", "important");
-                tableClone.style.setProperty("background-color", "#ffffff", "important");
-
-                // Evitar IDs duplicados mientras los clones están temporalmente en el documento.
-                [periodClone, tablePanelClone].forEach(function (node) {
-                    if (node.id) node.removeAttribute("id");
-                    node.querySelectorAll("[id]").forEach(function (element) {
-                        element.removeAttribute("id");
-                    });
-                    node.querySelectorAll("[onclick]").forEach(function (element) {
-                        element.removeAttribute("onclick");
-                    });
-                });
-
-                // Dejar que la tabla calcule su ancho natural y usar exactamente ese ancho
-                // tanto para el selector como para el panel de la tabla.
-                captureRoot.appendChild(periodClone);
-                captureRoot.appendChild(tablePanelClone);
-                document.body.appendChild(captureRoot);
                 await new Promise(function (resolve) { window.requestAnimationFrame(resolve); });
 
-                const measuredTableWidth = Math.ceil(Math.max(
-                    tableClone.getBoundingClientRect().width,
-                    tableClone.scrollWidth,
-                    tablePanelClone.scrollWidth
-                ));
-                tableClone.style.setProperty("width", measuredTableWidth + "px", "important");
-                tableClone.style.setProperty("min-width", measuredTableWidth + "px", "important");
-                tablePanelClone.style.setProperty("width", measuredTableWidth + "px", "important");
-                periodClone.style.setProperty("width", measuredTableWidth + "px", "important");
+                // Extraer estado real de la vista web actual
+                const monthInputEl = document.getElementById("avanceMonth");
+                const monthKey = (monthInputEl && monthInputEl.value) || currentMetricsMonth || getCurrentMonthKey();
+                const formattedMonthLabel = capitalizeSpanish(formatMetricsMonth(monthKey)) || monthKey;
+                const displayMonthEl = document.getElementById("avanceMonthDisplay");
+                const rawDisplayText = (displayMonthEl && displayMonthEl.textContent.trim()) || formattedMonthLabel;
+                // En la página web, .calendar-period-current aplica text-transform: capitalize
+                const periodCurrentTitle = rawDisplayText.replace(/(^|\s)([a-záéíóúñ])/giu, function (_, sep, chr) {
+                    return sep + chr.toLocaleUpperCase("es-PE");
+                });
 
-                // Conservar las alturas y el padding originales del sitio: imponer alturas por fila
-                // desplazaba visualmente los porcentajes frente al resto de valores. Solo fijamos
-                // la alineación vertical y el eje horizontal de cada columna en la copia.
-                tableClone.querySelectorAll("thead tr, tbody tr").forEach(function (row) {
-                    Array.from(row.children).forEach(function (cell, index) {
-                        cell.style.setProperty("vertical-align", "middle", "important");
-                        cell.style.setProperty("text-align", index === 0 ? "left" : "center", "important");
-                        cell.style.setProperty("white-space", "nowrap", "important");
+                const statusEl = document.getElementById("avanceMonthStatus");
+                const statusText = (statusEl && statusEl.textContent.trim()) || ("Datos guardados para " + formatMetricsMonth(monthKey) + ".");
+                const statusIsError = Boolean(statusEl && statusEl.classList.contains("text-red-700"));
+                const statusIsSuccess = Boolean(statusEl && statusEl.classList.contains("text-emerald-700"));
+
+                // Leer encabezados y filas reales de la tabla en el DOM
+                const headerCells = Array.from(sourceTable.querySelectorAll("thead th")).map(function (th) {
+                    return th.textContent.trim().toLocaleUpperCase("es-PE");
+                });
+                const bodyRows = Array.from(sourceTable.querySelectorAll("tbody tr")).map(function (tr) {
+                    const isTotal = tr.classList.contains("bg-brand-50");
+                    const cells = Array.from(tr.children).map(function (td) {
+                        const badge = td.querySelector("span.rounded-full");
+                        const input = td.querySelector("input");
+                        const text = input ? String(input.value || "").trim() : td.textContent.trim();
+                        let badgeTone = null;
+                        if (badge) {
+                            if (badge.classList.contains("bg-emerald-100")) badgeTone = "emerald";
+                            else if (badge.classList.contains("bg-amber-100")) badgeTone = "amber";
+                            else badgeTone = "red";
+                        }
+                        return { text: text, isBadge: Boolean(badge), badgeTone: badgeTone };
                     });
+                    return { isTotal: isTotal, cells: cells, colSpan: tr.children.length === 1 };
                 });
 
-                // Evitar el desplazamiento de la línea base en las cápsulas al usar html2canvas.
-                tableClone.querySelectorAll("tbody td span.rounded-full.border").forEach(function (badge) {
-                    const labelText = badge.textContent.trim();
-                    const label = document.createElement("span");
-                    label.textContent = labelText;
-                    label.style.cssText = [
-                        "position:absolute",
-                        "left:0",
-                        "right:0",
-                        "top:0",
-                        "bottom:0",
-                        "display:block",
-                        "padding:0",
-                        "margin:0",
-                        "text-align:center",
-                        "line-height:26px",
-                        "transform:translateY(-6px)",
-                        "font-size:12px",
-                        "font-weight:700",
-                        "white-space:nowrap",
-                        "color:inherit",
-                        "box-sizing:border-box"
-                    ].join(";");
-                    badge.textContent = "";
-                    badge.appendChild(label);
-                    badge.style.setProperty("display", "inline-block", "important");
-                    badge.style.setProperty("position", "relative", "important");
-                    badge.style.setProperty("height", "28px", "important");
-                    badge.style.setProperty("min-width", "52px", "important");
-                    badge.style.setProperty("width", Math.max(52, labelText.length * 8 + 28) + "px", "important");
-                    badge.style.setProperty("padding", "0", "important");
-                    badge.style.setProperty("margin", "0 auto", "important");
-                    badge.style.setProperty("line-height", "26px", "important");
-                    badge.style.setProperty("vertical-align", "middle", "important");
-                    badge.style.setProperty("white-space", "nowrap", "important");
-                    badge.style.setProperty("box-sizing", "border-box", "important");
-                    badge.style.setProperty("overflow", "hidden", "important");
+                // Dimensiones y geometría idénticas a la vista web de escritorio (1439px ancho base @ 2x Retina)
+                const baseWidth = 1439;
+                const outerPadX = 17;
+                const outerPadTop = 14;
+                const outerPadBottom = 14;
+                const contentWidth = baseWidth - outerPadX * 2; // 1405px
+
+                const periodHeight = 148;
+                const sectionGap = 24;
+                const tableHeaderHeight = 49;
+                const normalRowHeight = 68;
+                const totalRowHeight = 78;
+
+                let tableBodyHeight = 0;
+                bodyRows.forEach(function (row) {
+                    tableBodyHeight += row.isTotal ? totalRowHeight : normalRowHeight;
+                });
+                if (tableBodyHeight === 0) tableBodyHeight = normalRowHeight;
+
+                const tableHeight = tableHeaderHeight + tableBodyHeight;
+                const baseHeight = outerPadTop + periodHeight + sectionGap + tableHeight + outerPadBottom;
+
+                const scale = 2;
+                const canvas = document.createElement("canvas");
+                canvas.width = baseWidth * scale;
+                canvas.height = baseHeight * scale;
+                const ctx = canvas.getContext("2d");
+                ctx.scale(scale, scale);
+
+                const fontStack = 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
+                // Utilidades de dibujo de alta precisión
+                function roundedRectPath(x, y, w, h, r) {
+                    const radius = Math.min(r, w / 2, h / 2);
+                    ctx.beginPath();
+                    ctx.moveTo(x + radius, y);
+                    ctx.arcTo(x + w, y, x + w, y + h, radius);
+                    ctx.arcTo(x + w, y + h, x, y + h, radius);
+                    ctx.arcTo(x, y + h, x, y, radius);
+                    ctx.arcTo(x, y, x + w, y, radius);
+                    ctx.closePath();
+                }
+
+                function drawCenteredText(text, x, centerY, align) {
+                    ctx.textAlign = align || "center";
+                    ctx.textBaseline = "alphabetic";
+                    const metrics = ctx.measureText(text);
+                    const ascent = metrics.actualBoundingBoxAscent || 10;
+                    const descent = metrics.actualBoundingBoxDescent || 3;
+                    const baselineY = centerY + (ascent - descent) / 2;
+                    ctx.fillText(text, x, baselineY);
+                }
+
+                // Iconos vectoriales nítidos idénticos a los de la interfaz web
+                function drawCalendarIcon(cx, cy, size, color, variant) {
+                    ctx.save();
+                    ctx.strokeStyle = color;
+                    ctx.fillStyle = color;
+                    ctx.lineWidth = Math.max(1.6, size * 0.105);
+                    ctx.lineCap = "round";
+                    ctx.lineJoin = "round";
+
+                    const w = size * 0.86;
+                    const h = size * 0.86;
+                    const x = cx - w / 2;
+                    const y = cy - h / 2 + size * 0.04;
+                    const r = size * 0.14;
+
+                    if (variant === "solid-day") {
+                        // fa-solid fa-calendar-day
+                        roundedRectPath(x, y, w, h, r);
+                        ctx.fill();
+                        // Tapa superior separada con línea blanca
+                        ctx.strokeStyle = "#ffffff";
+                        ctx.lineWidth = Math.max(1.4, size * 0.09);
+                        ctx.beginPath();
+                        ctx.moveTo(x + 1.5, y + h * 0.33);
+                        ctx.lineTo(x + w - 1.5, y + h * 0.33);
+                        ctx.stroke();
+                        // Cuadro de día destacado
+                        ctx.fillStyle = "#ffffff";
+                        roundedRectPath(x + w * 0.24, y + h * 0.48, w * 0.30, h * 0.30, 1.5);
+                        ctx.fill();
+                        // Argollas superiores
+                        ctx.strokeStyle = color;
+                        ctx.lineWidth = Math.max(1.8, size * 0.12);
+                        ctx.beginPath();
+                        ctx.moveTo(x + w * 0.28, y - size * 0.08);
+                        ctx.lineTo(x + w * 0.28, y + size * 0.06);
+                        ctx.moveTo(x + w * 0.72, y - size * 0.08);
+                        ctx.lineTo(x + w * 0.72, y + size * 0.06);
+                        ctx.stroke();
+                    } else {
+                        // fa-regular fa-calendar / fa-calendar-days
+                        roundedRectPath(x, y, w, h, r);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(x, y + h * 0.32);
+                        ctx.lineTo(x + w, y + h * 0.32);
+                        ctx.moveTo(x + w * 0.28, y - size * 0.09);
+                        ctx.lineTo(x + w * 0.28, y + size * 0.08);
+                        ctx.moveTo(x + w * 0.72, y - size * 0.09);
+                        ctx.lineTo(x + w * 0.72, y + size * 0.08);
+                        ctx.stroke();
+
+                        if (variant === "days") {
+                            const dotR = Math.max(1.15, size * 0.055);
+                            const cols = [0.28, 0.50, 0.72];
+                            const rows = [0.53, 0.75];
+                            rows.forEach(function (ry) {
+                                cols.forEach(function (rx) {
+                                    ctx.beginPath();
+                                    ctx.arc(x + w * rx, y + h * ry, dotR, 0, Math.PI * 2);
+                                    ctx.fill();
+                                });
+                            });
+                        }
+                    }
+                    ctx.restore();
+                }
+
+                function drawChevronIcon(cx, cy, size, direction, color) {
+                    ctx.save();
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 2.2;
+                    ctx.lineCap = "round";
+                    ctx.lineJoin = "round";
+                    const dx = size * 0.22 * (direction === "left" ? -1 : 1);
+                    const dy = size * 0.38;
+                    ctx.beginPath();
+                    ctx.moveTo(cx - dx, cy - dy);
+                    ctx.lineTo(cx + dx, cy);
+                    ctx.lineTo(cx - dx, cy + dy);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // 1. Fondo general blanco
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, baseWidth, baseHeight);
+
+                // 2. Panel superior: Selector de periodo (.calendar-period-panel)
+                const px = outerPadX;
+                const py = outerPadTop;
+                const pw = contentWidth;
+                const ph = periodHeight;
+
+                ctx.save();
+                ctx.shadowColor = "rgba(15, 23, 42, 0.03)";
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetY = 2;
+                roundedRectPath(px, py, pw, ph, 16);
+                const panelGrad = ctx.createLinearGradient(px, py, px + pw * 0.85, py + ph);
+                panelGrad.addColorStop(0, "#f2fbfc");
+                panelGrad.addColorStop(0.6, "#fbfeff");
+                panelGrad.addColorStop(1, "#ffffff");
+                ctx.fillStyle = panelGrad;
+                ctx.fill();
+                ctx.restore();
+
+                roundedRectPath(px, py, pw, ph, 16);
+                ctx.strokeStyle = "#d5e8eb";
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+
+                // Icono izquierdo del panel de periodo
+                const iconBoxX = px + 23;
+                const iconBoxY = py + 22;
+                const iconBoxSize = 50;
+                roundedRectPath(iconBoxX, iconBoxY, iconBoxSize, iconBoxSize, 14);
+                ctx.fillStyle = "#e4f9fa";
+                ctx.fill();
+                ctx.strokeStyle = "#c7eef0";
+                ctx.lineWidth = 1.1;
+                ctx.stroke();
+                drawCalendarIcon(iconBoxX + iconBoxSize / 2, iconBoxY + iconBoxSize / 2, 22, "#18777d", "days");
+
+                // Títulos de "Periodo de métricas" y "Octubre De 2026"
+                ctx.fillStyle = "#334155";
+                ctx.font = "800 15px " + fontStack;
+                drawCenteredText("Periodo de métricas", iconBoxX + iconBoxSize + 15, iconBoxY + 14, "left");
+
+                ctx.fillStyle = "#102b3a";
+                ctx.font = "850 19.5px " + fontStack;
+                drawCenteredText(periodCurrentTitle, iconBoxX + iconBoxSize + 15, iconBoxY + 39, "left");
+
+                // Controles derechos del selector de periodo
+                const ctrlY = py + 21;
+                const ctrlH = 52;
+                const curBtnW = 134;
+                const navBtnW = 51;
+                const monthBoxW = 265;
+                const ctrlGap = 9;
+
+                const curBtnX = px + pw - 23 - curBtnW;
+                const nextBtnX = curBtnX - ctrlGap - navBtnW;
+                const monthBoxX = nextBtnX - ctrlGap - monthBoxW;
+                const prevBtnX = monthBoxX - ctrlGap - navBtnW;
+                const ctrlCenterY = ctrlY + ctrlH / 2;
+
+                // Botón mes anterior (<)
+                roundedRectPath(prevBtnX, ctrlY, navBtnW, ctrlH, 13);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+                ctx.strokeStyle = "#d4e1e7";
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+                drawChevronIcon(prevBtnX + navBtnW / 2, ctrlCenterY, 15, "left", "#334155");
+
+                // Caja del selector de mes (con "Octubre de 2026" + icono calendario izquierdo y derecho como en la vista web)
+                roundedRectPath(monthBoxX, ctrlY, monthBoxW, ctrlH, 13);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+                ctx.strokeStyle = "#cbdce3";
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+                drawCalendarIcon(monthBoxX + 22, ctrlCenterY, 17, "#238087", "regular");
+                ctx.fillStyle = "#102b3a";
+                ctx.font = "800 15.5px " + fontStack;
+                drawCenteredText(formattedMonthLabel, monthBoxX + 42, ctrlCenterY, "left");
+                drawCalendarIcon(monthBoxX + monthBoxW - 24, ctrlCenterY, 15, "#334155", "regular");
+
+                // Botón mes siguiente (>)
+                roundedRectPath(nextBtnX, ctrlY, navBtnW, ctrlH, 13);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+                ctx.strokeStyle = "#d4e1e7";
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+                drawChevronIcon(nextBtnX + navBtnW / 2, ctrlCenterY, 15, "right", "#334155");
+
+                // Botón "Mes actual"
+                roundedRectPath(curBtnX, ctrlY, curBtnW, ctrlH, 13);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+                ctx.strokeStyle = "#b9e7e9";
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
+                drawCalendarIcon(curBtnX + 24, ctrlCenterY, 16, "#155e63", "solid-day");
+                ctx.fillStyle = "#155e63";
+                ctx.font = "850 14.5px " + fontStack;
+                drawCenteredText("Mes actual", curBtnX + 40, ctrlCenterY, "left");
+
+                // Línea divisoria y texto de estado en el panel de periodo
+                const dividerY = py + 92;
+                ctx.beginPath();
+                ctx.moveTo(px + 23, dividerY);
+                ctx.lineTo(px + pw - 23, dividerY);
+                ctx.strokeStyle = "#dbecef";
+                ctx.lineWidth = 1.1;
+                ctx.stroke();
+
+                ctx.fillStyle = statusIsError ? "#b91c1c" : (statusIsSuccess ? "#047857" : "#475569");
+                ctx.font = (statusIsError || statusIsSuccess ? "600 " : "500 ") + "15.5px " + fontStack;
+                drawCenteredText(statusText, px + 23, dividerY + (ph - 92) / 2 + 1, "left");
+
+                // 3. Tabla de Métricas de Avance (#avanceMetricsTable)
+                const tx = outerPadX;
+                const ty = py + ph + sectionGap;
+                const tw = contentWidth;
+                const th = tableHeight;
+                const tableRadius = 11;
+
+                // Sombra suave del contenedor de la tabla
+                ctx.save();
+                ctx.shadowColor = "rgba(15, 23, 42, 0.06)";
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetY = 2;
+                roundedRectPath(tx, ty, tw, th, tableRadius);
+                ctx.fillStyle = "#ffffff";
+                ctx.fill();
+                ctx.restore();
+
+                // Recorte (clip) para que el encabezado gris y la fila final turquesa respeten las esquinas redondeadas
+                ctx.save();
+                roundedRectPath(tx, ty, tw, th, tableRadius);
+                ctx.clip();
+
+                // Coordenadas horizontales de las 8 columnas (idénticas a la vista web en escritorio)
+                const colX = [
+                    tx + 21,   // 0: ASESOR (left)
+                    tx + 451,  // 1: META 4.º SECUNDARIA (center)
+                    tx + 610,  // 2: AVANCE (center)
+                    tx + 713,  // 3: % (center)
+                    tx + 886,  // 4: REFERIDOS POSTULANTES (center)
+                    tx + 1076, // 5: PROYECCIÓN (center)
+                    tx + 1219, // 6: LOGRO FINAL (center)
+                    tx + 1347  // 7: % FINAL (center)
+                ];
+
+                // Fondo y textos del encabezado (thead)
+                ctx.fillStyle = "#f9fafb";
+                ctx.fillRect(tx, ty, tw, tableHeaderHeight);
+                ctx.beginPath();
+                ctx.moveTo(tx, ty + tableHeaderHeight);
+                ctx.lineTo(tx + tw, ty + tableHeaderHeight);
+                ctx.strokeStyle = "#e5e7eb";
+                ctx.lineWidth = 1.1;
+                ctx.stroke();
+
+                ctx.fillStyle = "#6b7280";
+                ctx.font = "600 13.5px " + fontStack;
+                const headerCenterY = ty + tableHeaderHeight / 2;
+                headerCells.forEach(function (label, idx) {
+                    const x = colX[idx] !== undefined ? colX[idx] : (tx + 20 + idx * 160);
+                    drawCenteredText(label, x, headerCenterY, idx === 0 ? "left" : "center");
                 });
 
-                // El panel de periodo tiene controles flexibles. Hacemos que su clon use el mismo
-                // ancho que la tabla y preservamos todos los controles y el texto de estado.
-                await new Promise(function (resolve) { window.requestAnimationFrame(resolve); });
-                const rootRect = captureRoot.getBoundingClientRect();
-                const tableRect = tablePanelClone.getBoundingClientRect();
-                const captureWidth = Math.ceil(Math.max(
-                    captureRoot.scrollWidth,
-                    rootRect.width,
-                    tableRect.right - rootRect.left + 24
-                ));
-                const captureHeight = Math.ceil(Math.max(
-                    captureRoot.scrollHeight,
-                    rootRect.height,
-                    tableRect.bottom - rootRect.top + 32
-                ));
+                // Filas del cuerpo (tbody)
+                let curY = ty + tableHeaderHeight;
+                bodyRows.forEach(function (row) {
+                    const rowH = row.isTotal ? totalRowHeight : normalRowHeight;
+                    const rowCenterY = curY + rowH / 2;
 
-                const canvas = await html2canvas(captureRoot, {
-                    scale: 2,
-                    width: captureWidth,
-                    height: captureHeight,
-                    backgroundColor: "#ffffff",
-                    logging: false,
-                    foreignObjectRendering: false,
-                    onclone: function (clonedDocument) {
-                        const clonedRoot = clonedDocument.getElementById("avanceCaptureRootTemporary");
-                        if (!clonedRoot) return;
-                        clonedRoot.style.setProperty("opacity", "1", "important");
-                        clonedRoot.style.setProperty("visibility", "visible", "important");
-                        clonedRoot.style.setProperty("position", "fixed", "important");
-                        clonedRoot.style.setProperty("left", "0", "important");
-                        clonedRoot.style.setProperty("top", "0", "important");
-                        clonedRoot.style.setProperty("z-index", "2147483647", "important");
-                        clonedRoot.style.setProperty("background-color", "#ffffff", "important");
-                        clonedRoot.style.setProperty("overflow", "visible", "important");
-                        clonedRoot.style.setProperty("width", captureWidth + "px", "important");
-                        clonedRoot.style.setProperty("height", captureHeight + "px", "important");
-                        clonedRoot.style.setProperty("min-height", captureHeight + "px", "important");
-                        clonedRoot.style.setProperty("padding-bottom", "32px", "important");
+                    if (row.isTotal) {
+                        ctx.fillStyle = "#e4f9fa";
+                        ctx.fillRect(tx, curY, tw, rowH);
+                        ctx.beginPath();
+                        ctx.moveTo(tx, curY + 1);
+                        ctx.lineTo(tx + tw, curY + 1);
+                        ctx.strokeStyle = "#99eaf0";
+                        ctx.lineWidth = 2.2;
+                        ctx.stroke();
+                    } else {
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fillRect(tx, curY, tw, rowH);
+                        ctx.beginPath();
+                        ctx.moveTo(tx, curY + rowH);
+                        ctx.lineTo(tx + tw, curY + rowH);
+                        ctx.strokeStyle = "#e5e7eb";
+                        ctx.lineWidth = 1.0;
+                        ctx.stroke();
+                    }
 
-                        clonedRoot.querySelectorAll(".overflow-x-auto, .overflow-y-auto, .overflow-auto").forEach(function (scroller) {
-                            scroller.style.setProperty("overflow", "visible", "important");
-                            scroller.style.setProperty("overflow-x", "visible", "important");
-                            scroller.style.setProperty("overflow-y", "visible", "important");
-                            scroller.style.setProperty("max-width", "none", "important");
-                            scroller.style.setProperty("max-height", "none", "important");
-                            scroller.style.setProperty("height", "auto", "important");
+                    if (row.colSpan && row.cells[0]) {
+                        ctx.fillStyle = "#6b7280";
+                        ctx.font = "500 15px " + fontStack;
+                        drawCenteredText(row.cells[0].text, tx + tw / 2, rowCenterY, "center");
+                    } else {
+                        row.cells.forEach(function (cell, idx) {
+                            const x = colX[idx] !== undefined ? colX[idx] : (tx + 20 + idx * 160);
+                            if (cell.isBadge) {
+                                // Cápsula de porcentaje con texto matemáticamente centrado
+                                ctx.font = "700 13.5px " + fontStack;
+                                const textW = ctx.measureText(cell.text).width;
+                                const pillW = Math.max(54, Math.ceil(textW + 26));
+                                const pillH = 30;
+                                const pillX = x - pillW / 2;
+                                const pillY = rowCenterY - pillH / 2;
+
+                                let bg = "#fee2e2", border = "#fecaca", fg = "#991b1b";
+                                if (cell.badgeTone === "emerald") {
+                                    bg = "#d1fae5"; border = "#a7f3d0"; fg = "#065f46";
+                                } else if (cell.badgeTone === "amber") {
+                                    bg = "#fef3c7"; border = "#fde68a"; fg = "#92400e";
+                                }
+
+                                roundedRectPath(pillX, pillY, pillW, pillH, 999);
+                                ctx.fillStyle = bg;
+                                ctx.fill();
+                                ctx.strokeStyle = border;
+                                ctx.lineWidth = 1.1;
+                                ctx.stroke();
+
+                                ctx.fillStyle = fg;
+                                drawCenteredText(cell.text, x, rowCenterY, "center");
+                            } else {
+                                if (row.isTotal) {
+                                    ctx.font = "700 16px " + fontStack;
+                                    ctx.fillStyle = idx === 0 ? "#09292a" : (idx === 6 ? "#1c7a7d" : "#111827");
+                                    const val = idx === 0 ? cell.text.toLocaleUpperCase("es-PE") : cell.text;
+                                    drawCenteredText(val, x, rowCenterY, idx === 0 ? "left" : "center");
+                                } else {
+                                    ctx.font = "700 15.5px " + fontStack;
+                                    ctx.fillStyle = (idx === 0 || idx === 6) ? "#111827" : "#374151";
+                                    drawCenteredText(cell.text, x, rowCenterY, idx === 0 ? "left" : "center");
+                                }
+                            }
                         });
                     }
+                    curY += rowH;
                 });
+
+                ctx.restore();
+
+                // Contorno redondeado exterior de la tabla (equivalente a ring-1 ring-black/5 + md:rounded-lg)
+                roundedRectPath(tx, ty, tw, th, tableRadius);
+                ctx.strokeStyle = "#e2e8f0";
+                ctx.lineWidth = 1.2;
+                ctx.stroke();
 
                 const blob = await new Promise(function (resolve, reject) {
                     canvas.toBlob(function (result) {
@@ -3706,7 +4340,6 @@
                 console.error("No se pudo copiar la captura de Métricas de Avance:", error);
                 showAppToast("No se pudo copiar la captura. Comprueba los permisos del portapapeles e inténtalo nuevamente.", "error", { duration: 6500 });
             } finally {
-                if (captureRoot && captureRoot.parentNode) captureRoot.parentNode.removeChild(captureRoot);
                 btn.innerHTML = originalButtonHTML;
                 btn.disabled = originalButtonDisabled;
                 btn.classList.remove("bg-emerald-500", "hover:bg-emerald-600");
@@ -3863,6 +4496,21 @@
                 window.setTimeout(function () { cancel.focus(); }, 30);
             });
         }
+
+        // Efecto ripple táctil en botones para retroalimentación visual inmediata
+        document.addEventListener("pointerdown", function (event) {
+            const btn = event.target.closest("button:not(:disabled):not(.tab-btn):not(.rp-toast__close)");
+            if (!btn) return;
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const ripple = document.createElement("span");
+            ripple.className = "rp-click-ripple";
+            ripple.style.width = ripple.style.height = size + "px";
+            ripple.style.left = (event.clientX - rect.left - size / 2) + "px";
+            ripple.style.top = (event.clientY - rect.top - size / 2) + "px";
+            btn.appendChild(ripple);
+            window.setTimeout(function () { ripple.remove(); }, 540);
+        });
 
         updateProgress();
         auth.onAuthStateChanged(handleAuthState);

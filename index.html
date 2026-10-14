@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 19 //////// -->
+<!-- //////// Versión 20 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3470,8 +3470,13 @@
 
             const btn = document.getElementById("btnCopyAvance");
             const sourceTable = document.getElementById("avanceMetricsTable");
-            if (!btn || !sourceTable) {
+            const sourcePeriod = document.querySelector("#avance .calendar-period-panel");
+            const sourceScroller = sourceTable
+                ? sourceTable.closest(".overflow-x-auto, .overflow-auto, .overflow-y-auto")
+                : null;
+            if (!btn || !sourceTable || !sourcePeriod || !sourceScroller) {
                 if (wasEditing) toggleEditAvance();
+                showAppToast("No se encontró el panel de periodo o la tabla completa para capturar.", "error");
                 return;
             }
 
@@ -3482,9 +3487,8 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
             try {
-                // Mantener el clon dentro del viewport. Se oculta en la página real y se vuelve
-                // visible solo dentro del documento clonado de html2canvas; así evitamos capturas
-                // negras por intentar renderizar contenido situado fuera de la pantalla.
+                // Capturar el selector de periodo real y la tabla real, no una tabla reconstruida.
+                // Esto conserva el aspecto de la página y alinea cada dato en su fila original.
                 captureRoot = document.createElement("div");
                 captureRoot.id = "avanceCaptureRootTemporary";
                 captureRoot.setAttribute("aria-hidden", "true");
@@ -3499,7 +3503,7 @@
                     "height:auto",
                     "overflow:visible",
                     "box-sizing:border-box",
-                    "padding:24px 24px 96px 24px",
+                    "padding:24px",
                     "margin:0",
                     "background:#ffffff",
                     "color:#0f172a",
@@ -3509,55 +3513,129 @@
                     "z-index:2147483647"
                 ].join(";");
 
-                const heading = document.createElement("div");
-                heading.style.cssText = "display:block;width:max-content;margin:0 0 18px 0;color:#0f172a;background:#ffffff;";
-                const title = document.createElement("div");
-                title.textContent = "Métricas de Avance";
-                title.style.cssText = "font-size:24px;font-weight:800;line-height:1.3;margin:0 0 6px 0;color:#0f172a;";
-                const selectedMonth = document.getElementById("avanceMonthDisplay");
-                const period = document.createElement("div");
-                period.textContent = "Periodo: " + (selectedMonth && selectedMonth.textContent.trim() ? selectedMonth.textContent.trim() : (currentMetricsMonth || ""));
-                period.style.cssText = "font-size:13px;font-weight:600;color:#475569;line-height:1.5;";
-                heading.appendChild(title);
-                heading.appendChild(period);
+                const periodClone = sourcePeriod.cloneNode(true);
+                const sourceMonthInput = document.getElementById("avanceMonth");
+                const clonedMonthInput = periodClone.querySelector('input[type="month"]');
+                if (sourceMonthInput && clonedMonthInput) {
+                    clonedMonthInput.value = sourceMonthInput.value;
+                    clonedMonthInput.setAttribute("value", sourceMonthInput.value);
+                }
+                periodClone.style.setProperty("box-sizing", "border-box", "important");
+                periodClone.style.setProperty("width", "max-content", "important");
+                periodClone.style.setProperty("max-width", "none", "important");
 
-                const tableClone = sourceTable.cloneNode(true);
-                tableClone.removeAttribute("id");
+                const tablePanelClone = sourceScroller.cloneNode(true);
+                tablePanelClone.style.setProperty("display", "block", "important");
+                tablePanelClone.style.setProperty("width", "max-content", "important");
+                tablePanelClone.style.setProperty("min-width", "0", "important");
+                tablePanelClone.style.setProperty("max-width", "none", "important");
+                tablePanelClone.style.setProperty("height", "auto", "important");
+                tablePanelClone.style.setProperty("max-height", "none", "important");
+                tablePanelClone.style.setProperty("overflow", "visible", "important");
+
+                const tableClone = tablePanelClone.querySelector("table");
+                if (!tableClone) throw new Error("No se pudo copiar la tabla de Métricas de Avance.");
                 tableClone.style.setProperty("display", "table", "important");
                 tableClone.style.setProperty("width", "max-content", "important");
                 tableClone.style.setProperty("min-width", "max-content", "important");
                 tableClone.style.setProperty("max-width", "none", "important");
                 tableClone.style.setProperty("table-layout", "auto", "important");
                 tableClone.style.setProperty("overflow", "visible", "important");
-                tableClone.style.setProperty("border-collapse", "separate", "important");
-                tableClone.style.setProperty("border-spacing", "0", "important");
                 tableClone.style.setProperty("background-color", "#ffffff", "important");
 
-                tableClone.querySelectorAll("thead").forEach(function (element) {
-                    element.style.setProperty("display", "table-header-group", "important");
-                    element.style.setProperty("background-color", "#f9fafb", "important");
-                });
-                tableClone.querySelectorAll("tbody").forEach(function (element) {
-                    element.style.setProperty("display", "table-row-group", "important");
-                });
-                tableClone.querySelectorAll("tr").forEach(function (element) {
-                    element.style.setProperty("display", "table-row", "important");
-                });
-                tableClone.querySelectorAll("th, td").forEach(function (element) {
-                    element.style.setProperty("display", "table-cell", "important");
-                    element.style.setProperty("white-space", "nowrap", "important");
-                    element.style.setProperty("overflow", "visible", "important");
+                // Evitar IDs duplicados mientras los clones están temporalmente en el documento.
+                [periodClone, tablePanelClone].forEach(function (node) {
+                    if (node.id) node.removeAttribute("id");
+                    node.querySelectorAll("[id]").forEach(function (element) {
+                        element.removeAttribute("id");
+                    });
+                    node.querySelectorAll("[onclick]").forEach(function (element) {
+                        element.removeAttribute("onclick");
+                    });
                 });
 
-                captureRoot.appendChild(heading);
-                captureRoot.appendChild(tableClone);
+                // Dejar que la tabla calcule su ancho natural y usar exactamente ese ancho
+                // tanto para el selector como para el panel de la tabla.
+                captureRoot.appendChild(periodClone);
+                captureRoot.appendChild(tablePanelClone);
                 document.body.appendChild(captureRoot);
+                await new Promise(function (resolve) { window.requestAnimationFrame(resolve); });
 
+                const measuredTableWidth = Math.ceil(Math.max(
+                    tableClone.getBoundingClientRect().width,
+                    tableClone.scrollWidth,
+                    tablePanelClone.scrollWidth
+                ));
+                tableClone.style.setProperty("width", measuredTableWidth + "px", "important");
+                tableClone.style.setProperty("min-width", measuredTableWidth + "px", "important");
+                tablePanelClone.style.setProperty("width", measuredTableWidth + "px", "important");
+                periodClone.style.setProperty("width", measuredTableWidth + "px", "important");
+
+                // Normalizar la alineación únicamente en la copia: encabezados y valores comparten
+                // eje por columna; todos los contenidos quedan centrados verticalmente por fila.
+                tableClone.querySelectorAll("thead tr, tbody tr").forEach(function (row) {
+                    const isHeader = row.parentElement && row.parentElement.tagName === "THEAD";
+                    const isTotal = row.classList.contains("bg-brand-50");
+                    const rowHeight = isHeader ? "50px" : (isTotal ? "66px" : "64px");
+                    const verticalPadding = isHeader ? "12px" : (isTotal ? "18px" : "16px");
+                    const lineHeight = isHeader ? "18px" : "20px";
+                    row.style.setProperty("height", rowHeight, "important");
+                    Array.from(row.children).forEach(function (cell, index) {
+                        cell.style.setProperty("display", "table-cell", "important");
+                        cell.style.setProperty("vertical-align", "middle", "important");
+                        cell.style.setProperty("text-align", index === 0 ? "left" : "center", "important");
+                        cell.style.setProperty("padding-top", verticalPadding, "important");
+                        cell.style.setProperty("padding-bottom", verticalPadding, "important");
+                        cell.style.setProperty("line-height", lineHeight, "important");
+                        cell.style.setProperty("box-sizing", "border-box", "important");
+                        cell.style.setProperty("white-space", "nowrap", "important");
+                    });
+                });
+
+                // Evitar el desplazamiento de la línea base en las cápsulas al usar html2canvas.
+                tableClone.querySelectorAll("tbody td span.rounded-full.border").forEach(function (badge) {
+                    const labelText = badge.textContent.trim();
+                    const label = document.createElement("span");
+                    label.textContent = labelText;
+                    label.style.cssText = [
+                        "position:absolute",
+                        "left:0",
+                        "right:0",
+                        "top:0",
+                        "bottom:0",
+                        "display:block",
+                        "padding:0",
+                        "margin:0",
+                        "text-align:center",
+                        "line-height:26px",
+                        "transform:translateY(-6px)",
+                        "font-size:12px",
+                        "font-weight:700",
+                        "white-space:nowrap",
+                        "color:inherit",
+                        "box-sizing:border-box"
+                    ].join(";");
+                    badge.textContent = "";
+                    badge.appendChild(label);
+                    badge.style.setProperty("display", "inline-block", "important");
+                    badge.style.setProperty("position", "relative", "important");
+                    badge.style.setProperty("height", "28px", "important");
+                    badge.style.setProperty("min-width", "52px", "important");
+                    badge.style.setProperty("width", Math.max(52, labelText.length * 8 + 28) + "px", "important");
+                    badge.style.setProperty("padding", "0", "important");
+                    badge.style.setProperty("margin", "0 auto", "important");
+                    badge.style.setProperty("line-height", "26px", "important");
+                    badge.style.setProperty("vertical-align", "middle", "important");
+                    badge.style.setProperty("white-space", "nowrap", "important");
+                    badge.style.setProperty("box-sizing", "border-box", "important");
+                    badge.style.setProperty("overflow", "hidden", "important");
+                });
+
+                // El panel de periodo tiene controles flexibles. Hacemos que su clon use el mismo
+                // ancho que la tabla y preservamos todos los controles y el texto de estado.
                 await new Promise(function (resolve) { window.requestAnimationFrame(resolve); });
                 const rootRect = captureRoot.getBoundingClientRect();
-                const tableRect = tableClone.getBoundingClientRect();
-                // Medir el borde real de la última fila, y sumar margen de seguridad inferior.
-                // scrollHeight por sí solo puede subestimar algunos píxeles al renderizar tablas.
+                const tableRect = tablePanelClone.getBoundingClientRect();
                 const captureWidth = Math.ceil(Math.max(
                     captureRoot.scrollWidth,
                     rootRect.width,
@@ -3566,7 +3644,7 @@
                 const captureHeight = Math.ceil(Math.max(
                     captureRoot.scrollHeight,
                     rootRect.height,
-                    tableRect.bottom - rootRect.top + 96
+                    tableRect.bottom - rootRect.top + 32
                 ));
 
                 const canvas = await html2canvas(captureRoot, {
@@ -3579,7 +3657,6 @@
                     onclone: function (clonedDocument) {
                         const clonedRoot = clonedDocument.getElementById("avanceCaptureRootTemporary");
                         if (!clonedRoot) return;
-                        // El original permanece invisible para la persona; el clon se renderiza normal.
                         clonedRoot.style.setProperty("opacity", "1", "important");
                         clonedRoot.style.setProperty("visibility", "visible", "important");
                         clonedRoot.style.setProperty("position", "fixed", "important");
@@ -3591,78 +3668,16 @@
                         clonedRoot.style.setProperty("width", captureWidth + "px", "important");
                         clonedRoot.style.setProperty("height", captureHeight + "px", "important");
                         clonedRoot.style.setProperty("min-height", captureHeight + "px", "important");
-                        clonedRoot.style.setProperty("padding-bottom", "96px", "important");
-                        const clonedTable = clonedRoot.querySelector("table");
-                        if (clonedTable) {
-                            clonedTable.style.setProperty("width", "max-content", "important");
-                            clonedTable.style.setProperty("min-width", "max-content", "important");
-                            clonedTable.style.setProperty("max-width", "none", "important");
+                        clonedRoot.style.setProperty("padding-bottom", "32px", "important");
 
-                            // Normalizar la tabla solo en la captura: todas las celdas de una fila
-                            // comparten altura, espaciado y alineación. La primera columna queda a la
-                            // izquierda y todas las columnas numéricas centradas bajo sus encabezados.
-                            clonedTable.querySelectorAll("thead tr, tbody tr").forEach(function (row) {
-                                const isHeader = row.parentElement && row.parentElement.tagName === "THEAD";
-                                const isTotal = row.classList.contains("bg-brand-50");
-                                const rowHeight = isHeader ? "50px" : (isTotal ? "66px" : "64px");
-                                const verticalPadding = isHeader ? "12px" : (isTotal ? "18px" : "16px");
-                                const lineHeight = isHeader ? "18px" : "20px";
-
-                                row.style.setProperty("height", rowHeight, "important");
-                                Array.from(row.children).forEach(function (cell, index) {
-                                    cell.style.setProperty("display", "table-cell", "important");
-                                    cell.style.setProperty("vertical-align", "middle", "important");
-                                    cell.style.setProperty("text-align", index === 0 ? "left" : "center", "important");
-                                    cell.style.setProperty("padding-top", verticalPadding, "important");
-                                    cell.style.setProperty("padding-bottom", verticalPadding, "important");
-                                    cell.style.setProperty("line-height", lineHeight, "important");
-                                    cell.style.setProperty("box-sizing", "border-box", "important");
-                                    cell.style.setProperty("white-space", "nowrap", "important");
-                                });
-                            });
-
-                            // html2canvas sitúa demasiado abajo el texto cuando queda como nodo de texto
-                            // directo dentro de la cápsula. En la copia de captura, envolver el porcentaje
-                            // en una caja de altura fija centra el texto de forma estable sin tocar la página.
-                            clonedTable.querySelectorAll("tbody td span.rounded-full.border").forEach(function (badge) {
-                                const labelText = badge.textContent.trim();
-                                const label = clonedDocument.createElement("span");
-                                label.textContent = labelText;
-                                label.style.cssText = [
-                                    "position:absolute",
-                                    "left:0",
-                                    "right:0",
-                                    "top:0",
-                                    "bottom:0",
-                                    "display:block",
-                                    "padding:0",
-                                    "margin:0",
-                                    "text-align:center",
-                                    "line-height:26px",
-                                    "transform:translateY(-6px)",
-                                    "font-size:12px",
-                                    "font-weight:700",
-                                    "white-space:nowrap",
-                                    "color:inherit",
-                                    "box-sizing:border-box"
-                                ].join(";");
-
-                                badge.textContent = "";
-                                badge.appendChild(label);
-                                badge.style.setProperty("display", "inline-block", "important");
-                                badge.style.setProperty("position", "relative", "important");
-                                badge.style.setProperty("height", "28px", "important");
-                                badge.style.setProperty("min-width", "52px", "important");
-                                badge.style.setProperty("width", Math.max(52, labelText.length * 8 + 28) + "px", "important");
-                                badge.style.setProperty("padding", "0", "important");
-                                badge.style.setProperty("margin", "0 auto", "important");
-                                badge.style.setProperty("line-height", "26px", "important");
-                                badge.style.setProperty("vertical-align", "middle", "important");
-                                badge.style.setProperty("white-space", "nowrap", "important");
-                                badge.style.setProperty("box-sizing", "border-box", "important");
-                                badge.style.setProperty("overflow", "hidden", "important");
-                            });
-                        }
+                        clonedRoot.querySelectorAll(".overflow-x-auto, .overflow-y-auto, .overflow-auto").forEach(function (scroller) {
+                            scroller.style.setProperty("overflow", "visible", "important");
+                            scroller.style.setProperty("overflow-x", "visible", "important");
+                            scroller.style.setProperty("overflow-y", "visible", "important");
+                            scroller.style.setProperty("max-width", "none", "important");
+                            scroller.style.setProperty("max-height", "none", "important");
+                            scroller.style.setProperty("height", "auto", "important");
+                        });
                     }
                 });
 
@@ -3681,7 +3696,7 @@
                 btn.innerHTML = '<i class="fa-solid fa-check"></i>';
                 btn.classList.remove("bg-brand-500", "hover:bg-brand-600");
                 btn.classList.add("bg-emerald-500", "hover:bg-emerald-600");
-                showAppToast("Captura completa copiada con encabezados y las ocho columnas de Métricas de Avance.", "success");
+                showAppToast("Captura generada con el selector de periodo y la tabla completa.", "success");
                 await new Promise(function (resolve) { window.setTimeout(resolve, 1200); });
             } catch (error) {
                 console.error("No se pudo copiar la captura de Métricas de Avance:", error);

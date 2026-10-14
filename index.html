@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 18 //////// -->
+<!-- //////// Versión 19 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3598,9 +3598,27 @@
                             clonedTable.style.setProperty("min-width", "max-content", "important");
                             clonedTable.style.setProperty("max-width", "none", "important");
 
-                            // Conservar la alineación vertical de las celdas de la página.
-                            clonedTable.querySelectorAll("th, td").forEach(function (cell) {
-                                cell.style.setProperty("vertical-align", "middle", "important");
+                            // Normalizar la tabla solo en la captura: todas las celdas de una fila
+                            // comparten altura, espaciado y alineación. La primera columna queda a la
+                            // izquierda y todas las columnas numéricas centradas bajo sus encabezados.
+                            clonedTable.querySelectorAll("thead tr, tbody tr").forEach(function (row) {
+                                const isHeader = row.parentElement && row.parentElement.tagName === "THEAD";
+                                const isTotal = row.classList.contains("bg-brand-50");
+                                const rowHeight = isHeader ? "50px" : (isTotal ? "66px" : "64px");
+                                const verticalPadding = isHeader ? "12px" : (isTotal ? "18px" : "16px");
+                                const lineHeight = isHeader ? "18px" : "20px";
+
+                                row.style.setProperty("height", rowHeight, "important");
+                                Array.from(row.children).forEach(function (cell, index) {
+                                    cell.style.setProperty("display", "table-cell", "important");
+                                    cell.style.setProperty("vertical-align", "middle", "important");
+                                    cell.style.setProperty("text-align", index === 0 ? "left" : "center", "important");
+                                    cell.style.setProperty("padding-top", verticalPadding, "important");
+                                    cell.style.setProperty("padding-bottom", verticalPadding, "important");
+                                    cell.style.setProperty("line-height", lineHeight, "important");
+                                    cell.style.setProperty("box-sizing", "border-box", "important");
+                                    cell.style.setProperty("white-space", "nowrap", "important");
+                                });
                             });
 
                             // html2canvas sitúa demasiado abajo el texto cuando queda como nodo de texto

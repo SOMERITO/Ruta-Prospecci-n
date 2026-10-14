@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 17 //////// -->
+<!-- //////// Versión 18 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3499,7 +3499,7 @@
                     "height:auto",
                     "overflow:visible",
                     "box-sizing:border-box",
-                    "padding:24px",
+                    "padding:24px 24px 96px 24px",
                     "margin:0",
                     "background:#ffffff",
                     "color:#0f172a",
@@ -3555,8 +3555,19 @@
 
                 await new Promise(function (resolve) { window.requestAnimationFrame(resolve); });
                 const rootRect = captureRoot.getBoundingClientRect();
-                const captureWidth = Math.ceil(Math.max(captureRoot.scrollWidth, rootRect.width));
-                const captureHeight = Math.ceil(Math.max(captureRoot.scrollHeight, rootRect.height));
+                const tableRect = tableClone.getBoundingClientRect();
+                // Medir el borde real de la última fila, y sumar margen de seguridad inferior.
+                // scrollHeight por sí solo puede subestimar algunos píxeles al renderizar tablas.
+                const captureWidth = Math.ceil(Math.max(
+                    captureRoot.scrollWidth,
+                    rootRect.width,
+                    tableRect.right - rootRect.left + 24
+                ));
+                const captureHeight = Math.ceil(Math.max(
+                    captureRoot.scrollHeight,
+                    rootRect.height,
+                    tableRect.bottom - rootRect.top + 96
+                ));
 
                 const canvas = await html2canvas(captureRoot, {
                     scale: 2,
@@ -3578,7 +3589,9 @@
                         clonedRoot.style.setProperty("background-color", "#ffffff", "important");
                         clonedRoot.style.setProperty("overflow", "visible", "important");
                         clonedRoot.style.setProperty("width", captureWidth + "px", "important");
-                        clonedRoot.style.setProperty("height", "auto", "important");
+                        clonedRoot.style.setProperty("height", captureHeight + "px", "important");
+                        clonedRoot.style.setProperty("min-height", captureHeight + "px", "important");
+                        clonedRoot.style.setProperty("padding-bottom", "96px", "important");
                         const clonedTable = clonedRoot.querySelector("table");
                         if (clonedTable) {
                             clonedTable.style.setProperty("width", "max-content", "important");

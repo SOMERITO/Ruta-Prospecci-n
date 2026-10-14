@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- //////// Versión 20 //////// -->
+<!-- //////// Versión 21 //////// -->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -3517,8 +3517,22 @@
                 const sourceMonthInput = document.getElementById("avanceMonth");
                 const clonedMonthInput = periodClone.querySelector('input[type="month"]');
                 if (sourceMonthInput && clonedMonthInput) {
-                    clonedMonthInput.value = sourceMonthInput.value;
-                    clonedMonthInput.setAttribute("value", sourceMonthInput.value);
+                    // Un input[type=month] suele renderizarse como "2026-10" dentro de html2canvas,
+                    // aunque la página lo muestre localizado. En la imagen usamos el mismo texto visible
+                    // del selector para conservar su alineación y evitar ese cambio de formato.
+                    const monthDisplay = document.getElementById("avanceMonthDisplay");
+                    const monthLabel = document.createElement("span");
+                    monthLabel.className = clonedMonthInput.className;
+                    monthLabel.textContent = monthDisplay && monthDisplay.textContent.trim()
+                        ? monthDisplay.textContent.trim()
+                        : sourceMonthInput.value;
+                    monthLabel.setAttribute("aria-label", "Periodo seleccionado");
+                    monthLabel.style.setProperty("display", "inline-flex", "important");
+                    monthLabel.style.setProperty("align-items", "center", "important");
+                    monthLabel.style.setProperty("box-sizing", "border-box", "important");
+                    clonedMonthInput.replaceWith(monthLabel);
+                    const monthWrap = periodClone.querySelector(".calendar-month-input-wrap");
+                    if (monthWrap) monthWrap.removeAttribute("for");
                 }
                 periodClone.style.setProperty("box-sizing", "border-box", "important");
                 periodClone.style.setProperty("width", "max-content", "important");
@@ -3571,23 +3585,13 @@
                 tablePanelClone.style.setProperty("width", measuredTableWidth + "px", "important");
                 periodClone.style.setProperty("width", measuredTableWidth + "px", "important");
 
-                // Normalizar la alineación únicamente en la copia: encabezados y valores comparten
-                // eje por columna; todos los contenidos quedan centrados verticalmente por fila.
+                // Conservar las alturas y el padding originales del sitio: imponer alturas por fila
+                // desplazaba visualmente los porcentajes frente al resto de valores. Solo fijamos
+                // la alineación vertical y el eje horizontal de cada columna en la copia.
                 tableClone.querySelectorAll("thead tr, tbody tr").forEach(function (row) {
-                    const isHeader = row.parentElement && row.parentElement.tagName === "THEAD";
-                    const isTotal = row.classList.contains("bg-brand-50");
-                    const rowHeight = isHeader ? "50px" : (isTotal ? "66px" : "64px");
-                    const verticalPadding = isHeader ? "12px" : (isTotal ? "18px" : "16px");
-                    const lineHeight = isHeader ? "18px" : "20px";
-                    row.style.setProperty("height", rowHeight, "important");
                     Array.from(row.children).forEach(function (cell, index) {
-                        cell.style.setProperty("display", "table-cell", "important");
                         cell.style.setProperty("vertical-align", "middle", "important");
                         cell.style.setProperty("text-align", index === 0 ? "left" : "center", "important");
-                        cell.style.setProperty("padding-top", verticalPadding, "important");
-                        cell.style.setProperty("padding-bottom", verticalPadding, "important");
-                        cell.style.setProperty("line-height", lineHeight, "important");
-                        cell.style.setProperty("box-sizing", "border-box", "important");
                         cell.style.setProperty("white-space", "nowrap", "important");
                     });
                 });
